@@ -1,11 +1,7 @@
 #!/bin/bash
 
-git_is_dirty () {
-    if [[ $(git diff --shortstat 2> /dev/null | tail -n1) != "" ]]; then
-        return 1
-    fi
-
-    return 0
+function git_is_dirty {
+  [[ $(git diff --shortstat 2> /dev/null | tail -n1) != "" ]] && echo "*"
 }
 
 main () {
