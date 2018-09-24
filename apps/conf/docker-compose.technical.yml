@@ -1,0 +1,28 @@
+version: '2'
+services:
+    #
+    # Docker admin panel
+    #
+    portainer:
+        image: portainer/portainer
+        labels:
+            - "traefik.frontend.rule=Host:a2.${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
+            - "traefik.enable=true"
+            - "traefik.basic.protocol=${PROTO}"
+            - "traefik.port=9000"
+        command: -H unix:///var/run/docker.sock
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ./data/portainer:/data
+
+    healthcheck:
+        image: wolnosciowiec/infracheck
+        command: " --directory=/data --server-path-prefix=/some-prefix"
+        volumes:
+            - "./apps/healthchecks:/data"
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        labels:
+            - "traefik.frontend.rule=Host: health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}; PathPrefix: /some-prefix"
+            - "traefik.enable=true"
+            - "traefik.basic.protocol=${PROTO}"
+            - "traefik.port=8000"

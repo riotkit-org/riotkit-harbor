@@ -1,0 +1,7 @@
+/.idea
+/data/*/
+!/data/*/.gitkeep
+/data/www-data/*
+!/data/www-data/.gitkeep
+
+/.env

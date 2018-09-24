@@ -1,0 +1,23 @@
+defaultEntryPoints = ["http", "https"]
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+# redirect does not work with letsencrypt
+#    [entryPoints.http.redirect]
+#      entryPoint = "https"
+
+  [entryPoints.https]
+  address = ":443"
+    [entryPoints.https.tls]
+
+[acme]
+email = "example@example.org"
+storage = "/acme.json"
+onHostRule = true
+onDemand = false
+acmeLogging = true
+#caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+entryPoint = "https"
+  [acme.httpChallenge]
+  entryPoint = "http"

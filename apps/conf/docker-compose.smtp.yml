@@ -1,0 +1,8 @@
+version: '2'
+services:
+    smtp_server:
+        image: namshi/smtp
+        expose:
+            - "25"
+        labels:
+            - "traefik.enable=false"

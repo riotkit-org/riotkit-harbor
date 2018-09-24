@@ -1,0 +1,8 @@
+{
+    "type": "port-open",
+    "input": {
+        "po_port": "25",
+        "po_host": "smtp_server",
+        "po_timeout": "1"
+    }
+}

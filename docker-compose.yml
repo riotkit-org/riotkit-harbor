@@ -1,0 +1,28 @@
+version: '2'
+services:
+
+    gateway:
+        image: "traefik:1.7"
+        command: --api --docker --logLevel=INFO
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+            - "./containers/auth:/auth:ro"
+            - "./traefik.toml:/etc/traefik/traefik${DOMAIN_SUFFIX}.toml"
+            - "./data/traefik-acme.json:/acme.json"
+        labels:
+            # important: do NOT specify the entryPoint
+            - "traefik.backend=traefik"
+            - "traefik.enable=true"
+            - "traefik.frontend.rule=Host:a3.${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
+            - "traefik.frontend.auth.basic.usersFile=/auth/technical.htpasswd"
+            - "traefik.port=8080"
+
+    smtp_server:
+        image: namshi/smtp
+        expose:
+            - "25"
+        labels:
+            - "traefik.enable=false"
