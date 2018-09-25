@@ -38,6 +38,12 @@ strpos() {
 }
 
 copy_file_update () {
+    FILE_DEST_DIR_NAME=$(dirname ./${1})
+
+    if [[ ! -d "${FILE_DEST_DIR_NAME}" ]]; then
+        mkdir -p "${FILE_DEST_DIR_NAME}"
+    fi
+
     cp "${TEMP_DIR_NAME}/${1}" "./${1}"
 }
 
