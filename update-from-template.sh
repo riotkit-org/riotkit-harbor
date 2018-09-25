@@ -4,10 +4,13 @@ IGNORED_FILES=()
 ZIP_URL=https://github.com/zwiazeksyndykalistowpolski/docker-project-template/archive/master.zip
 UNPACKED_DIR_NAME=docker-project-template-master
 TEMP_DIR_NAME=/tmp/_dpt
+CURRENT_PWD=$(pwd)
 
 git_is_dirty () {
-    return 1
-    [[ $(git diff --shortstat 2> /dev/null | tail -n1) != "" ]] && return 1
+    if [[ $(git status) == *"working tree clean"* ]]; then
+        return 1
+    fi
+
     return 0
 }
 
@@ -38,13 +41,14 @@ strpos() {
 }
 
 copy_file_update () {
-    FILE_DEST_DIR_NAME=$(dirname ./${1})
+    F_NAME=$(normalize_path ${1})
+    FILE_DEST_DIR_NAME=$(dirname ./${F_NAME})
 
     if [[ ! -d "${FILE_DEST_DIR_NAME}" ]]; then
-        mkdir -p "${FILE_DEST_DIR_NAME}"
+        set -x; mkdir -p "${FILE_DEST_DIR_NAME}"; set +x
     fi
 
-    cp "${TEMP_DIR_NAME}/${1}" "./${1}"
+    set -x; cp "${TEMP_DIR_NAME}/${F_NAME}" "./${F_NAME}"; set +x
 }
 
 
@@ -66,7 +70,7 @@ clean_up () {
 }
 
 normalize_path () {
-    echo $1 | sed -e 's/^[\.\/|\/]*//'
+    echo $1 | sed -e 's/^\.\/*//' | sed -e 's/^\/*//'
 }
 
 is_file_ignored () {
@@ -107,12 +111,11 @@ main () {
 
     load_ignored_files
     download_and_unzip_archive
+    cd ${CURRENT_PWD}
 
     for f_path in $(list_files_to_upgrade); do
-        echo -n " ~> ${f_path}"
-
         if is_file_ignored "${f_path}"; then
-            echo " [ignored by .updateignore]"
+            echo " ~> [ignored] ${f_path}"
             continue
         fi
 
