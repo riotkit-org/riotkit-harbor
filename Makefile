@@ -41,6 +41,9 @@ get_compose_args:
 
 ## Starts or updates (if config was changed) the environment
 start:
+	sudo touch ./bin-data/traefik-acme.json 2>/dev/null || true
+	sudo chmod 600 ./bin-data/traefik-acme.json
+
 	set -x; sudo docker-compose ${COMPOSE_ARGS} up
 
 ## Stops the environment
