@@ -1,0 +1,6 @@
+/apps/
+/traefik.toml
+/traefik.localhost.toml
+/auth
+/.updateignore
+/.gitignore
