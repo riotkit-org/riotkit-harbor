@@ -6,6 +6,8 @@ services:
             - "./apps/continuous-deployment/deployer.yml:/root/.deployer.yml"
             - "./:/deployer-root"
             - "/var/run/docker.sock:/var/run/docker.sock"
+        expose:
+            - "8012"
         environment:
             # gateway configuration
             - VIRTUAL_HOST=deploy.${MAIN_DOMAIN}${DOMAIN_SUFFIX}

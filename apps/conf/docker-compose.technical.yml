@@ -9,6 +9,8 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ./data/portainer:/data
+        expose:
+            - "9000"
         environment:
             # gateway configuration
             - VIRTUAL_HOST=a2.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
@@ -20,6 +22,8 @@ services:
         volumes:
             - "./apps/healthchecks:/data"
             - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        expose:
+            - "8000"
         environment:
             # gateway configuration
             - VIRTUAL_HOST=health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
