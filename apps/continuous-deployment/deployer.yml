@@ -13,4 +13,5 @@ app_pl.godna-praca:
 
     # commands to execute in order
     commands:
-        - make update_single_service_container SERVICE=app_pl.godna-praca
+        - sudo docker ps
+        #- make update_single_service_container SERVICE=app_pl.godna-praca

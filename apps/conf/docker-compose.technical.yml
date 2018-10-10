@@ -5,15 +5,14 @@ services:
     #
     portainer:
         image: portainer/portainer
-        labels:
-            - "traefik.frontend.rule=Host:a2.${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
-            - "traefik.enable=true"
-            - "traefik.basic.protocol=${PROTO}"
-            - "traefik.port=9000"
         command: -H unix:///var/run/docker.sock
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
             - ./data/portainer:/data
+        environment:
+            # gateway configuration
+            - VIRTUAL_HOST=a2.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+            - VIRTUAL_PORT=9000
 
     healthcheck:
         image: wolnosciowiec/infracheck
@@ -21,8 +20,7 @@ services:
         volumes:
             - "./apps/healthchecks:/data"
             - "/var/run/docker.sock:/var/run/docker.sock:ro"
-        labels:
-            - "traefik.frontend.rule=Host: health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}; PathPrefix: /some-prefix"
-            - "traefik.enable=true"
-            - "traefik.basic.protocol=${PROTO}"
-            - "traefik.port=8000"
+        environment:
+            # gateway configuration
+            - VIRTUAL_HOST=health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+            - VIRTUAL_PORT=8000

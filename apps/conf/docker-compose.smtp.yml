@@ -4,5 +4,3 @@ services:
         image: namshi/smtp
         expose:
             - "25"
-        labels:
-            - "traefik.enable=false"

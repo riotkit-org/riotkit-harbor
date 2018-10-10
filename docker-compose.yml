@@ -1,21 +1,67 @@
 version: '2'
 services:
 
+    #
+    # Public gateway
+    #  It's just a normal nginx that is running GENERATED configurations by other container - gateway_proxy_gen
+    #
     gateway:
-        image: "traefik:1.7"
-        command: --api --docker --logLevel=INFO
-        ports:
-            - "80:80"
-            - "443:443"
-        volumes:
-            - "/var/run/docker.sock:/var/run/docker.sock:ro"
-            - "./containers/auth:/auth:ro"
-            - "./traefik.toml:/etc/traefik/traefik${DOMAIN_SUFFIX}.toml"
-            - "./data/traefik-acme.json:/acme.json"
+        image: nginx
+        restart: unless-stopped
         labels:
-            # important: do NOT specify the entryPoint
-            - "traefik.backend=traefik"
-            - "traefik.enable=true"
-            - "traefik.frontend.rule=Host:a3.${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
-            - "traefik.frontend.auth.basic.usersFile=/auth/technical.htpasswd"
-            - "traefik.port=8080"
+            - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true
+        ports:
+          - "80:80"
+          - "443:443"
+        volumes:
+            - ./data/conf.d:/etc/nginx/conf.d
+            - ./data/vhost.d:/etc/nginx/vhost.d
+            - ./data/html:/usr/share/nginx/html
+            - ./data/certs:/etc/nginx/certs:rw
+            - ./data/htpasswd:/etc/nginx/htpasswd:rw
+
+    #
+    # Service auto-discovery
+    #  Allows to expose all applications under their domains when they specify at least VIRTUAL_HOST env variable
+    #  Generates configuration files for NGINX and then restarts the NGINX
+    #
+    gateway_proxy_gen:
+        image: jwilder/docker-gen
+        # during startup the letsencrypt container will kill this container after certificates generation
+        # so it is necessary to bring it up quickly back, else the gateway will be unconfigured and not working
+        restart: always
+        labels:
+            - com.github.jrcs.letsencrypt_nginx_proxy_companion.docker_gen=true
+        command: "-notify-sighup ${COMPOSE_PROJECT_NAME}_gateway_1 -watch -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf"
+        volumes_from:
+            - gateway
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+            - ./containers/nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
+
+        environment:
+            - HTTPS_METHOD=redirect
+            - SSL_POLICY=Mozilla-Modern
+
+            # @debugging: It may be useful to disable HSTS when the SSL setup is not ready yet
+            - HSTS=on
+
+    #
+    # SSL certification service
+    #  Requests certs from Letsencrypt service, if they are not available then it falls back to
+    #  self generated certificates
+    #
+    gateway_letsencrypt:
+        image: jrcs/letsencrypt-nginx-proxy-companion
+        restart: unless-stopped
+        volumes_from:
+            - gateway
+            - gateway_proxy_gen
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        environment:
+            - NGINX_DOCKER_GEN_CONTAINER=gateway_proxy_gen
+            - NGINX_PROXY_CONTAINER=gateway
+
+            # @debugging: Enable to test if the Letsencrypt is properly configured
+            #- ACME_CA_URI=https://acme-staging.api.letsencrypt.org/directory
