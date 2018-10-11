@@ -103,7 +103,7 @@ list_configs_disabled:
 
 ## List all hosts exposed to the internet
 list_all_hosts:
-	find ./apps/conf -name '*.yml' | xargs grep 'traefik.frontend.rule'
+	find ./apps/conf -name '*.yml' | xargs grep 'VIRTUAL_HOST'
 
 ## Disable a configuration (APP_NAME=...)
 config_disable:
