@@ -42,11 +42,20 @@ get_compose_args:
 ## Starts or updates (if config was changed) the environment
 start:
 	sudo rm ./data/conf.d/* 2>/dev/null || true # nginx config needs to be recreated on each restart by proxy-gen
-	set -x; sudo docker-compose ${COMPOSE_ARGS} up
+	set -x; sudo docker-compose ${COMPOSE_ARGS} up -d
+	make _exec_hooks NAME=post-start
+	sudo docker-compose ${COMPOSE_ARGS} -f
 
 ## Stops the environment
 stop:
 	sudo docker-compose ${COMPOSE_ARGS} down
+	make _exec_hooks NAME=post-down
+
+_exec_hooks:
+	printf " >> Executing hooks ${NAME}\n"
+	for f in ./hooks.d/${NAME}/*.sh; do \
+		bash $${f}; \
+	done
 
 ## Restart
 restart:
@@ -58,6 +67,7 @@ check_status:
 
 ## Deployment hook: PRE up
 deployment_pre: pull_containers update_all
+	make _exec_hooks NAME=deployment-pre
 
 ## Update this deployment repository
 pull: pull_git pull_containers
