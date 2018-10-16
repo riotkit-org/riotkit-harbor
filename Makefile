@@ -53,9 +53,12 @@ stop:
 
 _exec_hooks:
 	printf " >> Executing hooks ${NAME}\n"
-	for f in ./hooks.d/${NAME}/*.sh; do \
-		bash $${f}; \
-	done
+
+	if [[ -d ./hooks.d/${NAME}/ ]]; then \
+		for f in ./hooks.d/${NAME}/*.sh; do \
+			bash $${f}; \
+		done \
+	fi
 
 ## Restart
 restart:
