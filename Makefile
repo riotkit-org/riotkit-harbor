@@ -44,7 +44,7 @@ start:
 	sudo rm ./data/conf.d/* 2>/dev/null || true # nginx config needs to be recreated on each restart by proxy-gen
 	set -x; sudo docker-compose ${COMPOSE_ARGS} up -d
 	make _exec_hooks NAME=post-start
-	sudo docker-compose ${COMPOSE_ARGS} -f
+	sudo docker-compose ${COMPOSE_ARGS} logs -f
 
 ## Stops the environment
 stop:
