@@ -169,7 +169,7 @@ __rm:
 
 __fetch_repository:
 	echo " >> Updating application at ./apps/www-data/${GIT_PROJECT_DIR}"
-	if [[ -d ./apps/www-data/${GIT_PROJECT_DIR} ]]; then \
+	if [[ -d ./apps/www-data/${GIT_PROJECT_DIR}/.git ]]; then \
 		cd "./apps/www-data/${GIT_PROJECT_DIR}" || exit 1; \
 		echo " >> Setting remote origin"; \
 		git remote remove origin 2>/dev/null || true; \
