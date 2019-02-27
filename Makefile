@@ -180,3 +180,10 @@ __fetch_repository:
 		echo " >> Cloning..."; \
 		git clone ${GIT_PROTO}://${GIT_USER}:${GIT_PASSWORD}@${GIT_SERVER}/${GIT_ORG_NAME}/${GIT_PROJECT_NAME} ./apps/www-data/${GIT_PROJECT_DIR} || exit 1; \
 	fi;
+
+## Encrypt the .env-prod file with Ansible Vault (passphrase needs to be stored in ./.vault-password that should be in .gitignore)
+encrypt_env_prod:
+	echo " >> Encrypting .env file into .env-prod"
+	cp .env .env-prod-tmp
+	ansible-vault --vault-password-file=$$(pwd)/.vault-password encrypt .env-prod-tmp
+	mv .env-prod-tmp .env-prod
