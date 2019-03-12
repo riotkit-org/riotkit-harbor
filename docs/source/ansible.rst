@@ -52,7 +52,7 @@ A role from this repository_ can be used simply, for example in this way:
 
 1. Add above to your playbook
 2. Install role with *ansible galaxy install blackandred.server_docker_project*
-3. Run *ansible-playbook your-playbook.yml -t project*
+3. Run *ansible-playbook your-playbook.yml -i hosts.cfg -t project*
 
 .. _repository: https://git.riotkit.org/docker-ansible-role
 
@@ -69,3 +69,17 @@ There is a solution.
 3. Optional: You can keep *".vault-password"* in safe place, eg. on your pendrive linked symbolically to the project directory
 4. Use *make encrypt_env_prod* to generate *.env-prod* that will be used by Ansible to create *.env* on production server during deployment
 
+Limited downtime deployments
+----------------------------
+
+Docker Compose has an ability to detect which service YAML file was changed and recreate only containers for changed services.
+This does not apply to files mounted via volumes.
+
+
+If you made a change to one of files mounted via volumes, then you need to restart the environment, or disable limited downtime feature (can be done temporarily).
+
+To disable the limited downtime feature for a single deployment you can use a switch:
+
+.. code:: bash
+
+    ansible-playbook -e avoid_whole_environment_restart=False ...
