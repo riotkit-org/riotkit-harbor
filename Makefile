@@ -54,7 +54,7 @@ stop:
 _exec_hooks:
 	printf " >> Executing hooks ${NAME}\n"
 
-	if [[ -d ./hooks.d/${NAME}/ ]]; then \
+	if [[ -d ./hooks.d/${NAME}/ ]] && [ ! -z "$(ls -A ./hooks.d/${NAME})" ]; then \
 		for f in ./hooks.d/${NAME}/*.sh; do \
 			bash $${f}; \
 		done \
