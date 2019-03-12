@@ -30,6 +30,7 @@ Goals:
 
    first-steps
    structure
+   general_concept
    configuration_conception
    features
    ansible
