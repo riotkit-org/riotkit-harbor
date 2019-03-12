@@ -1,4 +1,4 @@
-app_pl.godna-praca:
+my_app_name:
     # token used to authorize via "token" GET parameter, or "X-Auth-Token" header
     token: your_token_goes_here
     use_notification: false

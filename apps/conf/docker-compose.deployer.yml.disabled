@@ -12,3 +12,5 @@ services:
             # gateway configuration
             - VIRTUAL_HOST=deploy.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
             - VIRTUAL_PORT=8012
+            - LETSENCRYPT_HOST=deploy.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+            - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
