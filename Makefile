@@ -187,3 +187,7 @@ encrypt_env_prod:
 	cp .env .env-prod-tmp
 	ansible-vault --vault-password-file=$$(pwd)/.vault-password encrypt .env-prod-tmp
 	mv .env-prod-tmp .env-prod
+
+## Build documentation
+build_docs:
+	cd ./docs && make html

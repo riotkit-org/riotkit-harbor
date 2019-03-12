@@ -3,7 +3,7 @@ Applications
 
 ```bash
 # docker-compose configurations, managed by Makefile (turning on/off)
-./apps
+./conf
 
 # thin-deployer configuration for automatic deploy via webhook
 ./continuous-deployment 

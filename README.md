@@ -10,6 +10,9 @@ Includes:
 - SMTP server
 - Docker administration panel (allows to quickly log-in and eg. restart some service or repair via web-shell)
 - Webhook handler for automatic deployment (push to git to deploy an update on target server)
+- Automatic backups with disaster recovery
+- Integration with Ansible
+- Encrypted production .env file (.env-prod)
 
 Getting started
 ---------------
