@@ -63,6 +63,8 @@ Applications needs to be tagged with docker labels, example:
     org.docker.services.dashboard.icon: 'pe-7s-browser'
     org.docker.services.dashboard.only_for_admin: false
 
+.. image:: _static/services-dashboard.png
+
 Sending e-mails
 ---------------
 
@@ -80,3 +82,28 @@ You can use any external SMTP, your own, a gmail account, or other.
 
 If you make values empty, then the service will send mails directly.
 
+Docker administration panel
+---------------------------
+
+We suggest to optionally use *Portainer* in case a need for web access to the environment.
+*Portainer* is very lightweight and has support for almost all important features.
+
+.. image:: _static/portainer.png
+
+Uptime Board
+------------
+
+Dashboard with health check status. The status is fetched from an external service provider.
+
+**Configuration in .env file:**
+
+.. code:: yaml
+
+    MONITORING_PROVIDERS=UptimeRobot://some-token;UptimeRobot://some-other-token
+
+.. image:: _static/uptime-board.png
+
+Integration with Ansible
+------------------------
+
+See: :ref:`ansible`
