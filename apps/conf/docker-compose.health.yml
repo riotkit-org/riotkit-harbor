@@ -1,0 +1,16 @@
+version: '2'
+services:
+    healthcheck:
+        image: wolnosciowiec/infracheck
+        command: " --directory=/data --server-path-prefix=/${HEALTH_CHECK_CODE}"
+        volumes:
+            - "./apps/healthchecks:/data"
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        expose:
+            - "8000"
+        environment:
+            # gateway configuration
+            - VIRTUAL_HOST=health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+            - VIRTUAL_PORT=8000
+            - LETSENCRYPT_HOST=health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+            - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
