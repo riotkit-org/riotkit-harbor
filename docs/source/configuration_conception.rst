@@ -25,7 +25,7 @@ Test and production environment
 
 They are mostly the same except fact, that the domains are different and, the test environment does not have real SSL enabled.
 
-**Domain suffix design pattern**, is a pattern where we have a BASE DOMAIN eg. riotkit.org, then in test environment we add a suffix, so it is riotkit.org.localhost on our test environment.
+**Domain suffix design pattern**, is a pattern where we have a BASE DOMAIN eg. riotkit.org, in test environment we add a suffix, so it would be riotkit.org.localhost on our test environment.
 This practice gives us out-of-the-box working DNS on local testing machine.
 
 

@@ -1,3 +1,6 @@
+
+.. _general_concept:
+
 General conception
 ==================
 
@@ -67,7 +70,7 @@ Main domain and domain suffix concept
 -------------------------------------
 
 **MAIN_DOMAIN** can be defined in **.env** and reused in YAML files together with **DOMAIN_SUFFIX**.
-It opens huge possibility of creating test environments which have different DNS settings.
+It opens huge possibility of creating test environments, which have different DNS settings.
 Sounds like a theory? Let's see a practical example!
 
 **Scenario for test environment:**
@@ -93,7 +96,7 @@ Sounds like a theory? Let's see a practical example!
     Then the SOME SERVICE will have address http://some-service.iwa-ait.org
 
 
-It's so much flexible that you can host multiple subdomains on main domain, but you can also use totally different domain.
+It's so much flexible that you can host multiple subdomains on main domain, but you can also use totally different domains.
 
 **Example:**
 
@@ -116,3 +119,36 @@ It's so much flexible that you can host multiple subdomains on main domain, but 
 
 - some-service.iwa-ait.org.localhost
 - other-service.example.org.localhost
+
+**Complete example**
+
+In `.env` file:
+
+.. code:: bash
+
+    MAIN_DOMAIN=iwa-ait.org
+    DOMAIN_SUFFIX=.localhost
+
+
+In `./apps/conf/docker-compose.phpmyadmin.yaml`:
+
+.. code:: yaml
+
+    db_mysql_admin:
+        image: phpmyadmin/phpmyadmin
+        environment:
+            - PMA_HOST=db_mysql
+
+            # gateway configuration
+            - VIRTUAL_HOST=pma.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+            - VIRTUAL_PORT=80
+        labels:
+            org.docker.services.dashboard.enabled: true
+            org.docker.services.dashboard.description: 'MySQL database management'
+            org.docker.services.dashboard.icon: 'pe-7s-server'
+            org.docker.services.dashboard.only_for_admin: true
+
+
+Now you can access http://pma.iwa-ait.org.localhost in your browser.
+On production server just remove the DOMAIN_SUFFIX value to have http://pma.iwa-ait.org - simple enough, huh?
+

@@ -34,6 +34,7 @@ Goals:
    configuration_conception
    features
    ansible
+   configuration_reference
 
 From authors
 ============
