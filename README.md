@@ -1,6 +1,8 @@
 Docker Project Template
 =======================
 
+[![Documentation Status](https://readthedocs.org/projects/riotkit-docker-template/badge/?version=latest)](https://environment.docs.riotkit.org/en/latest/?badge=latest)
+
 docker-compose + git based template which features a complete infrastructure for any project.
 
 Includes:

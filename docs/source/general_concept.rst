@@ -66,7 +66,7 @@ As the **.env** cannot be pushed into the repository, there is a possibility to 
 Main domain and domain suffix concept
 -------------------------------------
 
-**MAIN_DOMAIN** can be defined in **.env** and reused in YAML files togeter with **DOMAIN_SUFFIX**.
+**MAIN_DOMAIN** can be defined in **.env** and reused in YAML files together with **DOMAIN_SUFFIX**.
 It opens huge possibility of creating test environments which have different DNS settings.
 Sounds like a theory? Let's see a practical example!
 

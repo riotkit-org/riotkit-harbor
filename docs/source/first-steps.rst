@@ -18,14 +18,20 @@ Project template is hosted on **git** version control system and it's updater ba
 
 .. code:: bash
 
-    git clone https://git.riotkit.org/docker-project-template your-project-name
-    cd your-project-name
+    mkdir your-project-dir
+    cd your-project-dir
+
+    # initialize git repository, at least locally
+    git init
+
+    # download the project files using updater script
+    curl -s https://raw.githubusercontent.com/zwiazeksyndykalistowpolski/docker-project-template/master/update-from-template.sh | bash
 
 2. Take a look around, check documentation for:
 
 - :ref:`structure`
 - :ref:`features`
-- Configuration reference
+- :ref:`configuration_reference`
 
 3. Configure the project:
 

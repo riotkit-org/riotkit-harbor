@@ -1,4 +1,7 @@
 /.idea
+/.vscode
+/docs/build
+/docs/source/_build
 /data/*/
 !/data/*/.gitkeep
 /data/www-data/*
