@@ -63,8 +63,8 @@ As the **.env** cannot be pushed into the repository, there is a possibility to 
     make encrypt_env_prod
 
 
-Main domain concept
--------------------
+Main domain and domain suffix concept
+-------------------------------------
 
 **MAIN_DOMAIN** can be defined in **.env** and reused in YAML files togeter with **DOMAIN_SUFFIX**.
 It opens huge possibility of creating test environments which have different DNS settings.
@@ -72,9 +72,9 @@ Sounds like a theory? Let's see a practical example!
 
 **Scenario for test environment:**
 
-.. code:: gherkin
+.. code:: cucumber
 
-   =Given It's a TEST environment
+    Given It's a TEST environment
     So the variables are configured in following way
     | DOMAIN_SUFFIX | .localhost  |
     | MAIN_DOMAIN   | iwa-ait.org |
@@ -83,7 +83,7 @@ Sounds like a theory? Let's see a practical example!
 
 **Scenario for production environment:**
 
-.. code:: gherkin
+.. code:: cucumber
 
     Given It's a TEST environment
     So the variables are configured in following way
@@ -91,3 +91,28 @@ Sounds like a theory? Let's see a practical example!
     | MAIN_DOMAIN   | iwa-ait.org |
     When application has set VIRTUAL_HOST=some-service.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
     Then the SOME SERVICE will have address http://some-service.iwa-ait.org
+
+
+It's so much flexible that you can host multiple subdomains on main domain, but you can also use totally different domain.
+
+**Example:**
+
+.. code:: bash
+
+    MAIN_DOMAIN=iwa-ait.org
+    DOMAIN_SUFFIX=.localhost
+
+.. code:: yaml
+
+    first:
+        environment:
+            - VIRTUAL_HOST=some-service.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+
+    second:
+        environment:
+            - VIRTUAL_HOST=other-service.example.org${DOMAIN_SUFFIX}
+
+**In result of above example you will have services under domains in test environment:**
+
+- some-service.iwa-ait.org.localhost
+- other-service.example.org.localhost
