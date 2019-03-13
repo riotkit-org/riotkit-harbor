@@ -41,7 +41,7 @@ This template contains predefined configuration and tools for managing a project
 Even if you have your own git repository and existing changes there is a possibility to keep general things up-to-date
 with the template.
 
-At first, add important files and directories to the `./updateignore` file, so those files or directories will not be touched.
+At first, add important files and directories to the `./.updateignore` file, so those files or directories will not be touched.
 
 ```bash
 edit ./.updateignore
