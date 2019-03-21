@@ -45,6 +45,7 @@ FAQ:
     b) Modify directly the template from which the nginx.conf is created
 
 
+*NOTE: During the make start the docker-gen container is modifying files in vhost.d directory. On production a script reset-nginx-conf-permissions.sh in make stop will attempt to restore file contents to allow git pull execution later*
 
 .. _docker-gen: https://github.com/jwilder/docker-gen
 
@@ -107,3 +108,77 @@ Integration with Ansible
 ------------------------
 
 See: :ref:`ansible`
+
+Templating
+----------
+
+Imagine that everything is in environment variables in **.env**, but you need to eg. initialize the MySQL database by creating multiple users and databases.
+To allow keeping passwords safe in the **.env-prod**, but still automating eg. the user and password creation in databases we can use a templating mechanism.
+
+.. code:: yaml
+
+   Templating is GENERATING configuration files from templates, while having access to .env variables.
+
+Workflow:
+
+1. Create a template that will be rendered on **make start**
+2. Mount compiled template to a volume eg. to the entrypoint.d directory
+
+*Example ./containers/templates/source/mysql/access.sql.j2*
+
+.. code:: sql
+
+    /* transprzyjazn.pl */
+    CREATE DATABASE IF NOT EXISTS transprzyjazn;
+    CREATE USER IF NOT EXISTS 'transprzyjazn'@'%' IDENTIFIED BY '{{ DB_PASSWD_TRANSPRZYJAZN }}';
+    GRANT ALL ON `transprzyjazn`.* TO 'transprzyjazn'@'%' IDENTIFIED BY '{{ DB_PASSWD_TRANSPRZYJAZN }}';
+
+    /* lokatorzy.info.pl */
+    CREATE DATABASE IF NOT EXISTS lokatorzy;
+    CREATE USER IF NOT EXISTS 'lokatorzy'@'%' IDENTIFIED BY '{{ DB_PASSWD_LOKATORZY_INFO_PL }}';
+    GRANT ALL ON `lokatorzy`.* TO 'lokatorzy'@'%' IDENTIFIED BY '{{ DB_PASSWD_LOKATORZY_INFO_PL }}';
+
+You need to define environment variables in the **.env** (on following example: DB_PASSWD_TRANSPRZYJAZN and DB_PASSWD_LOKATORZY_INFO_PL).
+The file will be rendered into **./containers/templates/compiled/mysql/access.sql.j2**
+So, now you can mount the compiled mysql files directory into the MySQL container for example.
+
+.. literalinclude:: ../../apps/conf/templates/docker-compose.db.yml.example
+   :language: yaml
+
+Backups
+-------
+
+The environment template natively chooses RiotKit's File Repository as the backups automation.
+Requirement: You need to have a server running File Repository, check file-repository_.
+
+Example *docker-compose.backup.yaml*
+
+.. literalinclude:: ../../apps/conf/templates/docker-compose.backup.yml.example
+   :language: yaml
+
+**Configuration**
+
+1. In **./containers/backup/bahub.conf.yaml** define backup definitions, a recovery plan, passwords. Take a look at the File Repository's documentation there: file-repository.docs.riotkit.org_
+2. All collection ids, passwords extract to **.env** file, example: **collection_id: "${BACKUPS_PORTAINER_COLLECTION_ID}"**
+3. Schedule some backup jobs in **./containers/backup/cron** eg. **0 1 * * MON bahub backup db**
+
+**Recovery from backup**
+
+There are multiple cases when you need to recover multiple containers, or all containers from latest version from backup.
+
+Example cases:
+
+- Server failure, need to recreate the server
+- Server was compromised "hacked", need to restore latest copy of data
+- Migrating from development environment into production-ready, working live server
+- Migrating from server to server
+
+.. code:: bash
+
+    # will restore all services defined in bahub.conf.yaml into latest copy from backup server
+    make recover_from_backup
+
+*Note: Ansible deployment will attempt to take latest versions from backup when doing a first deploy on a server*
+
+.. _file-repository: https://github.com/riotkit-org/file-repository
+.. _file-repository.docs.riotkit.org: https://file-repository.docs.riotkit.org/en/latest/client/configuration-reference.html

@@ -3,8 +3,12 @@ Docker Project Template
 =======================
 
 Comprehensive single-server docker deployment template. Perfect for smaller and medium projects.
+Unified production and development environment, with minimum amount of differences.
 
-Includes:
+.. image:: _static/env-differences.png
+    :align: center
+
+**Includes:**
 
 - Service discovery, automatic SSL
 - Support for webhooks
@@ -19,7 +23,7 @@ Includes:
 - Support for git-based projects mounted as volumes
 - Updater to keep your template up-to-date with docker-project-template
 
-Goals:
+**Goals:**
 
 - Provide complete, automated infrastructure
 - Easy of use and easy to understand
@@ -35,6 +39,8 @@ Goals:
    features
    ansible
    configuration_reference
+   guides/cookbook
+
 
 From authors
 ============

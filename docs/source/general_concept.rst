@@ -5,9 +5,12 @@ General conception
 ==================
 
 The idea of this environment template is to provide a base for small and medium projects, deployed on a single server.
-With a high focus on ease of use.
+With a high focus on ease of use. The environment should be also almost the same on development server as on production server.
 
 There are a few **design patterns**, that are the basis of the environment conception.
+
+.. image:: _static/env-differences.png
+    :align: center
 
 Management from Makefile
 ------------------------
@@ -151,4 +154,24 @@ In `./apps/conf/docker-compose.phpmyadmin.yaml`:
 
 Now you can access http://pma.iwa-ait.org.localhost in your browser.
 On production server just remove the DOMAIN_SUFFIX value to have http://pma.iwa-ait.org - simple enough, huh?
+
+Automatic distinction between development and production server
+---------------------------------------------------------------
+
+There should be no need to have separated configuration files for local development environment, and for production environment.
+Everything should be REALLY the same, except **DOMAIN_SUFFIX** variable, which should point to **.localhost** on development environment.
+
+Whenever you will need to pass information to some docker container, that we are in **debug mode** you can use **${IS_DEBUG_ENVIRONMENT}** in YAML definition.
+**IS_DEBUG_ENVIRONMENT** is a result of auto-detection if the environment is local or production, you may also set **ENFORCE_DEBUG_ENVIRONMENT=1** if you want to enforce debug environment.
+
+
+*HINT: File Repository's Bahub integration configuration integrates with IS_DEBUG_ENVIRONMENT by stopping cronjobs, no backups are done from developer environment*
+*HINT: Ansible deployment is able to modify .env variables when pushing changes to production.*
+
+Applications pulled from git repositories
+-----------------------------------------
+
+Not always it's possible to package an application into container.
+If we have a private application without public source code, and we do not have a private docker registry - then it's possible
+to use a generic eg. PHP + NGINX container and **mount the application files as a volume**.
 
