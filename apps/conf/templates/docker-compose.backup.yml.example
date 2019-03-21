@@ -1,0 +1,19 @@
+version: "2"
+services:
+    backup:
+        image: wolnosciowiec/file-repository:bahub
+        volumes:
+            - "./containers/backup/cron:/cron:ro"
+            - "./containers/backup/bahub.conf.yaml:/bahub.conf.yaml:ro"
+            - "/var/run/docker.sock:/var/run/docker.sock"
+        env_file:
+            - ./.env
+
+        environment:
+            # On localhost will turn off automatic backups, so the dev will not override production backups
+            # Still you can send backups to production backup server, so later you can easily migrate applications
+            # from developer environment to production environment.
+            - DISABLE_SCHEDULED_JOBS=${IS_DEBUG_ENVIRONMENT}
+
+        restart: on-failure
+        mem_limit: 80000000 # 80M
