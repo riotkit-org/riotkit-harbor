@@ -21,10 +21,12 @@ You need a database that will create your user with proper password, create inte
 .. literalinclude:: ../../../apps/conf/templates/docker-compose.db.yml.example
    :language: yaml
 
-2. Backups configuration
-------------------------
+2. Backups configuration (optional)
+-----------------------------------
 
 See: Backups section of :ref:`features`
+
+*Notice: It's optional. But you will need to copy your post images (uploads) to production manually, and later do manual backups of it. Consider having a $3 dollar/month 100GB VPS that stores backups of your files.*
 
 3. Adding theme to GIT
 ----------------------
