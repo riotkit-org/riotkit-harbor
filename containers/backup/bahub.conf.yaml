@@ -27,3 +27,8 @@ backups:
         collection_id: "${BACKUPS_PORTAINER_COLLECTION_ID}"
         paths:
             - "/data"
+
+recoveries:
+    default:
+        policy: restore-whats-possible
+        definitions: all

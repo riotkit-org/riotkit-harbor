@@ -1,15 +1,24 @@
 
 .SILENT:
 
-COMPOSE_PROJECT_NAME = change_name
 PREPARE := $(shell test -e .env || cp .env-default .env)
 IS_ENV_PRESENT := $(shell test -e .env && echo -n yes)
 APP_USER=$(shell whoami)
+WARN_SLEEP_TIME=10
 
 ifeq ($(IS_ENV_PRESENT), yes)
 	include .env
 	export $(shell sed 's/=.*//' .env)
 endif
+
+#
+# Determine if we are using a developer or production environment
+#
+#   - Domain suffix contains localhost
+#   - Main domain contains localhost
+#   - Or we explicitly set ENFORCE_DEBUG_ENVIRONMENT=1
+#
+IS_DEBUG_ENVIRONMENT=$(shell (([[ "${DOMAIN_SUFFIX}" == *".localhost"* ]] || [[ "${MAIN_DOMAIN}" == *"localhost"* ]] || [[ "${ENFORCE_DEBUG_ENVIRONMENT}" == "1" ]]) && echo "1") || echo "0")
 
 SHELL = /bin/bash
 COMPOSE_COMPILED_ARGS = $$(for f in $$(ls ./apps/conf|grep -v ".yml.disabled"); do echo "-f ./apps/conf/$${f}"; done)
@@ -19,6 +28,12 @@ COMPOSE_ARGS = -p ${COMPOSE_PROJECT_NAME} --project-directory $$(pwd) -f docker-
 COLOR_RESET   = \033[0m
 COLOR_INFO    = \033[32m
 COLOR_COMMENT = \033[33m
+
+PIP=pip
+SUDO=sudo
+
+
+########### ENVIRONMENT CORE ###########
 
 ## This help screen
 help:
@@ -35,62 +50,84 @@ help:
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
+	echo "> Domain: ${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
+	echo "> Debug status: ${IS_DEBUG_ENVIRONMENT}"
+
+## Install requirements for the environment (eg. libraries)
+setup:
+	${SUDO} ${PIP} install -r ./requirements.txt
+
 ## Lists docker-compose args
 get_compose_args:
 	echo ${COMPOSE_ARGS}
 
 ## Starts or updates (if config was changed) the environment
 start:
-	sudo rm ./data/conf.d/* 2>/dev/null || true # nginx config needs to be recreated on each restart by proxy-gen
-	set -x; sudo docker-compose ${COMPOSE_ARGS} up -d
+	${SUDO} rm ./data/conf.d/* 2>/dev/null || true # nginx config needs to be recreated on each restart by proxy-gen
+	set -x; ${SUDO} /bin/bash -c 'export IS_DEBUG_ENVIRONMENT=${IS_DEBUG_ENVIRONMENT}; docker-compose ${COMPOSE_ARGS} up -d'
 	make _exec_hooks NAME=post-start
-	sudo docker-compose ${COMPOSE_ARGS} logs -f
+	${SUDO} docker-compose ${COMPOSE_ARGS} logs -f
 
 ## Stops the environment
 stop:
-	sudo docker-compose ${COMPOSE_ARGS} down
+	${SUDO} docker-compose ${COMPOSE_ARGS} down
 	make _exec_hooks NAME=post-down
 
 _exec_hooks:
 	printf " >> Executing hooks ${NAME}\n"
 
-	if [[ -d ./hooks.d/${NAME}/ ]] && [ ! -z "$(ls -A ./hooks.d/${NAME})" ]; then \
+	if [[ -d ./hooks.d/${NAME}/ ]] && [ ! -z "$$(ls -A ./hooks.d/${NAME})" ]; then \
 		for f in ./hooks.d/${NAME}/*.sh; do \
-			bash $${f}; \
+			export IS_DEBUG_ENVIRONMENT=${IS_DEBUG_ENVIRONMENT}; bash $${f}; \
 		done \
 	fi
 
+_root_session:
+	sudo true
+
 ## Restart
-restart:
-	sudo systemctl restart project
+restart: _root_session
+	${SUDO} systemctl restart project
 
 ## Check status
-check_status:
-	sudo systemctl status project
+check_status: _root_session
+	${SUDO} systemctl status project
 
 ## Deployment hook: PRE up
 deployment_pre: pull_containers update_all
 	make _exec_hooks NAME=deployment-pre
 
 ## Update this deployment repository
-pull: pull_git pull_containers
+pull: _root_session pull_git pull_containers
 
 pull_git:
 	git pull origin master
 
-pull_containers:
-	sudo docker-compose ${COMPOSE_ARGS} pull
+pull_containers: _root_session
+	${SUDO} docker-compose ${COMPOSE_ARGS} pull
 
 ## Pull image from registry for specified service and rebuild, restart the service (params: SERVICE eg. app_pl.godna-praca)
-update_single_service_container:
-	sudo docker-compose ${COMPOSE_ARGS} pull ${SERVICE}
-	sudo docker-compose ${COMPOSE_ARGS} stop -t 1 ${SERVICE}
-	sudo docker-compose ${COMPOSE_ARGS} up --no-start --force-recreate --build ${SERVICE}
-	sudo docker-compose ${COMPOSE_ARGS} start ${SERVICE}
+update_single_service_container: _root_session
+	${SUDO} docker-compose ${COMPOSE_ARGS} pull ${SERVICE}
+	${SUDO} docker-compose ${COMPOSE_ARGS} stop -t 1 ${SERVICE}
+	${SUDO} docker-compose ${COMPOSE_ARGS} up --no-start --force-recreate --build ${SERVICE}
+	${SUDO} docker-compose ${COMPOSE_ARGS} start ${SERVICE}
 
-## List all repositories
-list_repos:
-	ls ./apps/repos-enabled | grep .sh | cut -d '.' -f 1
+## Render all templates using .env file
+render_templates:
+	echo " >> Rendering templates from ./containers/templates/source"
+	found=$$(find ./containers/templates/source -type f -name '*.j2'); \
+	for template in $${found[@]}; do \
+		file_path=$${template/\/templates\/source/\/templates\/compiled}; \
+		target_path=$$(dirname $${file_path}); \
+		\
+		echo " .. Rendering $${template}"; \
+		mkdir -p $${target_path}; \
+		source .env; j2 $${template} > $${file_path/.j2/}; \
+	done
+
+
+########### YAML SERVICES ###########
 
 ## List all configurations
 list_configs:
@@ -120,9 +157,16 @@ config_enable:
 	mv ./apps/conf/docker-compose.${APP_NAME}.yml.disabled ./apps/conf/docker-compose.${APP_NAME}.yml
 	echo " OK, ${APP_NAME} is now enabled."
 
+
+########### GIT-VOLUME REPOSITORIES ###########
+
+## List all repositories
+list_repos:
+	ls ./apps/repos-enabled | grep .sh | cut -d '.' -f 1
+
 ## Updates a single application, usage: make update APP_NAME=iwa-ait
-update:
-	sudo -u "${APP_USER}" make _update APP_NAME=${APP_NAME};\
+update: _root_session
+	${SUDO} -u "${APP_USER}" make _update APP_NAME=${APP_NAME};\
 
 _update:
 	if [[ ! "${APP_NAME}" ]] || [[ ! -f ./apps/repos-enabled/${APP_NAME}.sh ]]; then \
@@ -134,12 +178,12 @@ _update:
 
 	current_pwd=$$(pwd); post_update() { return 0; };\
 	source ./apps/repos-enabled/${APP_NAME}.sh; \
-	[[ -d ./apps/www-data/$${GIT_PROJECT_DIR} ]] && sudo chown -R `id -u`:`id -g` ./apps/www-data/$${GIT_PROJECT_DIR}; \
+	[[ -d ./apps/www-data/$${GIT_PROJECT_DIR} ]] && ${SUDO} chown -R `id -u`:`id -g` ./apps/www-data/$${GIT_PROJECT_DIR}; \
 	make __fetch_repository GIT_PROJECT_DIR=$${GIT_PROJECT_DIR} GIT_PASSWORD=$${GIT_PASSWORD} GIT_PROJECT_NAME=$${GIT_PROJECT_NAME} || exit 1; \
 	post_update "./apps/www-data/$${GIT_PROJECT_DIR}" || exit 1;\
 	cd $${current_pwd} && make __chown_writable_dirs APP_NAME=${APP_NAME}
 
-__chown_writable_dirs:
+__chown_writable_dirs: _root_session
 	echo " >> Preparing write permissions for upload directories for '${APP_NAME}'"
 	CONTAINER_USER=${DEFAULT_CONTAINER_USER}; \
 	source ./apps/repos-enabled/${APP_NAME}.sh; \
@@ -147,7 +191,7 @@ __chown_writable_dirs:
 	\
 	for writable_dir in "$${dirs_to_chown[@]}"; do \
 		echo " >> Making $${CONTAINER_USER} owner of ./apps/www-data/$${GIT_PROJECT_DIR}/$${writable_dir}"; \
-		sudo chown -R $${CONTAINER_USER} "./apps/www-data/$${GIT_PROJECT_DIR}/$${writable_dir}" || true; \
+		${SUDO} chown -R $${CONTAINER_USER} "./apps/www-data/$${GIT_PROJECT_DIR}/$${writable_dir}" || true; \
 	done
 
 ## Deploy updates to all applications
@@ -165,7 +209,7 @@ update_all:
 	done
 
 __rm:
-	sudo docker-compose ${COMPOSE_ARGS} rm
+	${SUDO} docker-compose ${COMPOSE_ARGS} rm
 
 __fetch_repository:
 	echo " >> Updating application at ./apps/www-data/${GIT_PROJECT_DIR}"
@@ -181,6 +225,19 @@ __fetch_repository:
 		git clone ${GIT_PROTO}://${GIT_USER}:${GIT_PASSWORD}@${GIT_SERVER}/${GIT_ORG_NAME}/${GIT_PROJECT_NAME} ./apps/www-data/${GIT_PROJECT_DIR} || exit 1; \
 	fi;
 
+
+########### BACKUP RECOVERY ###########
+
+## Recover services from a backup (Use cases: Moving from dev to prod, Recovery from failure, Migrating from server to server)
+recover_from_backup: _root_session
+	echo " >> !!! WARNING !!!: In ${WARN_SLEEP_TIME} seconds selected or ALL services will be restored from backup with a ${BACKUPS_RECOVERY_PLAN} recovery plan"
+	echo " >> If this is not what you want, just do CTRL+C NOW!"
+	sleep ${WARN_SLEEP_TIME}
+	${SUDO} docker-compose ${COMPOSE_ARGS} exec ${BACKUPS_CONTAINER} bahub recover ${BACKUPS_RECOVERY_PLAN}
+
+
+########### ANSIBLE ###########
+
 ## Encrypt the .env-prod file with Ansible Vault (passphrase needs to be stored in ./.vault-password that should be in .gitignore)
 encrypt_env_prod:
 	echo " >> Encrypting .env file into .env-prod"
@@ -188,6 +245,12 @@ encrypt_env_prod:
 	ansible-vault --vault-password-file=$$(pwd)/.vault-password encrypt .env-prod-tmp
 	mv .env-prod-tmp .env-prod
 
+
+########### DOCUMENTATION ###########
+
 ## Build documentation
 build_docs:
 	cd ./docs && make html
+
+
+########### PROJECT SPECIFIC ###########
