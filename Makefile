@@ -178,7 +178,8 @@ update: __assert_has_root_permissions
 _update_existing_directory_permissions: __assert_has_root_permissions
 	echo " >> Updating existing directory permissions"
 	source ./apps/repos-enabled/${APP_NAME}.sh; \
-	[[ -d ./apps/www-data/$${GIT_PROJECT_DIR} ]] && set -x && chown -R ${USER}:${GROUP_ID} ./apps/www-data/$${GIT_PROJECT_DIR};
+	[[ -d ./apps/www-data/$${GIT_PROJECT_DIR} ]] && set -x && chown -R ${USER}:${GROUP_ID} ./apps/www-data/$${GIT_PROJECT_DIR}; \
+	exit 0
 
 _update: __assert_not_root
 	if [[ ! "${APP_NAME}" ]] || [[ ! -f ./apps/repos-enabled/${APP_NAME}.sh ]]; then \
