@@ -1,0 +1,17 @@
+version: "2"
+services:
+    #
+    # Automatically does a docker pull for tagged services with "com.centurylinklabs.watchtower.enable" tag
+    #
+    autoupdater:
+        image: v2tec/watchtower
+        command: "--label-enable --interval ${WATCHTOWER_INTERVAL} --cleanup"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /root/.docker/config.json:/config.json
+        environment:
+            - WATCHTOWER_NOTIFICATIONS=slack
+            - WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL=${WATCHTOWER_SLACK_HOOK}
+            - WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER=${WATCHTOWER_IDENTIFIER}
+        labels:
+            com.centurylinklabs.watchtower.enable: true

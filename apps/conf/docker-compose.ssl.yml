@@ -19,3 +19,5 @@ services:
 
             # @debugging: Enable to test if the Letsencrypt is properly configured
             #- ACME_CA_URI=https://acme-staging.api.letsencrypt.org/directory
+        labels:
+            com.centurylinklabs.watchtower.enable: true

@@ -182,3 +182,31 @@ Example cases:
 
 .. _file-repository: https://github.com/riotkit-org/file-repository
 .. _file-repository.docs.riotkit.org: https://file-repository.docs.riotkit.org/en/latest/client/configuration-reference.html
+
+Automatic containers update
+---------------------------
+
+Watchtower_ keeps an eye on containers marked with *com.centurylinklabs.watchtower.enable* label.
+Each container's image is checked for update availability, if an update is available then it's pulled from registry
+and the container is re-created on a new version of image.
+
+Downtime is minimized by pulling newer versions of images at first, then re-creating containers in proper order.
+Linked containers dependency chain is respected, so the containers are re-created in proper order.
+
+To enable Watchtower, just use a template "docker-compose.updates.yml.example", copy it to the conf directory with removing ".example" suffix.
+
+**Configuration**
+
+By default there are a few example variables extracted into the environment. You may adjust it to your needs, turn off notifications,
+or switch notifications from slack/mattermost to e-mail.
+
+Check Watchtower_ documentation for detail.
+
+.. code:: bash
+
+    # watchtower
+    WATCHTOWER_INTERVAL=1800
+    WATCHTOWER_SLACK_HOOK=...
+    WATCHTOWER_IDENTIFIER="Watchtower"
+
+.. _Watchtower: https://github.com/v2tec/watchtower

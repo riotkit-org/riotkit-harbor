@@ -17,3 +17,5 @@ services:
 
         restart: on-failure
         mem_limit: 80000000 # 80M
+        labels:
+            com.centurylinklabs.watchtower.enable: true

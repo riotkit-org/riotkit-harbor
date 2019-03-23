@@ -20,3 +20,4 @@ services:
             org.docker.services.dashboard.description: 'Dashboard - a list of all hosted websites running on this network'
             org.docker.services.dashboard.icon: 'pe-7s-browser'
             org.docker.services.dashboard.only_for_admin: false
+            com.centurylinklabs.watchtower.enable: true

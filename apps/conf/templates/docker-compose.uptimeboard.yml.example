@@ -20,3 +20,4 @@ services:
             org.docker.services.dashboard.description: 'Applications health monitoring'
             org.docker.services.dashboard.icon: 'pe-7s-angle-down-circle'
             org.docker.services.dashboard.only_for_admin: false
+            com.centurylinklabs.watchtower.enable: true

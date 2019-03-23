@@ -14,3 +14,5 @@ services:
             - VIRTUAL_PORT=8000
             - LETSENCRYPT_HOST=health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+        labels:
+            com.centurylinklabs.watchtower.enable: true
