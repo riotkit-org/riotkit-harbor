@@ -3,7 +3,6 @@
 
 PREPARE := $(shell test -e .env || cp .env-default .env)
 IS_ENV_PRESENT := $(shell test -e .env && echo -n yes)
-APP_USER=$(shell whoami)
 WARN_SLEEP_TIME=10
 
 ifeq ($(IS_ENV_PRESENT), yes)
@@ -11,14 +10,12 @@ ifeq ($(IS_ENV_PRESENT), yes)
 	export $(shell sed 's/=.*//' .env)
 endif
 
-#
-# Determine if we are using a developer or production environment
-#
-#   - Domain suffix contains localhost
-#   - Main domain contains localhost
-#   - Or we explicitly set ENFORCE_DEBUG_ENVIRONMENT=1
-#
+# Environment detection (detects if it's production or development basing on "localhost" presence in domains configuration, or ENFORCE_DEBUG_ENVIRONMENT=1)
 IS_DEBUG_ENVIRONMENT=$(shell (([[ "${DOMAIN_SUFFIX}" == *".localhost"* ]] || [[ "${MAIN_DOMAIN}" == *"localhost"* ]] || [[ "${ENFORCE_DEBUG_ENVIRONMENT}" == "1" ]]) && echo "1") || echo "0")
+
+# User and group detection. Allows to keep APP_USER and APP_GROUP empty, so the differences in configuration between production and developer environment could be minimized there
+USER=$(shell ([[ "${APP_USER}" != "" ]] && echo "${APP_USER}") || ([[ "${SUDO_USER}" != "" ]] && echo "${SUDO_USER}") || whoami)
+GROUP_ID=$(shell ([[ "${APP_GROUP_ID}" != "" ]] && echo "${APP_GROUP_ID}") || ([[ "${SUDO_GID}" != "" ]] && echo "${SUDO_GID}") || id -g)
 
 SHELL = /bin/bash
 COMPOSE_COMPILED_ARGS = $$(for f in $$(ls ./apps/conf|grep -v ".yml.disabled"); do echo "-f ./apps/conf/$${f}"; done)
@@ -50,8 +47,12 @@ help:
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
-	echo "> Domain: ${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
-	echo "> Debug status: ${IS_DEBUG_ENVIRONMENT}"
+	echo ""
+	echo " Environment configuration:"
+	echo "> Main domain: ${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
+	echo "> Debug status (1/0): ${IS_DEBUG_ENVIRONMENT}"
+	echo "> Non-root user that will own git repositories files: ${USER}"
+	echo "> Non-root group id: ${GROUP_ID}"
 
 ## Install requirements for the environment (eg. libraries)
 setup:
@@ -61,16 +62,20 @@ setup:
 get_compose_args:
 	echo ${COMPOSE_ARGS}
 
+# entrypoint for docker-compose command
+_call_compose:
+	${SUDO} /bin/bash -c 'export IS_DEBUG_ENVIRONMENT=${IS_DEBUG_ENVIRONMENT}; docker-compose ${COMPOSE_ARGS} ${CMD}'
+
 ## Starts or updates (if config was changed) the environment
 start:
 	${SUDO} rm ./data/conf.d/* 2>/dev/null || true # nginx config needs to be recreated on each restart by proxy-gen
-	set -x; ${SUDO} /bin/bash -c 'export IS_DEBUG_ENVIRONMENT=${IS_DEBUG_ENVIRONMENT}; docker-compose ${COMPOSE_ARGS} up -d'
-	make _exec_hooks NAME=post-start
-	${SUDO} docker-compose ${COMPOSE_ARGS} logs -f
+	make _call_compose CMD="up -d"
+	${SUDO} make _exec_hooks NAME=post-start
+	make _call_compose CMD="logs -f"
 
 ## Stops the environment
 stop:
-	${SUDO} docker-compose ${COMPOSE_ARGS} down
+	make _call_compose CMD="down"
 	make _exec_hooks NAME=post-down
 
 _exec_hooks:
@@ -78,7 +83,7 @@ _exec_hooks:
 
 	if [[ -d ./hooks.d/${NAME}/ ]] && [ ! -z "$$(ls -A ./hooks.d/${NAME})" ]; then \
 		for f in ./hooks.d/${NAME}/*.sh; do \
-			export IS_DEBUG_ENVIRONMENT=${IS_DEBUG_ENVIRONMENT}; bash $${f}; \
+			bash $${f}; \
 		done \
 	fi
 
@@ -94,7 +99,7 @@ check_status: _root_session
 	${SUDO} systemctl status project
 
 ## Deployment hook: PRE up
-deployment_pre: pull_containers update_all
+deployment_pre: _root_session pull_containers update_all render_templates
 	make _exec_hooks NAME=deployment-pre
 
 ## Update this deployment repository
@@ -104,14 +109,14 @@ pull_git:
 	git pull origin master
 
 pull_containers: _root_session
-	${SUDO} docker-compose ${COMPOSE_ARGS} pull
+	make _call_compose CMD="pull"
 
 ## Pull image from registry for specified service and rebuild, restart the service (params: SERVICE eg. app_pl.godna-praca)
 update_single_service_container: _root_session
-	${SUDO} docker-compose ${COMPOSE_ARGS} pull ${SERVICE}
-	${SUDO} docker-compose ${COMPOSE_ARGS} stop -t 1 ${SERVICE}
-	${SUDO} docker-compose ${COMPOSE_ARGS} up --no-start --force-recreate --build ${SERVICE}
-	${SUDO} docker-compose ${COMPOSE_ARGS} start ${SERVICE}
+	make _call_compose CMD="pull ${SERVICE}"
+	make _call_compose CMD="stop -t 1 ${SERVICE}"
+	make _call_compose CMD="up --no-start --force-recreate --build ${SERVICE}"
+	make _call_compose CMD="start ${SERVICE}"
 
 ## Render all templates using .env file
 render_templates:
@@ -165,10 +170,17 @@ list_repos:
 	ls ./apps/repos-enabled | grep .sh | cut -d '.' -f 1
 
 ## Updates a single application, usage: make update APP_NAME=iwa-ait
-update: _root_session
-	${SUDO} -u "${APP_USER}" make _update APP_NAME=${APP_NAME};\
+update: __assert_has_root_permissions
+	make _update_existing_directory_permissions APP_NAME=${APP_NAME}
+	${SUDO} -u "${USER}" make _update APP_NAME=${APP_NAME}
+	make __chown_writable_dirs APP_NAME=${APP_NAME}
 
-_update:
+_update_existing_directory_permissions: __assert_has_root_permissions
+	echo " >> Updating existing directory permissions"
+	source ./apps/repos-enabled/${APP_NAME}.sh; \
+	[[ -d ./apps/www-data/$${GIT_PROJECT_DIR} ]] && set -x && chown -R ${USER}:${GROUP_ID} ./apps/www-data/$${GIT_PROJECT_DIR};
+
+_update: __assert_not_root
 	if [[ ! "${APP_NAME}" ]] || [[ ! -f ./apps/repos-enabled/${APP_NAME}.sh ]]; then \
 		echo " >> Missing VALID application name, example usage: make update APP_NAME=iwa-ait"; \
 		echo " >> Please select one application, choices:"; \
@@ -178,12 +190,11 @@ _update:
 
 	current_pwd=$$(pwd); post_update() { return 0; };\
 	source ./apps/repos-enabled/${APP_NAME}.sh; \
-	[[ -d ./apps/www-data/$${GIT_PROJECT_DIR} ]] && ${SUDO} chown -R `id -u`:`id -g` ./apps/www-data/$${GIT_PROJECT_DIR}; \
 	make __fetch_repository GIT_PROJECT_DIR=$${GIT_PROJECT_DIR} GIT_PASSWORD=$${GIT_PASSWORD} GIT_PROJECT_NAME=$${GIT_PROJECT_NAME} || exit 1; \
-	post_update "./apps/www-data/$${GIT_PROJECT_DIR}" || exit 1;\
-	cd $${current_pwd} && make __chown_writable_dirs APP_NAME=${APP_NAME}
+	post_update "./apps/www-data/$${GIT_PROJECT_DIR}" || exit 1;
 
-__chown_writable_dirs: _root_session
+# running as root
+__chown_writable_dirs: __assert_has_root_permissions
 	echo " >> Preparing write permissions for upload directories for '${APP_NAME}'"
 	CONTAINER_USER=${DEFAULT_CONTAINER_USER}; \
 	source ./apps/repos-enabled/${APP_NAME}.sh; \
@@ -191,11 +202,25 @@ __chown_writable_dirs: _root_session
 	\
 	for writable_dir in "$${dirs_to_chown[@]}"; do \
 		echo " >> Making $${CONTAINER_USER} owner of ./apps/www-data/$${GIT_PROJECT_DIR}/$${writable_dir}"; \
-		${SUDO} chown -R $${CONTAINER_USER} "./apps/www-data/$${GIT_PROJECT_DIR}/$${writable_dir}" || true; \
+		chown -R $${CONTAINER_USER} "./apps/www-data/$${GIT_PROJECT_DIR}/$${writable_dir}" || true; \
 	done
 
+__assert_not_root:
+	if [[ "$$(id -u)" == "0" ]]; then \
+		id -u;\
+		echo " This task cannot work with root privileges"; \
+		exit 1; \
+	fi
+
+__assert_has_root_permissions:
+	if [[ "$$(id -u)" != "0" ]]; then \
+		id -u;\
+		echo " Root permissions required"; \
+		exit 1; \
+	fi
+
 ## Deploy updates to all applications
-update_all:
+update_all: __assert_has_root_permissions
 	echo " >> Deploying all applications"
 	make list_repos
 
@@ -209,9 +234,9 @@ update_all:
 	done
 
 __rm:
-	${SUDO} docker-compose ${COMPOSE_ARGS} rm
+	make _call_compose CMD="rm"
 
-__fetch_repository:
+__fetch_repository: __assert_not_root
 	echo " >> Updating application at ./apps/www-data/${GIT_PROJECT_DIR}"
 	if [[ -d ./apps/www-data/${GIT_PROJECT_DIR}/.git ]]; then \
 		cd "./apps/www-data/${GIT_PROJECT_DIR}" || exit 1; \
@@ -233,7 +258,7 @@ recover_from_backup: _root_session
 	echo " >> !!! WARNING !!!: In ${WARN_SLEEP_TIME} seconds selected or ALL services will be restored from backup with a ${BACKUPS_RECOVERY_PLAN} recovery plan"
 	echo " >> If this is not what you want, just do CTRL+C NOW!"
 	sleep ${WARN_SLEEP_TIME}
-	${SUDO} docker-compose ${COMPOSE_ARGS} exec ${BACKUPS_CONTAINER} bahub recover ${BACKUPS_RECOVERY_PLAN}
+	make _call_compose CMD="exec ${BACKUPS_CONTAINER} bahub recover ${BACKUPS_RECOVERY_PLAN}"
 
 
 ########### ANSIBLE ###########
