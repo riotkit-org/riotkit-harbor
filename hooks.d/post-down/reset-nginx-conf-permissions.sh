@@ -2,7 +2,7 @@
 
 if [[ -d ./containers/nginx/vhost.d ]]; then
     echo " .. Resetting permissions on ./containers/nginx/vhost.d"
-    sudo chown ${APP_USER} ./containers/nginx/vhost.d
+    sudo chown ${USER} -R ./containers/nginx/vhost.d
 
     if [[ "${IS_DEBUG_ENVIRONMENT}" != "1" ]]; then
         echo "   > Resetting nginx files on production"
