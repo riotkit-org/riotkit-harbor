@@ -10,26 +10,29 @@ Unified production and development environment, with minimum amount of differenc
 
 **Includes:**
 
-- Service discovery, automatic SSL
+- **Service discovery, automatic SSL (generates NGINX configuration on-fly for domains, subdomains + SSL)**
 - Support for webhooks
 - Ansible integration (ready to use role)
-- Encrypted production credentials (.env-prod)
-- Modularity, template is split into parts that could be enabled/disabled
+- **Encrypted production credentials (.env-prod)**
+- **Modularity, template is split into parts that could be enabled/disabled**
 - YAML based configuration, clear and easy to maintain
-- Health checks integration + simple dashboard
+- **Health checks integration** + simple dashboard
 - Services index (to publish list of installed apps for non-technical users)
-- Automatic backups to external server (File Repository integration)
+- **Automatic backups** to external server (File Repository integration)
 - Ready-to-use SMTP relay, easy to configure
-- Support for git-based projects mounted as volumes
+- **Support for git-based projects mounted as volumes**
 - Updater to keep your template up-to-date with RiotKit's Harbor
 - Templating system for generating configuration files
 - Database migrations
-- Maintenance mode
+- **Maintenance mode**
 
 **Goals:**
 
 - Provide complete, automated infrastructure
 - Easy of use and easy to understand
+- Feature toggle on/off
+- Template for common usages
+- Integration with other RiotKit's projects such as health checking, automated backups
 
 .. toctree::
    :maxdepth: 2
