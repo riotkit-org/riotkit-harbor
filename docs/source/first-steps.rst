@@ -26,7 +26,7 @@ Updates are not mandatory, and the template may be not always backwards compatib
     git init
 
     # download the project files using updater script
-    curl -s https://raw.githubusercontent.com/zwiazeksyndykalistowpolski/docker-project-template/master/update-from-template.sh | bash
+    curl -s https://raw.githubusercontent.com/riotkit-org/riotkit-harbor/master/update-from-template.sh | bash
 
 2. Take a look around, check documentation for:
 

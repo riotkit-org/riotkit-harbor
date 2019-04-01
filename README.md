@@ -31,7 +31,7 @@ cd your-project-dir
 git init 
 
 # download the project files using updater script
-curl -s https://raw.githubusercontent.com/zwiazeksyndykalistowpolski/docker-project-template/master/update-from-template.sh | bash
+curl -s https://raw.githubusercontent.com/riotkit-org/riotkit-harbor/master/update-from-template.sh | bash
 ```
 
 Updating existing project
@@ -45,5 +45,5 @@ At first, add important files and directories to the `./.updateignore` file, so 
 
 ```bash
 edit ./.updateignore
-curl -s https://raw.githubusercontent.com/zwiazeksyndykalistowpolski/docker-project-template/master/update-from-template.sh | bash
+curl -s https://raw.githubusercontent.com/riotkit-org/riotkit-harbor/master/update-from-template.sh | bash
 ```

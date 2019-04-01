@@ -1,7 +1,7 @@
 #!/bin/bash
 
 IGNORED_FILES=()
-ZIP_URL=https://github.com/zwiazeksyndykalistowpolski/docker-project-template/archive/master.zip
+ZIP_URL=https://github.com/riotkit-org/riotkit-harbor/archive/master.zip
 UNPACKED_DIR_NAME=docker-project-template-master
 TEMP_DIR_NAME=/tmp/_dpt
 CURRENT_PWD=$(pwd)
