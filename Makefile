@@ -71,7 +71,10 @@ start:
 	${SUDO} rm ./data/conf.d/* 2>/dev/null || true # nginx config needs to be recreated on each restart by proxy-gen
 	make _call_compose CMD="up -d"
 	${SUDO} make _exec_hooks NAME=post-start
-	make _call_compose CMD="logs -f"
+
+	if [[ "${DETACH}" != "true" ]]; then \
+		make _call_compose CMD="logs -f"; \
+	fi
 
 ## Stops the environment
 stop:
@@ -99,7 +102,7 @@ check_status: _root_session
 	${SUDO} systemctl status project
 
 ## Deployment hook: PRE up
-deployment_pre: _root_session pull_containers update_all render_templates
+deployment_pre: __assert_has_root_permissions pull_containers update_all render_templates
 	make _exec_hooks NAME=deployment-pre
 
 ## Update this deployment repository

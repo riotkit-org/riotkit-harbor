@@ -5,4 +5,4 @@
 # Allows to give access via sudoers only to executing the Makefile with sudo
 #
 
-cd /project && exec make "$@"
+cd "$( dirname "${BASH_SOURCE[0]}" )" && exec make "$@"
