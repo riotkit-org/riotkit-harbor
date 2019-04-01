@@ -22,6 +22,9 @@ Unified production and development environment, with minimum amount of differenc
 - Ready-to-use SMTP relay, easy to configure
 - Support for git-based projects mounted as volumes
 - Updater to keep your template up-to-date with docker-project-template
+- Templating system for generating configuration files
+- Database migrations
+- Maintenance mode
 
 **Goals:**
 
