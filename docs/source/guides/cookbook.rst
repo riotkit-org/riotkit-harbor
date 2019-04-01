@@ -6,3 +6,6 @@ Cookbook
    :caption: Contents:
 
    wordpress
+   backups
+   databases
+   git-volume-apps
