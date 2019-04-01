@@ -18,7 +18,7 @@ Following guide will give you following advantages:
 
 You need a database that will create your user with proper password, create internally a database.
 
-.. literalinclude:: ../../../apps/conf/templates/docker-compose.db.yml.example
+.. literalinclude:: ../../../apps/conf/templates/infrastructure.db.yml.example
    :language: yaml
 
 2. Backups configuration (optional)

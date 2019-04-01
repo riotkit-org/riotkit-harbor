@@ -142,46 +142,13 @@ You need to define environment variables in the **.env** (on following example: 
 The file will be rendered into **./containers/templates/compiled/mysql/access.sql.j2**
 So, now you can mount the compiled mysql files directory into the MySQL container for example.
 
-.. literalinclude:: ../../apps/conf/templates/docker-compose.db.yml.example
+.. literalinclude:: ../../apps/conf/templates/infrastructure.db.yml.example
    :language: yaml
 
 Backups
 -------
 
-The environment template natively chooses RiotKit's File Repository as the backups automation.
-Requirement: You need to have a server running File Repository, check file-repository_.
-
-Example *docker-compose.backup.yaml*
-
-.. literalinclude:: ../../apps/conf/templates/docker-compose.backup.yml.example
-   :language: yaml
-
-**Configuration**
-
-1. In **./containers/backup/bahub.conf.yaml** define backup definitions, a recovery plan, passwords. Take a look at the File Repository's documentation there: file-repository.docs.riotkit.org_
-2. All collection ids, passwords extract to **.env** file, example: **collection_id: "${BACKUPS_PORTAINER_COLLECTION_ID}"**
-3. Schedule some backup jobs in **./containers/backup/cron** eg. **0 1 * * MON bahub backup db**
-
-**Recovery from backup**
-
-There are multiple cases when you need to recover multiple containers, or all containers from latest version from backup.
-
-Example cases:
-
-- Server failure, need to recreate the server
-- Server was compromised "hacked", need to restore latest copy of data
-- Migrating from development environment into production-ready, working live server
-- Migrating from server to server
-
-.. code:: bash
-
-    # will restore all services defined in bahub.conf.yaml into latest copy from backup server
-    make recover_from_backup
-
-*Note: Ansible deployment will attempt to take latest versions from backup when doing a first deploy on a server*
-
-.. _file-repository: https://github.com/riotkit-org/file-repository
-.. _file-repository.docs.riotkit.org: https://file-repository.docs.riotkit.org/en/latest/client/configuration-reference.html
+See: :ref:`backups_guide`
 
 Automatic containers update
 ---------------------------
@@ -193,7 +160,7 @@ and the container is re-created on a new version of image.
 Downtime is minimized by pulling newer versions of images at first, then re-creating containers in proper order.
 Linked containers dependency chain is respected, so the containers are re-created in proper order.
 
-To enable Watchtower, just use a template "docker-compose.updates.yml.example", copy it to the conf directory with removing ".example" suffix.
+To enable Watchtower, just use a template "infrastructure.updates.yml.example", copy it to the conf directory with removing ".example" suffix.
 
 **Configuration**
 
@@ -210,3 +177,57 @@ Check Watchtower_ documentation for detail.
     WATCHTOWER_IDENTIFIER="Watchtower"
 
 .. _Watchtower: https://github.com/v2tec/watchtower
+
+Maintenance mode
+----------------
+
+When there are technical issues you may possibly want to show a nice error page, instead of "could not connect to redis".
+To achieve this goal RiotKit's environment implements a **maintenance mode**.
+
+**How it works**
+
+- The gateway is checking if */maintenance/on* file exists, if yes, then displays a maintenance page for all domains/containers labelled with "org.riotkit.useMaintenanceMode: true"
+- You can turn on/off manually maintenance mode with "make maintenance_on" and "make maintenance_off"
+- You can turn it on/off AUTOMATICALLY using infracheck healthchecks, add file creation and deletion as hooks (infracheck executes all checks every one minute by default)
+
+
+**Docker label required to enable maintenance mode for selected container**
+
+.. code:: yaml
+
+    org.riotkit.useMaintenanceMode: true
+
+**Toggle from shell**
+
+.. code:: bash
+
+    make maintenance_on
+    make maintenance_off
+
+**Automatic maintenance mode with Infracheck**
+
+Infracheck can execute checks each 1 minute (it is configurable via CHECK_INTERVAL), triggering hooks on success and failure.
+This means that we can turn on the maintenance mode, when for example MySQL will go down for a backup process.
+
+.. code:: json
+
+    {
+        "type": "port-open",
+        "input": {
+            "po_port": "3306",
+            "po_host": "db_mysql",
+            "po_timeout": "1"
+        },
+        "hooks": {
+            "on_each_down": [
+                "touch /maintenance/on"
+            ],
+            "on_each_up": [
+                "rm -f /maintenance/on"
+            ]
+        }
+    }
+
+**Modifying HTML templates**
+
+Everything is placed at *./containers/nginx/maintenance* and mounted as volume.

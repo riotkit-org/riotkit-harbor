@@ -20,6 +20,8 @@ services:
             - ./data/html:/usr/share/nginx/html
             - ./data/certs:/etc/nginx/certs:rw
             - ./data/htpasswd:/etc/nginx/htpasswd:rw
+            - ./containers/nginx/maintenance:/usr/share/nginx/maintenance:ro
+            - ./data/maintenance-mode:/maintenance:ro
 
     #
     # Service auto-discovery

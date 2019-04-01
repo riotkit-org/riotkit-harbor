@@ -19,3 +19,4 @@ services:
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
         labels:
             com.centurylinklabs.watchtower.enable: true
+            org.riotkit.useMaintenanceMode: false

@@ -162,6 +162,15 @@ config_enable:
 	mv ./apps/conf/docker-compose.${APP_NAME}.yml.disabled ./apps/conf/docker-compose.${APP_NAME}.yml
 	echo " OK, ${APP_NAME} is now enabled."
 
+########### MAINTENANCE MODE ###########
+
+## Turn on maintenance on on all websites
+maintenance_on:
+	sudo touch ./data/maintenance-mode/on
+
+## Turn off maintenance mode on all websites
+maintenance_off:
+	sudo rm -f ./data/maintenance-mode/on
 
 ########### GIT-VOLUME REPOSITORIES ###########
 

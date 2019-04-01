@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+cd ..
+
+source .env
+
+if [[ ! "${BACKUPS_CONTAINER}" ]]; then
+    echo " >> Error: BACKUPS_CONTAINER is not configured"
+    exit 1
+fi
+
+exec sudo docker exec "${COMPOSE_PROJECT_NAME}_${BACKUPS_CONTAINER}_1" bahub "$@"

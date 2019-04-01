@@ -6,6 +6,7 @@ services:
         volumes:
             - "./apps/healthchecks:/data"
             - "/var/run/docker.sock:/var/run/docker.sock:ro"
+            - "./data/maintenance-mode:/maintenance"
         expose:
             - "8000"
         environment:
@@ -16,3 +17,4 @@ services:
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
         labels:
             com.centurylinklabs.watchtower.enable: true
+            org.riotkit.useMaintenanceMode: false
