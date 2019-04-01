@@ -8,7 +8,7 @@ Requirement: You need to have a server running File Repository, check file-repos
 
 Example *infrastructure.backup.yaml*
 
-.. literalinclude:: ../../apps/conf/templates/infrastructure.backup.yml.example
+.. literalinclude:: ../../../apps/conf/templates/infrastructure.backup.yml.example
    :language: yaml
 
 **Configuration**
