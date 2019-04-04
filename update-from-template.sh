@@ -2,7 +2,7 @@
 
 IGNORED_FILES=()
 ZIP_URL=https://github.com/riotkit-org/riotkit-harbor/archive/master.zip
-UNPACKED_DIR_NAME=docker-project-template-master
+UNPACKED_DIR_NAME=riotkit-harbor-master
 TEMP_DIR_NAME=/tmp/_dpt
 CURRENT_PWD=$(pwd)
 
@@ -61,7 +61,7 @@ download_and_unzip_archive () {
     echo " >> Unzipping archive..."
     wget ${ZIP_URL} -O /tmp/_dpt.zip > /dev/null 2>&1
     cd /tmp/ && unzip -o -q ./_dpt.zip
-    mv /tmp/docker-project-template-master ${TEMP_DIR_NAME} > /dev/null 2>&1
+    mv /tmp/riotkit-harbor-master ${TEMP_DIR_NAME} > /dev/null 2>&1
 }
 
 clean_up () {
