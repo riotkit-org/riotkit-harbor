@@ -1,4 +1,6 @@
-/apps/
+/apps/healthchecks
+/apps/repos-enabled
+/apps/www-data
 /containers/auth
 /.updateignore
 /.gitignore
