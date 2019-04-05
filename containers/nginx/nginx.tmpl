@@ -69,6 +69,10 @@ access_log off;
 resolver {{ $.Env.RESOLVERS }};
 {{ end }}
 
+{{ if (exists "/etc/nginx/vhost.d/include/http.d") }}
+include /etc/nginx/vhost.d/include/http.d/*.conf;
+{{ end }}
+
 {{ if (exists "/etc/nginx/proxy.conf") }}
 include /etc/nginx/proxy.conf;
 {{ else }}

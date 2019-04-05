@@ -9,6 +9,11 @@ if [[ -d ./containers/nginx/vhost.d ]]; then
 
         for file in ./containers/nginx/vhost.d/*; do
             echo "   - ${file}"
+
+            if [[ -d "${file}" ]]; then
+                continue
+            fi
+
             git checkout "${file}"
         done
     else
