@@ -85,6 +85,7 @@ _exec_hooks:
 	printf " >> Executing hooks ${NAME}\n"
 
 	if [[ -d ./hooks.d/${NAME}/ ]] && [ ! -z "$$(ls -A ./hooks.d/${NAME}/ | grep '.sh')" ]; then \
+		export IS_DEBUG_ENVIRONMENT=${IS_DEBUG_ENVIRONMENT};\
 		for f in ./hooks.d/${NAME}/*.sh; do \
 			bash $${f}; \
 		done \
