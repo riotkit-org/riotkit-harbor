@@ -1,2 +1,5 @@
 version: '2'
 
+#
+# Place your applications configuration in ./apps/conf
+#
