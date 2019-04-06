@@ -1,4 +1,8 @@
 version: "2"
+
+volumes:
+    mysql-data:
+
 services:
     #
     # MySQL server
@@ -14,7 +18,8 @@ services:
     db:
         image: mariadb
         volumes:
-            - "./data/mysql:/var/lib/mysql"
+            - "mysql-data:/var/lib/mysql"     # use a named volume
+            #- "./data/mysql:/var/lib/mysql"  # use a bind-mount (possibly slower, but the files would be in one folder)
             - "./containers/templates/compiled/mysql:/docker-entrypoint-initdb.d/"
         command: mysqld --innodb_file_per_table=1
         environment:

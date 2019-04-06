@@ -2,8 +2,6 @@ version: '2'
 services:
     app_dashboard:
         image: wolnosciowiec/uptime-admin-board
-        volumes:
-            - "./data/storage:/usr/share/nginx/html"
         environment:
             - UAB_PROVIDERS=${MONITORING_PROVIDERS}
             - UAB_TITLE=Dashboard
