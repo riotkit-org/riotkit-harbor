@@ -69,8 +69,8 @@ access_log off;
 resolver {{ $.Env.RESOLVERS }};
 {{ end }}
 
-{{ if (exists "/etc/nginx/vhost.d/include/http.d") }}
-include /etc/nginx/vhost.d/include/http.d/*.conf;
+{{ if (exists "/etc/nginx/vhost-static.d/include/http.d") }}
+include /etc/nginx/vhost-static.d/include/http.d/*.conf;
 {{ end }}
 
 {{ if (exists "/etc/nginx/proxy.conf") }}
@@ -291,6 +291,17 @@ server {
 	add_header Strict-Transport-Security "{{ trim $hsts }}" always;
 	{{ end }}
 
+	# config file common for all domains/containers
+	{{ if (exists "/etc/nginx/vhost-static.d/all") }}
+	include "/etc/nginx/vhost-static.d/all";
+	{{ end }}
+
+	# config file per domain (managed by ops)
+	{{ if (exists (printf "/etc/nginx/vhost-static.d/%s" $host)) }}
+	include {{ printf "/etc/nginx/vhost-static.d/%s" $host }};
+	{{ end }}
+
+	# config file per domain (automatically generated)
 	{{ if (exists (printf "/etc/nginx/vhost.d/%s" $host)) }}
 	include {{ printf "/etc/nginx/vhost.d/%s" $host }};
 	{{ else if (exists "/etc/nginx/vhost.d/default") }}
@@ -353,6 +364,17 @@ server {
 	include /etc/nginx/network_internal.conf;
 	{{ end }}
 
+	# config file common for all domains/containers
+	{{ if (exists "/etc/nginx/vhost-static.d/all") }}
+	include "/etc/nginx/vhost-static.d/all";
+	{{ end }}
+
+	# config file per domain (managed by ops)
+	{{ if (exists (printf "/etc/nginx/vhost-static.d/%s" $host)) }}
+	include {{ printf "/etc/nginx/vhost-static.d/%s" $host }};
+	{{ end }}
+
+	# config file per domain (automatically generated)
 	{{ if (exists (printf "/etc/nginx/vhost.d/%s" $host)) }}
 	include {{ printf "/etc/nginx/vhost.d/%s" $host }};
 	{{ else if (exists "/etc/nginx/vhost.d/default") }}
