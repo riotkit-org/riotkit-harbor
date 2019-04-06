@@ -1,4 +1,11 @@
 version: '2'
+
+volumes:
+    nginx-confd:
+    nginx-certs:
+    nginx-vhostd:
+    nginx-html:
+
 services:
 
     #
@@ -15,13 +22,14 @@ services:
           - "80:80"
           - "443:443"
         volumes:
-            - ./data/conf.d:/etc/nginx/conf.d
-            - ./containers/nginx/vhost.d:/etc/nginx/vhost.d/
-            - ./data/html:/usr/share/nginx/html
-            - ./data/certs:/etc/nginx/certs:rw
-            - ./data/htpasswd:/etc/nginx/htpasswd:rw
-            - ./containers/nginx/maintenance:/usr/share/nginx/maintenance:ro
-            - ./data/maintenance-mode:/maintenance:ro
+            - nginx-confd:/etc/nginx/conf.d    # communication with docker-gen container
+            - nginx-certs:/etc/nginx/certs:rw  # communication with letsencrypt container
+            - nginx-vhostd:/etc/nginx/vhost.d/ # communication with docker-gen/ssl containers
+            - nginx-html:/usr/share/nginx/html # letsencrypt requires to store tokens there
+            - ./containers/nginx/vhost.d:/etc/nginx/vhost-static.d/          # custom configuration
+            - ./data/htpasswd:/etc/nginx/htpasswd:ro                         # basic auth
+            - ./containers/nginx/maintenance:/usr/share/nginx/maintenance:ro # RiotKit's maintenance page HTML files
+            - ./data/maintenance-mode:/maintenance:ro                        # RiotKit's maintenance page toggle
 
     #
     # Service auto-discovery
@@ -42,7 +50,6 @@ services:
         volumes:
             - /var/run/docker.sock:/tmp/docker.sock:ro
             - ./containers/nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
-            - ./containers/nginx/vhost.d:/etc/nginx/vhost.d/
 
         environment:
             - HTTPS_METHOD=redirect
@@ -50,4 +57,3 @@ services:
 
             # @debugging: It may be useful to disable HSTS when the SSL setup is not ready yet
             - HSTS=on
-
