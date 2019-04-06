@@ -18,7 +18,7 @@ USER=$(shell ([[ "${APP_USER}" != "" ]] && echo "${APP_USER}") || ([[ "${SUDO_US
 GROUP_ID=$(shell ([[ "${APP_GROUP_ID}" != "" ]] && echo "${APP_GROUP_ID}") || ([[ "${SUDO_GID}" != "" ]] && echo "${SUDO_GID}") || id -g)
 
 SHELL = /bin/bash
-COMPOSE_COMPILED_ARGS = $$(for f in $$(ls ./apps/conf|grep -v ".yml.disabled"); do echo "-f ./apps/conf/$${f}"; done)
+COMPOSE_COMPILED_ARGS = $$(for f in $$(ls ./apps/conf|grep -v ".yml.disabled"|grep ".yml"); do echo "-f ./apps/conf/$${f}"; done)
 COMPOSE_ARGS = -p ${COMPOSE_PROJECT_NAME} --project-directory $$(pwd) -f docker-compose.yml ${COMPOSE_COMPILED_ARGS}
 
 # Colors
