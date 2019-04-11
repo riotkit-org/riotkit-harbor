@@ -198,6 +198,9 @@ upstream {{ $upstream_name }} {
 {{/* Defines if container can be set into maintenance mode */}}
 {{ $use_maintenance_mode := (index $current_container.Labels "org.riotkit.useMaintenanceMode") eq "true" }}
 
+{{/* Defines if container can be set into maintenance mode */}}
+{{ $to_non_www_redirect := (index $current_container.Labels "org.riotkit.redirectFromWWW") eq "true" }}
+
 {{/* Get the first cert name defined by containers w/ the same vhost */}}
 {{ $certName := (first (groupByKeys $containers "Env.CERT_NAME")) }}
 
@@ -217,18 +220,18 @@ upstream {{ $upstream_name }} {
 
 {{ if eq $https_method "redirect" }}
 server {
-	server_name {{ $host }};
+	server_name {{ $host }}{{ if $to_non_www_redirect }} www.{{ $host }}{{ end }};
 	listen 80 {{ $default_server }};
 	{{ if $enable_ipv6 }}
 	listen [::]:80 {{ $default_server }};
 	{{ end }}
 	access_log /var/log/nginx/access.log vhost;
-	return 301 https://$host$request_uri;
+	return 301 https://{{ $host }}$request_uri;
 }
 {{ end }}
 
 server {
-	server_name {{ $host }};
+	server_name {{ $host }}{{ if $to_non_www_redirect }} www.{{ $host }}{{ end }};
 	listen 443 ssl http2 {{ $default_server }};
 	{{ if $enable_ipv6 }}
 	listen [::]:443 ssl http2 {{ $default_server }};
@@ -309,7 +312,11 @@ server {
 	{{ end }}
 
 	location / {
-		# test: {{ $use_maintenance_mode }} | 0
+		{{ if $to_non_www_redirect }}
+		if ($host = "www.{{ $host }}") {
+			return 302 https://{{ $host }}$request_uri;
+		}
+		{{ end }}
 
 		{{ if $use_maintenance_mode }}
 		if (-f /maintenance/on) {
@@ -352,7 +359,7 @@ server {
 {{ if or (not $is_https) (eq $https_method "noredirect") }}
 
 server {
-	server_name {{ $host }};
+	server_name {{ $host }}{{ if $to_non_www_redirect }} www.{{ $host }}{{ end }};
 	listen 80 {{ $default_server }};
 	{{ if $enable_ipv6 }}
 	listen [::]:80 {{ $default_server }};
@@ -382,6 +389,12 @@ server {
 	{{ end }}
 
 	location / {
+		{{ if $to_non_www_redirect }}
+		if ($host = "www.{{ $host }}") {
+			return 302 http://{{ $host }}$request_uri;
+		}
+		{{ end }}
+
 		{{ if eq $use_maintenance_mode "True" }}
 		if (-f /maintenance/on) {
 			return 503;
@@ -419,7 +432,7 @@ server {
 
 {{ if (and (not $is_https) (exists "/etc/nginx/certs/default.crt") (exists "/etc/nginx/certs/default.key")) }}
 server {
-	server_name {{ $host }};
+	server_name {{ $host }} {{ if $to_non_www_redirect }} www.{{ $host }}{{ end }};
 	listen 443 ssl http2 {{ $default_server }};
 	{{ if $enable_ipv6 }}
 	listen [::]:443 ssl http2 {{ $default_server }};
@@ -430,6 +443,12 @@ server {
 	ssl_certificate_key /etc/nginx/certs/default.key;
 
 	location / {
+		{{ if $to_non_www_redirect }}
+		if ($host = "www.{{ $host }}") {
+			return 302 https://{{ $host }}$request_uri;
+		}
+		{{ end }}
+
 		{{ if eq $use_maintenance_mode "True" }}
 		if (-f /maintenance/on) {
 			return 503;
