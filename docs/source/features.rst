@@ -59,10 +59,10 @@ Applications needs to be tagged with docker labels, example:
 
 .. code:: yaml
 
-    org.docker.services.dashboard.enabled: true
-    org.docker.services.dashboard.description: 'Dashboard - a list of all hosted websites running on this network'
-    org.docker.services.dashboard.icon: 'pe-7s-browser'
-    org.docker.services.dashboard.only_for_admin: false
+    org.riotkit.dashboard.enabled: true
+    org.riotkit.dashboard.description: 'Dashboard - a list of all hosted websites running on this network'
+    org.riotkit.dashboard.icon: 'pe-7s-browser'
+    org.riotkit.dashboard.only_for_admin: false
 
 .. image:: _static/services-dashboard.png
 
@@ -79,7 +79,6 @@ You can use any external SMTP, your own, a gmail account, or other.
     SMARTHOST_USER=login@your-server.org
     SMARTHOST_PASSWORD=
     SMARTHOST_ALIASES=*    # forward all e-mails, you can put here eg. allowed recipient domains
-
 
 If you make values empty, then the service will send mails directly.
 
@@ -231,3 +230,16 @@ This means that we can turn on the maintenance mode, when for example MySQL will
 **Modifying HTML templates**
 
 Everything is placed at *./containers/nginx/maintenance* and mounted as volume.
+
+WWW to non-www redirection
+--------------------------
+
+To enable automatic redirection from www. to non-www domain you need to use a label and inform also letsencrypt about a subdomain.
+
+.. code:: yaml
+
+    environment:
+        - VIRTUAL_HOST=aitrus.info${DOMAIN_SUFFIX}
+        - LETSENCRYPT_HOST=aitrus.info${DOMAIN_SUFFIX},www.aitrus.info${DOMAIN_SUFFIX}
+    labels:
+        org.riotkit.redirectFromWWW: true
