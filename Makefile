@@ -69,6 +69,8 @@ _call_compose:
 ## Starts or updates (if config was changed) the environment
 start:
 	${SUDO} rm ./data/conf.d/* 2>/dev/null || true # nginx config needs to be recreated on each restart by proxy-gen
+	make _clean_up_default_network
+
 	make _call_compose CMD="up -d"
 	${SUDO} make _exec_hooks NAME=post-start
 
@@ -80,6 +82,10 @@ start:
 stop:
 	make _call_compose CMD="down"
 	make _exec_hooks NAME=post-down
+
+_clean_up_default_network:
+	printf " >> Cleaning up silently the default network\n"
+	${SUDO} docker network rm $(docker network ls -f name=${COMPOSE_PROJECT_NAME} -q) 2>/dev/null || true
 
 _exec_hooks:
 	printf " >> Executing hooks ${NAME}\n"
