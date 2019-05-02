@@ -146,10 +146,10 @@ In `./apps/conf/docker-compose.phpmyadmin.yaml`:
             - VIRTUAL_HOST=pma.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
             - VIRTUAL_PORT=80
         labels:
-            org.docker.services.dashboard.enabled: true
-            org.docker.services.dashboard.description: 'MySQL database management'
-            org.docker.services.dashboard.icon: 'pe-7s-server'
-            org.docker.services.dashboard.only_for_admin: true
+            org.riotkit.dashboard.enabled: true
+            org.riotkit.dashboard.description: 'MySQL database management'
+            org.riotkit.dashboard.icon: 'pe-7s-server'
+            org.riotkit.dashboard.only_for_admin: true
 
 
 Now you can access http://pma.iwa-ait.org.localhost in your browser.
