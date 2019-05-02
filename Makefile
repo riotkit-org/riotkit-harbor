@@ -290,6 +290,9 @@ encrypt_env_prod:
 	ansible-vault --vault-password-file=$$(pwd)/.vault-password encrypt .env-prod-tmp
 	mv .env-prod-tmp .env-prod
 
+## Edit production environment configuration (.env.prod)
+edit_env_prod:
+	ansible-vault --vault-password-file=$$(pwd)/.vault-password edit .env-prod
 
 ########### DOCUMENTATION ###########
 
