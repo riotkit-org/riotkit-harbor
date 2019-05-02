@@ -16,9 +16,10 @@ services:
             - "APP_NAME=${DASHBOARD_TITLE}"
             - APP_ADMIN_TOKEN=${DASHBOARD_ADMIN_TOKEN}
         labels:
-            org.docker.services.dashboard.enabled: true
-            org.docker.services.dashboard.description: 'Dashboard - a list of all hosted websites running on this network'
-            org.docker.services.dashboard.icon: 'pe-7s-browser'
-            org.docker.services.dashboard.only_for_admin: false
+            org.riotkit.dashboard.enabled: true
+            org.riotkit.dashboard.description: 'Dashboard - a list of all hosted websites running on this network'
+            org.riotkit.dashboard.icon: 'pe-7s-browser'
+            org.riotkit.dashboard.only_for_admin: false
             com.centurylinklabs.watchtower.enable: true
             org.riotkit.useMaintenanceMode: false
+            #org.riotkit.htaccessFile: "dashboard.htpasswd"

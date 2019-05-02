@@ -27,7 +27,7 @@ services:
             - nginx-vhostd:/etc/nginx/vhost.d/ # communication with docker-gen/ssl containers
             - nginx-html:/usr/share/nginx/html # letsencrypt requires to store tokens there
             - ./containers/nginx/vhost.d:/etc/nginx/vhost-static.d/          # custom configuration
-            - ./data/htpasswd:/etc/nginx/htpasswd:ro                         # basic auth
+            - ./containers/auth:/etc/nginx/htpasswd:ro                         # basic auth
             - ./containers/nginx/maintenance:/usr/share/nginx/maintenance:ro # RiotKit's maintenance page HTML files
             - ./data/maintenance-mode:/maintenance:ro                        # RiotKit's maintenance page toggle
 

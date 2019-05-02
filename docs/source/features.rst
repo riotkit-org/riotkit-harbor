@@ -177,6 +177,25 @@ Check Watchtower_ documentation for detail.
 
 .. _Watchtower: https://github.com/v2tec/watchtower
 
+Securing access with basic auth
+-------------------------------
+
+Gateway can implement a basic auth standard for selected domains you want to secure with password.
+
+A container needs to be marked with a label, example:
+
+.. code:: yaml
+
+    labels:
+        org.riotkit.htaccessFile: "dashboard.htpasswd"
+
+The "dashboard.htpasswd" file needs to be placed in **./containers/auth/** directory.
+To generate a password use this example command:
+
+.. code:: bash
+
+    htpasswd -c ./containers/auth/dashboard.htpasswd admin
+
 Maintenance mode
 ----------------
 

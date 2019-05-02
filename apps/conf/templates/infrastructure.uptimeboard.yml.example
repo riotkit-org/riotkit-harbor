@@ -14,9 +14,9 @@ services:
             - LETSENCRYPT_HOST=dashboard.${DOMAIN_SUFFIX}
             - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
         labels:
-            org.docker.services.dashboard.enabled: true
-            org.docker.services.dashboard.description: 'Applications health monitoring'
-            org.docker.services.dashboard.icon: 'pe-7s-angle-down-circle'
-            org.docker.services.dashboard.only_for_admin: false
+            org.riotkit.dashboard.enabled: true
+            org.riotkit.dashboard.description: 'Applications health monitoring'
+            org.riotkit.dashboard.icon: 'pe-7s-angle-down-circle'
+            org.riotkit.dashboard.only_for_admin: false
             com.centurylinklabs.watchtower.enable: true
             org.riotkit.useMaintenanceMode: false

@@ -198,6 +198,10 @@ upstream {{ $upstream_name }} {
 {{/* Defines if container can be set into maintenance mode */}}
 {{ $use_maintenance_mode := (index $current_container.Labels "org.riotkit.useMaintenanceMode") eq "true" }}
 
+{{/* Name of the htaccess file */}}
+{{ $htaccess_file := or (index $current_container.Labels "org.riotkit.htaccessFile") "all" }}
+{{ $htaccess_file_path := or (and (exists (printf "/etc/nginx/htpasswd/%s" $htaccess_file)) (printf "/etc/nginx/htpasswd/%s" $htaccess_file)) (and (exists (printf "/etc/nginx/htpasswd/%s" $host)) (printf "/etc/nginx/htpasswd/%s" $host)) }}
+
 {{/* Defines if container can be set into maintenance mode */}}
 {{ $to_non_www_redirect := (index $current_container.Labels "org.riotkit.redirectFromWWW") eq "true" }}
 
@@ -335,9 +339,9 @@ server {
 		proxy_pass {{ trim $proto }}://{{ trim $upstream_name }};
 		{{ end }}
 
-		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+		{{ if $htaccess_file_path }}
 		auth_basic	"Restricted {{ $host }}";
-		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+		auth_basic_user_file	{{ $htaccess_file_path }};
 		{{ end }}
 		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
 		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
@@ -411,9 +415,9 @@ server {
 		{{ else }}
 		proxy_pass {{ trim $proto }}://{{ trim $upstream_name }};
 		{{ end }}
-		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+		{{ if $htaccess_file_path }}
 		auth_basic	"Restricted {{ $host }}";
-		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+		auth_basic_user_file	{{ $htaccess_file_path }};
 		{{ end }}
 		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
 		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
@@ -465,9 +469,9 @@ server {
 		{{ else }}
 		proxy_pass {{ trim $proto }}://{{ trim $upstream_name }};
 		{{ end }}
-		{{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+		{{ if $htaccess_file_path }}
 		auth_basic	"Restricted {{ $host }}";
-		auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+		auth_basic_user_file	{{ $htaccess_file_path }};
 		{{ end }}
 		{{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
 		include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
