@@ -46,6 +46,7 @@ Unified production and development environment, with minimum amount of differenc
    ansible
    configuration_reference
    guides/cookbook
+   riotkit-guide
 
 
 From authors
