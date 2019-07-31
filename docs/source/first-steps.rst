@@ -21,9 +21,12 @@ Updates are not mandatory, and the template may be not always backwards compatib
 
     mkdir your-project-dir
     cd your-project-dir
-
+    
     # initialize git repository, at least locally
     git init
+    echo "Hello RiotKit!" > README.md
+    git add README.md
+    git commit -m "Initial commit"
 
     # download the project files using updater script
     curl -s https://raw.githubusercontent.com/riotkit-org/riotkit-harbor/master/update-from-template.sh | bash
