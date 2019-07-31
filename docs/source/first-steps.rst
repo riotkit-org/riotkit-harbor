@@ -24,7 +24,7 @@ Updates are not mandatory, and the template may be not always backwards compatib
     
     # initialize git repository, at least locally
     git init
-    echo "Hello RiotKit!" > README.md
+    echo "Hello RiotKit :)" > README.md
     git add README.md
     git commit -m "Initial commit"
 
