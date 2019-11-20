@@ -1,14 +1,21 @@
 
 .SILENT:
 
+SHELL = /bin/bash
+WARN_SLEEP_TIME=10
+PIP=pip
+SUDO=sudo
+DETACH=true
+
+# --- include: env variables from .env
 PREPARE := $(shell test -e .env || cp .env-default .env)
 IS_ENV_PRESENT := $(shell test -e .env && echo -n yes)
-WARN_SLEEP_TIME=10
 
 ifeq ($(IS_ENV_PRESENT), yes)
 	include .env
 	export $(shell sed 's/=.*//' .env)
 endif
+# -- end of include
 
 # Environment detection (detects if it's production or development basing on "localhost" presence in domains configuration, or ENFORCE_DEBUG_ENVIRONMENT=1)
 IS_DEBUG_ENVIRONMENT=$(shell (([[ "${DOMAIN_SUFFIX}" == *".localhost"* ]] || [[ "${MAIN_DOMAIN}" == *"localhost"* ]] || [[ "${ENFORCE_DEBUG_ENVIRONMENT}" == "1" ]]) && echo "1") || echo "0")
@@ -17,57 +24,42 @@ IS_DEBUG_ENVIRONMENT=$(shell (([[ "${DOMAIN_SUFFIX}" == *".localhost"* ]] || [[ 
 USER=$(shell ([[ "${APP_USER}" != "" ]] && echo "${APP_USER}") || ([[ "${SUDO_USER}" != "" ]] && echo "${SUDO_USER}") || whoami)
 GROUP_ID=$(shell ([[ "${APP_GROUP_ID}" != "" ]] && echo "${APP_GROUP_ID}") || ([[ "${SUDO_GID}" != "" ]] && echo "${SUDO_GID}") || id -g)
 
-SHELL = /bin/bash
+# list all enabled application configurations (docker-compose configuration files)
 COMPOSE_COMPILED_ARGS = $$(for f in $$(ls ./apps/conf|grep -v ".yml.disabled"|grep ".yml"); do echo "-f ./apps/conf/$${f}"; done)
-COMPOSE_ARGS = -p ${COMPOSE_PROJECT_NAME} --project-directory $$(pwd) -f docker-compose.yml ${COMPOSE_COMPILED_ARGS}
+
+# on "localhost" add also all development configurations
+COMPOSE_COMPILED_DEV_ARGS = $(shell [[ "${IS_DEBUG_ENVIRONMENT}" == "1" ]] && (for f in $$(ls ./apps/conf.dev|grep -v ".yml.disabled"|grep ".yml"); do echo "-f ./apps/conf.dev/$${f}"; done))
+COMPOSE_ARGS = -p ${COMPOSE_PROJECT_NAME} --project-directory $$(pwd) -f docker-compose.yml ${COMPOSE_COMPILED_ARGS} ${COMPOSE_COMPILED_DEV_ARGS}
 
 # Colors
 COLOR_RESET   = \033[0m
 COLOR_INFO    = \033[32m
 COLOR_COMMENT = \033[33m
 
-PIP=pip
-SUDO=sudo
-
 
 ########### ENVIRONMENT CORE ###########
 
-## This help screen
-help:
-	printf "${COLOR_COMMENT}Usage:${COLOR_RESET}\n"
-	printf " make [target]\n\n"
-	printf "${COLOR_COMMENT}Available targets:${COLOR_RESET}\n"
-	awk '/^[a-zA-Z\-\_0-9\.@]+:/ { \
-		helpMessage = match(lastLine, /^## (.*)/); \
-		if (helpMessage) { \
-			helpCommand = substr($$1, 0, index($$1, ":")); \
-			helpMessage = substr(lastLine, RSTART + 3, RLENGTH); \
-			printf " ${COLOR_INFO}%-16s${COLOR_RESET}\t\t%s\n", helpCommand, helpMessage; \
-		} \
-	} \
-	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+help: ## This help screen
+	@grep -E '^[a-zA-Z\-\_0-9\.@]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-	echo ""
-	echo " Environment configuration:"
-	echo "> Main domain: ${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
-	echo "> Debug status (1/0): ${IS_DEBUG_ENVIRONMENT}"
-	echo "> Non-root user that will own git repositories files: ${USER}"
-	echo "> Non-root group id: ${GROUP_ID}"
+	@echo ""
+	@echo " Environment configuration:"
+	@echo "> Main domain: ${MAIN_DOMAIN}${DOMAIN_SUFFIX}"
+	@echo "> Debug status (1/0): ${IS_DEBUG_ENVIRONMENT}"
+	@echo "> Non-root user that will own git repositories files: ${USER}"
+	@echo "> Non-root group id: ${GROUP_ID}"
 
-## Install requirements for the environment (eg. libraries)
-setup:
+setup: ## Install requirements for the environment (eg. libraries)
 	${SUDO} ${PIP} install -r ./requirements.txt
 
-## Lists docker-compose args
-get_compose_args:
+get_compose_args: ## Lists docker-compose args
 	echo ${COMPOSE_ARGS}
 
 # entrypoint for docker-compose command
 _call_compose:
 	${SUDO} /bin/bash -c 'export IS_DEBUG_ENVIRONMENT=${IS_DEBUG_ENVIRONMENT}; docker-compose ${COMPOSE_ARGS} ${CMD}'
 
-## Starts or updates (if config was changed) the environment
-start:
+start: ## Starts or updates (if config was changed) the environment (params: DETACH=true/false)
 	${SUDO} rm ./data/conf.d/* 2>/dev/null || true # nginx config needs to be recreated on each restart by proxy-gen
 	make _clean_up_default_network
 
@@ -78,8 +70,7 @@ start:
 		make _call_compose CMD="logs -f"; \
 	fi
 
-## Stops the environment
-stop:
+stop: ## Stops the environment
 	make _call_compose CMD="down"
 	make _exec_hooks NAME=post-down
 
@@ -100,20 +91,16 @@ _exec_hooks:
 _root_session:
 	sudo true
 
-## Restart
-restart: _root_session
+restart: _root_session ## Restart
 	${SUDO} systemctl restart project
 
-## Check status
-check_status: _root_session
+check_status: _root_session ## Check status
 	${SUDO} systemctl status project
 
-## Deployment hook: PRE up
-deployment_pre: __assert_has_root_permissions pull_containers update_all render_templates
+deployment_pre: __assert_has_root_permissions pull_containers update_all render_templates ## Deployment hook: PRE up
 	make _exec_hooks NAME=deployment-pre
 
-## Update this deployment repository
-pull: _root_session pull_git pull_containers
+pull: _root_session pull_git pull_containers ## Update this deployment repository
 
 pull_git:
 	git pull origin master
@@ -121,15 +108,13 @@ pull_git:
 pull_containers: _root_session
 	make _call_compose CMD="pull"
 
-## Pull image from registry for specified service and rebuild, restart the service (params: SERVICE eg. app_pl.godna-praca)
-update_single_service_container: _root_session
+update_single_service_container: _root_session ## Pull image from registry for specified service and rebuild, restart the service (params: SERVICE eg. app_pl.godna-praca)
 	make _call_compose CMD="pull ${SERVICE}"
 	make _call_compose CMD="stop -t 1 ${SERVICE}"
 	make _call_compose CMD="up --no-start --force-recreate --build ${SERVICE}"
 	make _call_compose CMD="start ${SERVICE}"
 
-## Render all templates using .env file
-render_templates:
+render_templates: ## Render all templates using .env file
 	echo " >> Rendering templates from ./containers/templates/source"
 	found=$$(find ./containers/templates/source -type f -name '*.j2'); \
 	for template in $${found[@]}; do \
@@ -144,52 +129,42 @@ render_templates:
 
 ########### YAML SERVICES ###########
 
-## List all configurations
-list_configs:
+list_configs: ## List all configurations
 	ls ./apps/conf | grep .yml | cut -d '.' -f 2
 
-## List enabled configurations
-list_configs_enabled:
+list_configs_enabled: ## List enabled configurations
 	ls ./apps/conf | grep .yml | grep -v ".disabled" | cut -d '.' -f 2
 
-## List disabled configurations
-list_configs_disabled:
+list_configs_disabled: ## List disabled configurations
 	ls ./apps/conf | grep .yml | grep "disabled" | cut -d '.' -f 2
 
-## List all hosts exposed to the internet
-list_all_hosts:
+list_all_hosts: ## List all hosts exposed to the internet
 	find ./apps/conf -name '*.yml' | xargs grep 'VIRTUAL_HOST'
 
-## Disable a configuration (APP_NAME=...)
-config_disable:
+config_disable: ## Disable a configuration (APP_NAME=...)
 	echo " >> Use APP_NAME eg. make config_disable APP_NAME=iwa-ait"
 	mv ./apps/conf/docker-compose.${APP_NAME}.yml ./apps/conf/docker-compose.${APP_NAME}.yml.disabled
 	echo " OK, ${APP_NAME} was disabled."
 
-## Enable a configuration (APP_NAME=...)
-config_enable:
+config_enable: ## Enable a configuration (APP_NAME=...)
 	echo " >> Use APP_NAME eg. make config_disable APP_NAME=iwa-ait"
 	mv ./apps/conf/docker-compose.${APP_NAME}.yml.disabled ./apps/conf/docker-compose.${APP_NAME}.yml
 	echo " OK, ${APP_NAME} is now enabled."
 
 ########### MAINTENANCE MODE ###########
 
-## Turn on maintenance on on all websites
-maintenance_on:
+maintenance_on: ## Turn on maintenance on on all websites
 	sudo touch ./data/maintenance-mode/on
 
-## Turn off maintenance mode on all websites
-maintenance_off:
+maintenance_off: ## Turn off maintenance mode on all websites
 	sudo rm -f ./data/maintenance-mode/on
 
 ########### GIT-VOLUME REPOSITORIES ###########
 
-## List all repositories
-list_repos:
+list_repos: ## List all repositories
 	ls ./apps/repos-enabled | grep .sh | cut -d '.' -f 1
 
-## Updates a single application, usage: make update APP_NAME=iwa-ait
-update: __assert_has_root_permissions
+update: __assert_has_root_permissions ## Updates a single application, usage: make update APP_NAME=iwa-ait
 	make _update_existing_directory_permissions APP_NAME=${APP_NAME}
 	${SUDO} -u "${USER}" make _update APP_NAME=${APP_NAME}
 	make __chown_writable_dirs APP_NAME=${APP_NAME}
@@ -239,8 +214,7 @@ __assert_has_root_permissions:
 		exit 1; \
 	fi
 
-## Deploy updates to all applications
-update_all: __assert_has_root_permissions
+update_all: __assert_has_root_permissions ## Deploy updates to all applications
 	echo " >> Deploying all applications"
 	make list_repos
 
@@ -273,8 +247,7 @@ __fetch_repository: __assert_not_root
 
 ########### BACKUP RECOVERY ###########
 
-## Recover services from a backup (Use cases: Moving from dev to prod, Recovery from failure, Migrating from server to server)
-recover_from_backup: _root_session
+recover_from_backup: _root_session ## Recover services from a backup (Use cases: Moving from dev to prod, Recovery from failure, Migrating from server to server)
 	echo " >> !!! WARNING !!!: In ${WARN_SLEEP_TIME} seconds selected or ALL services will be restored from backup with a ${BACKUPS_RECOVERY_PLAN} recovery plan"
 	echo " >> If this is not what you want, just do CTRL+C NOW!"
 	sleep ${WARN_SLEEP_TIME}
@@ -283,21 +256,18 @@ recover_from_backup: _root_session
 
 ########### ANSIBLE ###########
 
-## Encrypt the .env-prod file with Ansible Vault (passphrase needs to be stored in ./.vault-password that should be in .gitignore)
-encrypt_env_prod:
+encrypt_env_prod: ## Encrypt the .env-prod file with Ansible Vault (passphrase needs to be stored in ./.vault-password that should be in .gitignore)
 	echo " >> Encrypting .env file into .env-prod"
 	cp .env .env-prod-tmp
 	ansible-vault --vault-password-file=$$(pwd)/.vault-password encrypt .env-prod-tmp
 	mv .env-prod-tmp .env-prod
 
-## Edit production environment configuration (.env.prod)
-edit_env_prod:
+edit_env_prod: ## Edit production environment configuration (.env.prod)
 	ansible-vault --vault-password-file=$$(pwd)/.vault-password edit .env-prod
 
 ########### DOCUMENTATION ###########
 
-## Build documentation
-build_docs:
+build_docs: ## Build documentation
 	cd ./docs && make html
 
 
