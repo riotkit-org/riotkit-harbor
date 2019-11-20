@@ -1,0 +1,14 @@
+language: python
+if: branch = master
+python: 3.6
+services:
+    - docker
+
+jobs:
+  include:
+    - stage: Check if environment starts
+      script:
+          - make start DETACHED=true
+          - curl http://health.test.localhost/some-test
+
+
