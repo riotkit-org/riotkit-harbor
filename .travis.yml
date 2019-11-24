@@ -6,6 +6,10 @@ services:
 jobs:
   include:
     - stage: Check if environment starts
+      before_script:
+          - sudo /bin/bash -c 'echo "127.0.0.1 health.test.localhost" >> /etc/hosts'
       script:
-          - make start DETACHED=true
-          - curl http://health.test.localhost/some-test
+          - make start DETACH=true
+          - sleep 15
+          - docker ps
+          - curl -f -v http://health.test.localhost/some-test/
