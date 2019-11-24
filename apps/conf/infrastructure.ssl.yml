@@ -6,7 +6,7 @@ services:
     #  self generated certificates
     #
     gateway_letsencrypt:
-        image: jrcs/letsencrypt-nginx-proxy-companion
+        image: jrcs/letsencrypt-nginx-proxy-companion:v1.12
         restart: unless-stopped
         volumes_from:
             - gateway
