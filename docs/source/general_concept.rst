@@ -76,10 +76,14 @@ Main domain and domain suffix concept
 It opens huge possibility of creating test environments, which have different DNS settings.
 Sounds like a theory? Let's see a practical example!
 
-| Domain     | MAIN_DOMAIN   | DOMAIN_SUFFIX  | Output domain              | Environment |
-|------------|---------------|----------------|----------------------------|-------------|
-| blog       | iwa-ait.org   | .localhost     | blog.iwa-ait.org.localhost | dev         |
-| blog       | iwa-ait.org   |                | blog.iwa-ait.org           | production  |
++--------+-------------+---------------+----------------------------+-------------+
+| Domain | MAIN_DOMAIN | DOMAIN_SUFFIX | Output domain              | Environment |
++--------+-------------+---------------+----------------------------+-------------+
+| blog   | iwa-ait.org | .localhost    | blog.iwa-ait.org.localhost | dev         |
++--------+-------------+---------------+----------------------------+-------------+
+| blog   | iwa-ait.org |               | blog.iwa-ait.org           | production  |
++--------+-------------+---------------+----------------------------+-------------+
+
 
 It's so much flexible that you can host multiple subdomains on main domain, but you can also use totally different domains.
 No /etc/hosts entries are required, it's a standard Linux DNS behavior.
