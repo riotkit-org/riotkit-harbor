@@ -76,30 +76,13 @@ Main domain and domain suffix concept
 It opens huge possibility of creating test environments, which have different DNS settings.
 Sounds like a theory? Let's see a practical example!
 
-**Scenario for test environment:**
-
-.. code:: cucumber
-
-    Given It's a TEST environment
-    So the variables are configured in following way
-    | DOMAIN_SUFFIX | .localhost  |
-    | MAIN_DOMAIN   | iwa-ait.org |
-    When application has set VIRTUAL_HOST=some-service.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
-    Then the SOME SERVICE will have address http://some-service.iwa-ait.org.localhost
-
-**Scenario for production environment:**
-
-.. code:: cucumber
-
-    Given It's a TEST environment
-    So the variables are configured in following way
-    | DOMAIN_SUFFIX |             |
-    | MAIN_DOMAIN   | iwa-ait.org |
-    When application has set VIRTUAL_HOST=some-service.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
-    Then the SOME SERVICE will have address http://some-service.iwa-ait.org
-
+| Domain     | MAIN_DOMAIN   | DOMAIN_SUFFIX  | Output domain              | Environment |
+|------------|---------------|----------------|----------------------------|-------------|
+| blog       | iwa-ait.org   | .localhost     | blog.iwa-ait.org.localhost | dev         |
+| blog       | iwa-ait.org   |                | blog.iwa-ait.org           | production  |
 
 It's so much flexible that you can host multiple subdomains on main domain, but you can also use totally different domains.
+No /etc/hosts entries are required, it's a standard Linux DNS behavior.
 
 **Example:**
 
