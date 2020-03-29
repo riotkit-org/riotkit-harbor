@@ -258,7 +258,7 @@ To enable automatic redirection from www. to non-www domain you need to use a la
 .. code:: yaml
 
     environment:
-        - VIRTUAL_HOST=aitrus.info${DOMAIN_SUFFIX}
+        - VIRTUAL_HOST=aitrus.info${DOMAIN_SUFFIX},www.aitrus.info${DOMAIN_SUFFIX}
         - LETSENCRYPT_HOST=aitrus.info${DOMAIN_SUFFIX},www.aitrus.info${DOMAIN_SUFFIX}
     labels:
         org.riotkit.redirectFromWWW: true
