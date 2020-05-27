@@ -7,8 +7,8 @@ from typing import Optional
 from typing import Dict
 from rkd.contract import TaskInterface
 from rkd.contract import ExecutionContext
-from .profile import ProfileLoader
-from .cached_loader import CachedLoader
+from ..service import ProfileLoader
+from ..cached_loader import CachedLoader
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -43,7 +43,7 @@ class HarborBaseTask(TaskInterface, ABC):
         """
 
         yamls = self._build_compose_files_list(src_root, is_dev)
-        args = ' -p %s ' % project_name
+        args = ' --project-directory=%s -p %s ' % (os.getcwd(), project_name)
 
         for yaml_path in yamls:
             args += ' -f %s ' % yaml_path
@@ -118,7 +118,7 @@ class HarborBaseTask(TaskInterface, ABC):
     def compose(self, arguments: list, capture: bool = False) -> Optional[str]:
         """Makes a call to docker-compose with all prepared arguments that should be"""
 
-        cmd = 'docker-compose %s %s' % (self._compose_args, ' '.join(arguments))
+        cmd = 'docker-compose %s %s' % ( self._compose_args, ' '.join(arguments))
         self.io().debug('Calling compose: %s' % cmd)
 
         return self.sh(cmd, capture=capture)

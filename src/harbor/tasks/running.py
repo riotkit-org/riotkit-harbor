@@ -4,7 +4,7 @@ from typing import List
 from tabulate import tabulate
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
-from .profile import Service
+from ..service import Service
 
 
 class ListContainersTask(HarborBaseTask):
@@ -45,6 +45,16 @@ class BaseProfileSupportingTasks(HarborBaseTask, ABC):
 class StartTask(BaseProfileSupportingTasks):
     """Create and start containers
     """
+    
+    def configure_argparse(self, parser: ArgumentParser):
+        super().configure_argparse(parser)
+        parser.add_argument('--no-recreate', help='If containers already exist, don\'t recreate them. ' +
+                                                  'Incompatible with --force-recreate and -V.', action='store_true')
+        parser.add_argument('--force-recreate', help='Recreate containers even if their ' +
+                                                     'configuration and image haven\'t changed.', action='store_true')
+        parser.add_argument('--no-build', help='Don\'t build an image, even if it\'s missing.', action='store_true')
+        parser.add_argument('--no-deps', help='Don\'t start linked services.', action='store_true')
+        parser.add_argument('--no-detach', '-n', help='Don\'t start in detach mode', action='store_true')
 
     def get_name(self) -> str:
         return ':start'

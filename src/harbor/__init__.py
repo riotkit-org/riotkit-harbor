@@ -1,7 +1,7 @@
 from rkd.syntax import TaskDeclaration
-from .running import ListContainersTask
-from .running import StartTask
-from .running import ListDefinedServices
+from .tasks.running import ListContainersTask
+from .tasks.running import StartTask
+from .tasks.running import ListDefinedServices
 
 
 def imports():
