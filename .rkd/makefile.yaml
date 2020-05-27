@@ -1,0 +1,8 @@
+version: org.riotkit.rkd/0.7
+imports:
+    - harbor
+
+env_files:
+    - .env
+
+tasks: {}
