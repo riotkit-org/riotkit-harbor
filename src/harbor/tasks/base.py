@@ -1,13 +1,16 @@
 
 import os
 import yaml
+from argparse import ArgumentParser
 from abc import ABC
 from abc import abstractmethod
 from typing import Optional
 from typing import Dict
+from typing import List
 from rkd.contract import TaskInterface
 from rkd.contract import ExecutionContext
 from ..service import ProfileLoader
+from ..service import Service
 from ..cached_loader import CachedLoader
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -122,3 +125,14 @@ class HarborBaseTask(TaskInterface, ABC):
         self.io().debug('Calling compose: %s' % cmd)
 
         return self.sh(cmd, capture=capture)
+
+
+class BaseProfileSupportingTask(HarborBaseTask, ABC):
+    def configure_argparse(self, parser: ArgumentParser):
+        parser.add_argument('--profile', '-p', help='Services profile', default='')
+
+    def get_matching_services(self, context: ExecutionContext) -> List[Service]:
+        service_selector = self.profile_loader(context).load_profile(context.get_arg('--profile'))
+        matched = service_selector.find_matching_services(self.get_services())
+
+        return matched
