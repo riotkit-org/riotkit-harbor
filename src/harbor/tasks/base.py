@@ -53,6 +53,9 @@ class HarborBaseTask(TaskInterface, ABC):
 
         return args
 
+    def get_container_name_for_service(self, service_name: str, ctx: ExecutionContext):
+        return self.get_project_name(ctx) + '_' + service_name + '_1'
+
     @staticmethod
     def _validate_env_present() -> bool:
         return os.path.isfile('./.env')
@@ -67,8 +70,12 @@ class HarborBaseTask(TaskInterface, ABC):
         }
 
     @staticmethod
-    def get_apps_path(ctx: ExecutionContext):
+    def get_apps_path(ctx: ExecutionContext) -> str:
         return ctx.get_env('APPS_PATH')
+
+    @staticmethod
+    def get_project_name(ctx: ExecutionContext) -> str:
+        return ctx.get_env('COMPOSE_PROJECT_NAME')
 
     def profile_loader(self, ctx: ExecutionContext) -> ProfileLoader:
         """Loads profile of a ServiceSelector to filter out"""
@@ -126,6 +133,10 @@ class HarborBaseTask(TaskInterface, ABC):
 
         return self.sh(cmd, capture=capture)
 
+    def exec_in_container(self, container_name: str, command: str) -> str:
+        """Executes a command in given container"""
+        return self.compose(['exec', '-T', container_name, 'sh', '-c', '"', command, '"'], capture=True)
+
 
 class BaseProfileSupportingTask(HarborBaseTask, ABC):
     def configure_argparse(self, parser: ArgumentParser):
@@ -136,3 +147,11 @@ class BaseProfileSupportingTask(HarborBaseTask, ABC):
         matched = service_selector.find_matching_services(self.get_services())
 
         return matched
+
+    def get_matching_service_names(self, context: ExecutionContext) -> List[str]:
+        service_names = []
+
+        for service in self.get_matching_services(context):
+            service_names.append(service.get_name())
+
+        return service_names

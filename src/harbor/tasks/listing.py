@@ -7,7 +7,7 @@ class ListDefinedServices(BaseProfileSupportingTask):
     """Lists all defined containers in YAML files (can be limited by --profile selector)"""
 
     def get_group_name(self) -> str:
-        return ':harbor:services'
+        return ':harbor:service'
 
     def get_name(self) -> str:
         return ':list'

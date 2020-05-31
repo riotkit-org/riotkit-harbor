@@ -7,7 +7,7 @@ services:
     #
     gateway_letsencrypt:
         image: jrcs/letsencrypt-nginx-proxy-companion:v1.12
-        restart: unless-stopped
+        restart: always
         volumes_from:
             - gateway
             - gateway_proxy_gen

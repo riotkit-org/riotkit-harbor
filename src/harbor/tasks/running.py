@@ -50,12 +50,7 @@ class StartTask(BaseProfileSupportingTask):
         return ':start'
 
     def run(self, context: ExecutionContext) -> bool:
-        service_names = []
-
-        for service in self.get_matching_services(context):
-            service_names.append(service.get_name())
-
-        self.compose(['up', '-d'] + service_names)
+        self.compose(['up', '-d'] + self.get_matching_service_names(context))
 
         return True
 
@@ -68,12 +63,7 @@ class StopTask(BaseProfileSupportingTask):
         return ':stop'
 
     def run(self, context: ExecutionContext) -> bool:
-        service_names = []
-
-        for service in self.get_matching_services(context):
-            service_names.append(service.get_name())
-
-        self.compose(['stop', '-t', '300'] + service_names)
+        self.compose(['stop', '-t', '300'] + self.get_matching_service_names(context))
 
         return True
 
@@ -86,12 +76,7 @@ class RestartTask(BaseProfileSupportingTask):
         return ':restart'
 
     def run(self, context: ExecutionContext) -> bool:
-        service_names = []
-
-        for service in self.get_matching_services(context):
-            service_names.append(service.get_name())
-
-        self.compose(['stop', '-t', '300'] + service_names)
+        self.compose(['stop', '-t', '300'] + self.get_matching_service_names(context))
 
         return True
 
@@ -104,12 +89,20 @@ class StopAndRemoveTask(BaseProfileSupportingTask):
         return ':remove'
 
     def run(self, context: ExecutionContext) -> bool:
-        service_names = []
+        self.compose(['rm', '-f', '--stop'] + self.get_matching_service_names(context))
 
-        for service in self.get_matching_services(context):
-            service_names.append(service.get_name())
+        return True
 
-        self.compose(['rm', '-f', '--stop'] + service_names)
+
+class PullTask(BaseProfileSupportingTask):
+    """Pull images specified in containers definitions
+    """
+
+    def get_name(self) -> str:
+        return ':pull'
+
+    def run(self, context: ExecutionContext) -> bool:
+        self.compose(['pull'] + self.get_matching_service_names(context))
 
         return True
 
@@ -143,13 +136,15 @@ class UpgradeTask(BaseProfileSupportingTask):
 
             if force_recreate:
                 try:
-                    self.rkd([':harbor:services:remove', '--name=%s' % service.get_name()])
+                    self.rkd([':harbor:service:rm', '--name=%s' % service.get_name()])
                 except CalledProcessError:
                     pass
 
             try:
-                self.rkd([':harbor:services:start', '--name=%s' % service.get_name()])
+                self.rkd([':harbor:service:up', '--name=%s' % service.get_name()])
             except CalledProcessError:
                 success = False
+
+        self.rkd([':harbor:gateway:update'])
 
         return success

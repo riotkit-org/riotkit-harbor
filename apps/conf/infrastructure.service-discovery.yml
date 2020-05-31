@@ -14,7 +14,7 @@ services:
     #
     gateway:
         image: nginx:1.17
-        restart: unless-stopped
+        restart: always
         labels:
             - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true
             - com.centurylinklabs.watchtower.enable=true
