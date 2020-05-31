@@ -12,6 +12,7 @@ from .tasks.listing import ListDefinedServices
 from .tasks.gateway import ReloadGatewayTask
 from .tasks.gateway import ShowSSLStatusTask
 from .tasks.gateway import ForceReloadSSLTask
+from .tasks.configsmanagement import ListConfigsTask
 from .tasks.env import GetEnvTask
 from .tasks.env import SetEnvTask
 
@@ -31,6 +32,7 @@ def imports():
         TaskDeclaration(ReloadGatewayTask()),
         TaskDeclaration(ShowSSLStatusTask()),
         TaskDeclaration(ForceReloadSSLTask()),
+        TaskDeclaration(ListConfigsTask()),
         TaskDeclaration(GetEnvTask()),
         TaskDeclaration(SetEnvTask())
     ]

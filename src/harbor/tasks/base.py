@@ -19,6 +19,9 @@ SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 class HarborBaseTask(TaskInterface, ABC):
     _compose_args: str
 
+    def configure_argparse(self, parser: ArgumentParser):
+        pass
+
     def _build_compose_files_list(self, src_root: str, is_dev: bool) -> list:
         """Lists all YAML files to include in docker-compose arguments
         """
