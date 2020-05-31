@@ -13,6 +13,8 @@ from .tasks.gateway import ReloadGatewayTask
 from .tasks.gateway import ShowSSLStatusTask
 from .tasks.gateway import ForceReloadSSLTask
 from .tasks.configsmanagement import ListConfigsTask
+from .tasks.configsmanagement import EnableConfigTask
+from .tasks.configsmanagement import DisableConfigTask
 from .tasks.env import GetEnvTask
 from .tasks.env import SetEnvTask
 
@@ -33,6 +35,8 @@ def imports():
         TaskDeclaration(ShowSSLStatusTask()),
         TaskDeclaration(ForceReloadSSLTask()),
         TaskDeclaration(ListConfigsTask()),
+        TaskDeclaration(EnableConfigTask()),
+        TaskDeclaration(DisableConfigTask()),
         TaskDeclaration(GetEnvTask()),
         TaskDeclaration(SetEnvTask())
     ]
