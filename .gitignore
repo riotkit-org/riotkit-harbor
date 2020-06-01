@@ -9,3 +9,5 @@
 /containers/templates/compiled/*
 !/containers/templates/compiled/.gitkeep
 /.env
+/AUTHORS
+/ChangeLog
