@@ -88,15 +88,6 @@ _exec_hooks:
 		done \
 	fi
 
-_root_session:
-	sudo true
-
-restart: _root_session ## Restart
-	${SUDO} systemctl restart project
-
-check_status: _root_session ## Check status
-	${SUDO} systemctl status project
-
 deployment_pre: __assert_has_root_permissions pull_containers update_all render_templates ## Deployment hook: PRE up
 	make _exec_hooks NAME=deployment-pre
 
@@ -104,9 +95,6 @@ pull: _root_session pull_git pull_containers ## Update this deployment repositor
 
 pull_git:
 	git pull origin master
-
-pull_containers: _root_session
-	make _call_compose CMD="pull"
 
 update_single_service_container: _root_session ## Pull image from registry for specified service and rebuild, restart the service (params: SERVICE eg. app_pl.godna-praca)
 	make _call_compose CMD="pull ${SERVICE}"
@@ -127,122 +115,10 @@ render_templates: ## Render all templates using .env file
 	done
 
 
-########### YAML SERVICES ###########
-
-list_configs: ## List all configurations
-	ls ./apps/conf | grep .yml | cut -d '.' -f 2
-
-list_configs_enabled: ## List enabled configurations
-	ls ./apps/conf | grep .yml | grep -v ".disabled" | cut -d '.' -f 2
-
-list_configs_disabled: ## List disabled configurations
-	ls ./apps/conf | grep .yml | grep "disabled" | cut -d '.' -f 2
-
-list_all_hosts: ## List all hosts exposed to the internet
-	find ./apps/conf -name '*.yml' | xargs grep 'VIRTUAL_HOST'
-
-config_disable: ## Disable a configuration (APP_NAME=...)
-	echo " >> Use APP_NAME eg. make config_disable APP_NAME=iwa-ait"
-	mv ./apps/conf/docker-compose.${APP_NAME}.yml ./apps/conf/docker-compose.${APP_NAME}.yml.disabled
-	echo " OK, ${APP_NAME} was disabled."
-
-config_enable: ## Enable a configuration (APP_NAME=...)
-	echo " >> Use APP_NAME eg. make config_disable APP_NAME=iwa-ait"
-	mv ./apps/conf/docker-compose.${APP_NAME}.yml.disabled ./apps/conf/docker-compose.${APP_NAME}.yml
-	echo " OK, ${APP_NAME} is now enabled."
-
-########### MAINTENANCE MODE ###########
-
-maintenance_on: ## Turn on maintenance on on all websites
-	sudo touch ./data/maintenance-mode/on
-
-maintenance_off: ## Turn off maintenance mode on all websites
-	sudo rm -f ./data/maintenance-mode/on
-
 ########### GIT-VOLUME REPOSITORIES ###########
-
-list_repos: ## List all repositories
-	ls ./apps/repos-enabled | grep .sh | cut -d '.' -f 1
-
-update: __assert_has_root_permissions ## Updates a single application, usage: make update APP_NAME=iwa-ait
-	make _update_existing_directory_permissions APP_NAME=${APP_NAME}
-	${SUDO} -u "${USER}" make _update APP_NAME=${APP_NAME}
-	make __chown_writable_dirs APP_NAME=${APP_NAME}
-
-_update_existing_directory_permissions: __assert_has_root_permissions
-	echo " >> Updating existing directory permissions"
-	source ./apps/repos-enabled/${APP_NAME}.sh; \
-	[[ -d ./apps/www-data/$${GIT_PROJECT_DIR} ]] && set -x && chown -R ${USER}:${GROUP_ID} ./apps/www-data/$${GIT_PROJECT_DIR}; \
-	exit 0
-
-_update: __assert_not_root
-	if [[ ! "${APP_NAME}" ]] || [[ ! -f ./apps/repos-enabled/${APP_NAME}.sh ]]; then \
-		echo " >> Missing VALID application name, example usage: make update APP_NAME=iwa-ait"; \
-		echo " >> Please select one application, choices:"; \
-		make list_repos; \
-		exit 1; \
-	fi
-
-	current_pwd=$$(pwd); post_update() { return 0; };\
-	source ./apps/repos-enabled/${APP_NAME}.sh; \
-	make __fetch_repository GIT_PROJECT_DIR=$${GIT_PROJECT_DIR} GIT_PASSWORD=$${GIT_PASSWORD} GIT_PROJECT_NAME=$${GIT_PROJECT_NAME} || exit 1; \
-	post_update "./apps/www-data/$${GIT_PROJECT_DIR}" || exit 1;
-
-# running as root
-__chown_writable_dirs: __assert_has_root_permissions
-	echo " >> Preparing write permissions for upload directories for '${APP_NAME}'"
-	CONTAINER_USER=${DEFAULT_CONTAINER_USER}; \
-	source ./apps/repos-enabled/${APP_NAME}.sh; \
-	dirs_to_chown=($${WRITABLE_DIRS//;/ });\
-	\
-	for writable_dir in "$${dirs_to_chown[@]}"; do \
-		echo " >> Making $${CONTAINER_USER} owner of ./apps/www-data/$${GIT_PROJECT_DIR}/$${writable_dir}"; \
-		chown -R $${CONTAINER_USER} "./apps/www-data/$${GIT_PROJECT_DIR}/$${writable_dir}" || true; \
-	done
-
-__assert_not_root:
-	if [[ "$$(id -u)" == "0" ]]; then \
-		id -u;\
-		echo " This task cannot work with root privileges"; \
-		exit 1; \
-	fi
-
-__assert_has_root_permissions:
-	if [[ "$$(id -u)" != "0" ]]; then \
-		id -u;\
-		echo " Root permissions required"; \
-		exit 1; \
-	fi
-
-update_all: __assert_has_root_permissions ## Deploy updates to all applications
-	echo " >> Deploying all applications"
-	make list_repos
-
-	for APP_NAME in $$(make list_repos); do \
-		echo " >> Deploying $${APP_NAME}";\
-		make update APP_NAME=$${APP_NAME}; \
-		if [[ $$? != 0 ]]; then \
-			echo " >> !!! Failed deploying $${APP_NAME}";\
-			exit 1; \
-		fi \
-	done
 
 __rm:
 	make _call_compose CMD="rm"
-
-__fetch_repository: __assert_not_root
-	echo " >> Updating application at ./apps/www-data/${GIT_PROJECT_DIR}"
-	if [[ -d ./apps/www-data/${GIT_PROJECT_DIR}/.git ]]; then \
-		cd "./apps/www-data/${GIT_PROJECT_DIR}" || exit 1; \
-		echo " >> Setting remote origin"; \
-		git remote remove origin 2>/dev/null || true; \
-		git remote add origin ${GIT_PROTO}://${GIT_USER}:${GIT_PASSWORD}@${GIT_SERVER}/${GIT_ORG_NAME}/${GIT_PROJECT_NAME}; \
-		git pull origin master || exit 1; \
-		git remote remove origin 2>/dev/null || true; \
-	else \
-		echo " >> Cloning..."; \
-		git clone ${GIT_PROTO}://${GIT_USER}:${GIT_PASSWORD}@${GIT_SERVER}/${GIT_ORG_NAME}/${GIT_PROJECT_NAME} ./apps/www-data/${GIT_PROJECT_DIR} || exit 1; \
-	fi;
 
 
 ########### BACKUP RECOVERY ###########
