@@ -19,6 +19,8 @@ from .tasks.gateway import ForceReloadSSLTask
 from .tasks.configsmanagement import ListConfigsTask
 from .tasks.configsmanagement import EnableConfigTask
 from .tasks.configsmanagement import DisableConfigTask
+from .tasks.maintenance import MaintenanceOnTask
+from .tasks.maintenance import MaintenanceOffTask
 
 
 def imports():
@@ -26,19 +28,24 @@ def imports():
         TaskDeclaration(ListContainersTask()),
         TaskDeclaration(StartTask()),
         TaskDeclaration(StopTask()),
+        TaskDeclaration(StopAndRemoveTask()),
         TaskDeclaration(ListDefinedServices()),
         TaskDeclaration(ServiceUpTask()),
         TaskDeclaration(ServiceDownTask()),
         TaskDeclaration(ServiceRemoveTask()),
-        TaskDeclaration(StopAndRemoveTask()),
         TaskDeclaration(PullTask()),
         TaskDeclaration(RestartTask()),
-        TaskDeclaration(ReloadGatewayTask()),
-        TaskDeclaration(ShowSSLStatusTask()),
-        TaskDeclaration(ForceReloadSSLTask()),
         TaskDeclaration(ListConfigsTask()),
         TaskDeclaration(EnableConfigTask()),
         TaskDeclaration(DisableConfigTask()),
+
+        # production-related
+        TaskDeclaration(ReloadGatewayTask()),
+        TaskDeclaration(ShowSSLStatusTask()),
+        TaskDeclaration(ForceReloadSSLTask()),
+        TaskDeclaration(MaintenanceOnTask()),
+        TaskDeclaration(MaintenanceOffTask()),
+
         TaskDeclaration(GetEnvTask()),
         TaskDeclaration(SetEnvTask())
     ]

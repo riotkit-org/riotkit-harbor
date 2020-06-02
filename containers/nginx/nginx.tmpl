@@ -322,8 +322,18 @@ server {
 		}
 		{{ end }}
 
-		{{ if $use_maintenance_mode }}
+		{{ if eq $use_maintenance_mode "True" }}
+		set $show_maintenance 0;
+
 		if (-f /maintenance/on) {
+			set $show_maintenance 1;
+		}
+
+		if (-f /maintenance/{{ $host }}-on) {
+			set $show_maintenance 1;
+		}
+
+		if ($show_maintenance = 1) {
 			return 503;
 		}
 		{{ end }}
@@ -400,7 +410,17 @@ server {
 		{{ end }}
 
 		{{ if eq $use_maintenance_mode "True" }}
+		set $show_maintenance 0;
+
 		if (-f /maintenance/on) {
+			set $show_maintenance 1;
+		}
+
+		if (-f /maintenance/{{ $host }}-on) {
+			set $show_maintenance 1;
+		}
+
+		if ($show_maintenance = 1) {
 			return 503;
 		}
 		{{ end }}
@@ -454,7 +474,17 @@ server {
 		{{ end }}
 
 		{{ if eq $use_maintenance_mode "True" }}
+		set $show_maintenance 0;
+
 		if (-f /maintenance/on) {
+			set $show_maintenance 1;
+		}
+
+		if (-f /maintenance/{{ $host }}-on) {
+			set $show_maintenance 1;
+		}
+
+		if ($show_maintenance = 1) {
 			return 503;
 		}
 		{{ end }}

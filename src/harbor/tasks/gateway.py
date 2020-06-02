@@ -34,7 +34,7 @@ class ReloadGatewayTask(GatewayBaseTask):
         return ':reload'
 
     def get_group_name(self) -> str:
-        return ':harbor:gateway'
+        return ':harbor:prod:gateway'
 
 
 class ShowSSLStatusTask(GatewayBaseTask):
@@ -50,7 +50,7 @@ class ShowSSLStatusTask(GatewayBaseTask):
         return ':status'
 
     def get_group_name(self) -> str:
-        return ':harbor:gateway:ssl'
+        return ':harbor:prod:gateway:ssl'
 
 
 class ForceReloadSSLTask(GatewayBaseTask):
@@ -66,4 +66,4 @@ class ForceReloadSSLTask(GatewayBaseTask):
         return ':regenerate'
 
     def get_group_name(self) -> str:
-        return ':harbor:gateway:ssl'
+        return ':harbor:prod:gateway:ssl'

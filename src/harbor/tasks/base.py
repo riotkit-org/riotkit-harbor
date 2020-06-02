@@ -69,12 +69,17 @@ class HarborBaseTask(TaskInterface, ABC):
     def get_declared_envs(self) -> Dict[str, str]:
         return {
             'APPS_PATH': './apps/',
+            'DATA_PATH': './data/',
             'COMPOSE_PROJECT_NAME': None
         }
 
     @staticmethod
     def get_apps_path(ctx: ExecutionContext) -> str:
         return ctx.get_env('APPS_PATH')
+
+    @staticmethod
+    def get_data_path(ctx: ExecutionContext) -> str:
+        return ctx.get_env('DATA_PATH')
 
     @staticmethod
     def get_project_name(ctx: ExecutionContext) -> str:

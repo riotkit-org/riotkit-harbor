@@ -82,7 +82,7 @@ class RestartTask(BaseProfileSupportingTask):
 
 
 class StopAndRemoveTask(BaseProfileSupportingTask):
-    """Forcibly stop running containers
+    """Forcibly stop running containers and remove (keeps volumes)
     """
 
     def get_name(self) -> str:
