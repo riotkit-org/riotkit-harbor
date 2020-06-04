@@ -1,16 +1,23 @@
 
+"""Services declarations operations - docker-compose YAML represented as model
+"""
+
 import os
 from traceback import print_exc
 from typing import List
+from typing import Optional
 from rkd.inputoutput import IO
 from .expressions import safe_eval
 from .exception import ProfileNotFoundException
+from .exception import ServiceNotFoundInYaml
 
 DEFAULT_SELECTOR = 'service is not None'  # passes all containers
 BOOLEANS = ['true', 'TRUE', 'True', True]
 
 
-class Service(object):
+class ServiceDeclaration(object):
+    """Model of a parsed service declaration from YAML"""
+
     _name: str
     _definition: dict
 
@@ -48,8 +55,16 @@ class Service(object):
         except KeyError:
             return []
 
+    def get_desired_replicas_count(self) -> int:
+        try:
+            return int(self.get_definition()['labels']['org.riotkit.replicas'])
+        except KeyError:
+            return 1
+
 
 class ServiceSelector(object):
+    """Acts as a service filter"""
+
     _selector: str
     _io: IO
 
@@ -67,19 +82,19 @@ class ServiceSelector(object):
             self._io.error_msg('Exception raised, while attempting to evaluate --profile selector')
             return False
 
-    def find_matching_services(self, services: dict) -> List[Service]:
+    def find_matching_services(self, services: dict) -> List[ServiceDeclaration]:
         """Find names of matching services by current Service Selector"""
         matched = []
 
         for name, definition in services.items():
             if self.is_service_matching(definition, name):
-                matched.append(Service(name, definition))
+                matched.append(ServiceDeclaration(name, definition))
 
         return matched
 
 
 class ProfileLoader(object):
-    """Parses profiles in ./apps/profiles
+    """Parses profiles from ./apps/profiles
     """
 
     _io: IO
@@ -105,3 +120,19 @@ class ProfileLoader(object):
             content = f.read()
 
             return ServiceSelector(content, self._io)
+
+
+class ServiceLocator(object):
+    """Declarations repository"""
+
+    _services: dict
+
+    def __init__(self, services: dict):
+        self._services = services
+
+    def get_by_name(self, name: str) -> Optional[ServiceDeclaration]:
+        try:
+            return ServiceDeclaration(name, self._services[name])
+        except KeyError:
+            raise ServiceNotFoundInYaml(name)
+

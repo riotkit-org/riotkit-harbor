@@ -5,7 +5,11 @@ class CachedLoader(object):
 
     @classmethod
     def load_compose_definition(cls, loader: callable):
-        if not 'compose' in cls.items:
-            cls.items['compose'] = loader()
+        return cls.cached('compose', loader)
 
-        return cls.items['compose']
+    @classmethod
+    def cached(cls, name: str, loader: callable):
+        if name not in cls.items:
+            cls.items[name] = loader()
+
+        return cls.items[name]

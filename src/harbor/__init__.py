@@ -12,6 +12,7 @@ from .tasks.running import PullTask
 from .tasks.service import ServiceRemoveTask
 from .tasks.service import ServiceUpTask
 from .tasks.service import ServiceDownTask
+from .tasks.service import WaitForServiceTask
 from .tasks.listing import ListDefinedServices
 from .tasks.gateway import ReloadGatewayTask
 from .tasks.gateway import ShowSSLStatusTask
@@ -36,6 +37,7 @@ def imports():
         TaskDeclaration(ListDefinedServices()),
         TaskDeclaration(ServiceUpTask()),
         TaskDeclaration(ServiceDownTask()),
+        TaskDeclaration(WaitForServiceTask()),
         TaskDeclaration(ServiceRemoveTask()),
         TaskDeclaration(PullTask()),
         TaskDeclaration(RestartTask()),
