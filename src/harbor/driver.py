@@ -151,11 +151,14 @@ class ComposeDriver(object):
     #
     # Domain specific methods
     #
-    def up(self, service: ServiceDeclaration, norecreate: bool = False, extra_args: str = ''):
+    def up(self, service: ServiceDeclaration, norecreate: bool = False, force_recreate: bool = False,
+           extra_args: str = ''):
         """Bring up the service"""
 
         self.compose([
-            'up', '-d', '--no-recreate' if norecreate else '',
+            'up', '-d',
+            '--no-recreate' if norecreate else '',
+            '--force-recreate' if force_recreate else '',
             '--scale %s=%i' % (service.get_name(), service.get_desired_replicas_count()),
             service.get_name(),
             extra_args

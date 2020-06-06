@@ -29,7 +29,9 @@ class ServiceUpTask(BaseHarborServiceTask):
 
            NOTICE: Do not use with databases
 
-        2) enforced: Perform an enforced update with a downtime (regular docker-compose behavior)
+        2) compose: Perform a standard docker-compose up-like, if service is up-to-date then does not update, does not remove volumes
+
+        3) recreate: Removes container and creates a new one, does not affect volumes
 
         3) auto (default): Performs automatic selection basing on label "org.riotkit.updateStrategy", defaults to "compose"
     """
@@ -50,7 +52,9 @@ class ServiceUpTask(BaseHarborServiceTask):
 
         strategies = {
             'rolling': lambda: self.deploy_rolling(service, context),
-            'compose': lambda: self.deploy_enforced(service, context)
+            'compose': lambda: self.deploy_compose_like(service, context),
+            'recreate': lambda: self.deploy_recreate(service, context)
+            # @todo: delayed-request
         }
 
         if strategy in strategies:
@@ -102,12 +106,22 @@ class ServiceUpTask(BaseHarborServiceTask):
 
         return True
 
-    def deploy_enforced(self, service: ServiceDeclaration, ctx: ExecutionContext) -> bool:
+    def deploy_compose_like(self, service: ServiceDeclaration, ctx: ExecutionContext) -> bool:
         """Regular docker-compose up deployment (with downtime)"""
 
         self.io().info('Performing "enforced" deployment for "%s"' % service.get_name())
         self.containers(ctx).up(service,
                                 norecreate=bool(ctx.get_arg('--dont-recreate')),
+                                extra_args=ctx.get_arg('--extra-args'))
+
+        return True
+
+    def deploy_recreate(self, service: ServiceDeclaration, ctx: ExecutionContext) -> bool:
+        """Regular docker-compose up deployment (with downtime)"""
+
+        self.io().info('Performing "recreate" deployment for "%s"' % service.get_name())
+        self.containers(ctx).up(service,
+                                norecreate=False, force_recreate=True,
                                 extra_args=ctx.get_arg('--extra-args'))
 
         return True

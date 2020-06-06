@@ -18,3 +18,4 @@ services:
         labels:
             com.centurylinklabs.watchtower.enable: true
             org.riotkit.useMaintenanceMode: false
+            org.riotkit.updateStrategy: rolling
