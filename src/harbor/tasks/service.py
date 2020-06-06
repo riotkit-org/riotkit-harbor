@@ -90,6 +90,7 @@ class ServiceUpTask(BaseHarborServiceTask):
                     existing_containers = self.containers(ctx).scale_one_up(service)
 
                     self.rkd([
+                        '--no-ui',
                         ':harbor:service:wait-for',
                         '--name=%s' % service.get_name(),
                         '--instance=%s' % max(existing_containers.keys())

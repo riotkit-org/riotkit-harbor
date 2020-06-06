@@ -5,6 +5,7 @@ from rkd.standardlib.env import GetEnvTask
 from rkd.standardlib.env import SetEnvTask
 from .tasks.running import ListContainersTask
 from .tasks.running import StartTask
+from .tasks.running import UpgradeTask
 from .tasks.running import StopTask
 from .tasks.running import StopAndRemoveTask
 from .tasks.running import RestartTask
@@ -33,6 +34,7 @@ def imports():
     return [
         TaskDeclaration(ListContainersTask()),
         TaskDeclaration(StartTask()),
+        TaskDeclaration(UpgradeTask()),
         TaskDeclaration(StopTask()),
         TaskDeclaration(StopAndRemoveTask()),
         TaskDeclaration(ListDefinedServices()),

@@ -38,20 +38,38 @@ class StartTask(BaseProfileSupportingTask):
     
     def configure_argparse(self, parser: ArgumentParser):
         super().configure_argparse(parser)
-        parser.add_argument('--no-recreate', help='If containers already exist, don\'t recreate them. ' +
-                                                  'Incompatible with --force-recreate and -V.', action='store_true')
-        parser.add_argument('--force-recreate', help='Recreate containers even if their ' +
-                                                     'configuration and image haven\'t changed.', action='store_true')
-        parser.add_argument('--no-build', help='Don\'t build an image, even if it\'s missing.', action='store_true')
-        parser.add_argument('--no-deps', help='Don\'t start linked services.', action='store_true')
-        parser.add_argument('--no-detach', '-n', help='Don\'t start in detach mode', action='store_true')
+        parser.add_argument('--strategy', '-s', default='', help='Enforce an update strategy (optional)')
 
     def get_name(self) -> str:
         return ':start'
 
     def run(self, context: ExecutionContext) -> bool:
-        # @todo: Rewrite to use service.py
-        return False
+        services = self.get_matching_services(context)
+        strategy = context.get_arg('--strategy')
+        result = True
+
+        for service in services:
+            self.io().h2('Starting "%s" (%i instances)...' % (service.get_name(), service.get_desired_replicas_count()))
+
+            try:
+                self.rkd(
+                    [
+                        '--no-ui',
+                        ':harbor:service:up',
+                        '--name=%s' % service.get_name(),
+                        ('--strategy=%s' % strategy) if strategy else ''
+                    ],
+                    capture=not self.io().is_log_level_at_least('debug')
+                )
+
+                self.io().success_msg('Service "%s" was started' % service.get_name())
+
+            except CalledProcessError as e:
+                print(e)
+                self.io().error_msg('Cannot start service "%s"' % service.get_name())
+                result = False
+
+        return result
 
 
 class StopTask(BaseProfileSupportingTask):
@@ -117,30 +135,13 @@ class UpgradeTask(BaseProfileSupportingTask):
     def get_name(self) -> str:
         return ':upgrade'
 
-    def configure_argparse(self, parser: ArgumentParser):
-        parser.add_argument('--force-recreate', '-r', help='Force recreate', action='store_true')
-
     def run(self, context: ExecutionContext) -> bool:
-        force_recreate = context.get_arg('--force-recreate')
+        profile = context.get_arg('--profile')
         success = True
 
         self.io().h2('Pulling images')
-        self.rkd([':harbor:pull', '--profile=%s' % context.get_arg('--profile')])
-
-        for service in self.get_matching_services(context):
-            self.io().h2('Upgrading %s' % service.get_name())
-
-            if force_recreate:
-                try:
-                    self.rkd([':harbor:service:rm', '--name=%s' % service.get_name()])
-                except CalledProcessError:
-                    pass
-
-            try:
-                self.rkd([':harbor:service:up', '--name=%s' % service.get_name()])
-            except CalledProcessError:
-                success = False
-
-        self.rkd([':harbor:gateway:update'])
+        self.rkd(['--no-ui', ':harbor:pull', '--profile=%s' % profile])
+        self.rkd(['--no-ui', ':harbor:start', '--profile=%s' % profile])
+        self.rkd(['--no-ui', ':harbor:gateway:update'])
 
         return success
