@@ -43,7 +43,7 @@ class ServiceUpTask(BaseHarborServiceTask):
         super().configure_argparse(parser)
         parser.add_argument('--dont-recreate', '-d', action='store_true', help='Don\'t recreate the container if' +
                                                                                ' already existing (compose only)')
-        parser.add_argument('--strategy', '-s', default='auto', help='Deployment strategy: rolling, compose, auto')
+        parser.add_argument('--strategy', '-s', default='auto', help='Deployment strategy: rolling, compose, recreate, auto')
 
     def run(self, context: ExecutionContext) -> bool:
         service_name = context.get_arg('--name')
@@ -54,7 +54,6 @@ class ServiceUpTask(BaseHarborServiceTask):
             'rolling': lambda: self.deploy_rolling(service, context),
             'compose': lambda: self.deploy_compose_like(service, context),
             'recreate': lambda: self.deploy_recreate(service, context)
-            # @todo: delayed-request
         }
 
         if strategy in strategies:
@@ -88,14 +87,20 @@ class ServiceUpTask(BaseHarborServiceTask):
 
             with self.containers(ctx).service_discovery_stopped():
                 try:
-                    new_replica_name = self.containers(ctx).scale_one_up(service)
+                    existing_containers = self.containers(ctx).scale_one_up(service)
+
                     self.rkd([
                         ':harbor:service:wait-for',
                         '--name=%s' % service.get_name(),
-                        '--instance=%s' % new_replica_name]
-                    )
+                        '--instance=%s' % max(existing_containers.keys())
+                    ])
 
-                    self.containers(ctx).kill_older_replica_than(new_replica_name, processed)
+                    self.containers(ctx).kill_older_replica_than(
+                        service,
+                        self.get_project_name(ctx),
+                        existing_containers,
+                        processed + 1
+                    )
 
                 except Exception as e:
                     self.io().error('Scaling back to declared state as error happened: %s' % str(e))
@@ -103,6 +108,8 @@ class ServiceUpTask(BaseHarborServiceTask):
                     raise e
 
                 processed += 1
+
+            self.io().print_opt_line()
 
         return True
 

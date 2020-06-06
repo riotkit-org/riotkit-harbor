@@ -1,3 +1,4 @@
+from typing import Dict
 from argparse import ArgumentParser
 from tabulate import tabulate
 from rkd.contract import ExecutionContext
@@ -23,10 +24,10 @@ class ListDefinedServices(BaseProfileSupportingTask):
         services = self.get_matching_services(ctx)
 
         # table
-        table_headers = ['Name', 'Running', 'URL', 'Ports', 'Watchtower', 'Maintenance mode', 'Update strategy']
+        table_headers = ['Name', 'Declared version', 'Replicas', 'URL', 'Ports', 'Maintenance mode', 'Update strategy', 'Watchtower']
         table_body = []
 
-        running = self.containers(ctx).get_running_containers()
+        running = self.containers(ctx).get_created_containers(only_running=True)
 
         for service in services:
             domains = service.get_domains()
@@ -53,18 +54,47 @@ class ListDefinedServices(BaseProfileSupportingTask):
         return "\n".join(domains)
 
     @staticmethod
-    def _append_to_table(table_body: list, service: ServiceDeclaration, running_services: list, domain: str):
-        replicas_running = ' (?/%i)' % service.get_desired_replicas_count()
+    def _append_to_table(table_body: list, service: ServiceDeclaration,
+                         running_services: Dict[str, Dict[int, bool]], domain: str):
+
+        is_running = service.get_name() in running_services
+        replicas_running = ' [%i/%i]' % (
+            len(running_services[service.get_name()]) if is_running else 0,
+            service.get_desired_replicas_count()
+        )
 
         table_body.append([
             service.get_name(),
-            bool2str(service.get_name() in running_services, y='Yes', n='No') + ' ' + replicas_running,
+            service.get_declared_version(),
+            replicas_running,
             domain,
-            ', '.join(service.get_ports()),
-            bool2str(service.is_using_watchtower()),
-            bool2str(service.is_using_maintenance_mode()),
-            service.get_update_strategy()
+            "\n".join(service.get_ports()),
+            bool2str(service.is_using_maintenance_mode(), y='Available', n='N/A'),
+            service.get_update_strategy(),
+            bool2str(service.is_using_watchtower())
         ])
+
+
+class DumpComposeArguments(BaseProfileSupportingTask):
+    """Lists all defined containers in YAML files (can be limited by --profile selector)"""
+
+    def get_group_name(self) -> str:
+        return ':harbor:diagnostic'
+
+    def get_name(self) -> str:
+        return ':dump-compose-args'
+
+    def run(self, context: ExecutionContext) -> bool:
+        try:
+            self.io().outln(self.containers(context).get_compose_args())
+
+        except AttributeError as e:
+            self.io().error_msg('Cannot retrieve compose arguments, possibly not using docker-compose. ' +
+                                'Details: %s' % str(e))
+            return False
+
+        return True
+
 
 def bool2str(val: bool, y: str = 'Active', n: str = 'Not active'):
     return y if val else n

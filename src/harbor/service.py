@@ -67,6 +67,14 @@ class ServiceDeclaration(object):
         except KeyError:
             return default
 
+    def get_declared_version(self):
+        try:
+            return str(self.get_definition()['image'].split(':')[1])
+        except KeyError:
+            return 'latest (build)'
+        except IndexError:
+            return 'latest'
+
 
 class ServiceSelector(object):
     """Acts as a service filter"""

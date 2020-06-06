@@ -10,6 +10,8 @@ import os
 import re
 from contextlib import contextmanager
 from typing import Optional
+from typing import Dict
+from collections import OrderedDict
 from json import loads as json_loads
 from rkd.contract import ExecutionContext
 from .interface import HarborTaskInterface
@@ -100,7 +102,7 @@ class ComposeDriver(object):
             yield
         finally:
             self.scope.io().info('Starting service discovery')
-            self.compose(['start', 'gateway_proxy_gen'])
+            self.compose(['up', '-d', '--no-recreate', 'gateway_proxy_gen'])
 
     #
     # Methods to spawn processes in shell
@@ -167,40 +169,40 @@ class ComposeDriver(object):
     def rm(self, service: ServiceDeclaration, extra_args: str = ''):
         self.compose(['rm', '--stop', '--force', service.get_name(), extra_args])
 
-    def kill_older_replica_than(self, replica_name: str, already_killed: int = 0):
+    def kill_older_replica_than(self, service: ServiceDeclaration, project_name: str,
+                                existing_containers: Dict[int, bool],
+                                already_killed: int = 0):
         """Kill first old replica on the list"""
 
-        current_num = int(replica_name.split('_')[-1])
-        previous_num = current_num - already_killed - 1
-        service_full_name = '_'.join(replica_name.split('_')[:-1])
+        instance_index = (already_killed * -1) - 1
+        previous_instance_num = list(existing_containers.items())[instance_index][0]
+        service_full_name = project_name + '_' + service.get_name() + '_' + str(previous_instance_num)
 
-        self.scope.io().info('Replica "%s" was spawned, killing older instance' % replica_name)
-        self.scope.io().info('Killing replica num=%i' % previous_num)
-        self.scope.sh('docker rm -f "%s_%i"' % (service_full_name, previous_num))
+        self.scope.io().info('Instances: ' + str(list(existing_containers.items())))
+        self.scope.io().info('Previous instance selector: %i' % instance_index)
 
-    def scale_one_up(self, service: ServiceDeclaration) -> str:
+        self.scope.io().info('Replica "%s" was spawned, killing older instance' % service_full_name)
+        self.scope.io().info('Killing replica num=%i' % previous_instance_num)
+        self.scope.sh('docker rm -f "%s"' % service_full_name)
+
+    def scale_one_up(self, service: ServiceDeclaration) -> Dict[int, bool]:
         """Scale up and return last instance name (docker container name)"""
 
         desired_replicas = service.get_desired_replicas_count()
         self.scope.io().info('Scaling up to %i' % (desired_replicas + 1))
 
-        out = self.compose(['up', '-d', '--no-deps', '--scale %s=%i' %
-                            (service.get_name(), desired_replicas + 1), service.get_name(), '2>&1'],
-                           capture=True)
+        self.compose(
+            ['up', '-d', '--no-deps',
+             '--scale %s=%i' % (service.get_name(), desired_replicas + 1), service.get_name(), '2>&1'],
+            capture=True
+        )
 
         self.scope.io().info('Finding last instance name...')
-        results = re.findall('([A-Za-z\-_]+)_([0-9]+)', out)
+        instances: Dict[int, bool] = self.get_created_containers(only_running=False)[service.get_name()]
 
-        # compose can throw warnings eg. "orphan service XY", we need to filter out that
-        results = list(filter(lambda match: match[0].endswith(service.get_name()), results))
+        self.scope.io().info('OK, it is "%s"' % max(instances.keys()))
 
-        # reduce to numbers (last part)
-        container_numbers = list(map(lambda matches: int(matches[1]), results))
-
-        last_instance_name = results[0][0] + '_' + str(max(container_numbers))
-        self.scope.io().info('OK, it is "%s"' % last_instance_name)
-
-        return last_instance_name
+        return instances
 
     def scale_to_desired_state(self, service: ServiceDeclaration):
         """Scale to declared state - eg. in case of a failure"""
@@ -224,9 +226,36 @@ class ComposeDriver(object):
     def pull(self, services_names: list):
         self.compose(['pull'] + services_names)
 
-    def get_running_containers(self):
+    def get_created_containers(self, only_running: bool) -> Dict[str, Dict[int, bool]]:
         """Gets all running services"""
-        return self.compose(['ps', '--services'], capture=True).strip().split("\n")
+
+        instances = self.compose(['ps'], capture=True).strip().split("\n")
+        counted = {}
+
+        for instance in instances:
+            matches = re.findall('([A-Za-z0-9\-_]+)_([0-9]+)\s*(.*)(Up|Exit)', instance)
+
+            if not matches:
+                continue
+
+            matches = matches[0]
+            service_name = matches[0][len(self.project_name + '_'):]
+            is_up = matches[3].upper() == 'UP'
+
+            if service_name not in counted:
+                counted[service_name] = OrderedDict()
+
+            if only_running and not is_up:
+                continue
+
+            counted[service_name][int(matches[1])] = is_up
+
+        counted_and_sorted = {}
+
+        for service in counted:
+            counted_and_sorted[service] = OrderedDict(sorted(counted[service].items()))
+
+        return counted
 
 
 def build_compose_files_list(src_root: str, is_dev: bool) -> list:

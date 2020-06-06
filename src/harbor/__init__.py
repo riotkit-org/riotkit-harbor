@@ -14,6 +14,7 @@ from .tasks.service import ServiceUpTask
 from .tasks.service import ServiceDownTask
 from .tasks.service import WaitForServiceTask
 from .tasks.listing import ListDefinedServices
+from .tasks.listing import DumpComposeArguments
 from .tasks.gateway import ReloadGatewayTask
 from .tasks.gateway import ShowSSLStatusTask
 from .tasks.gateway import ForceReloadSSLTask
@@ -44,6 +45,7 @@ def imports():
         TaskDeclaration(ListConfigsTask()),
         TaskDeclaration(EnableConfigTask()),
         TaskDeclaration(DisableConfigTask()),
+        TaskDeclaration(DumpComposeArguments()),
 
         # production-related
         TaskDeclaration(ReloadGatewayTask()),
