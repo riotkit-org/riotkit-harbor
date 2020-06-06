@@ -19,16 +19,16 @@ class ListContainersTask(HarborBaseTask):
         parser.add_argument('--quiet', '-q', help='Only display IDs', action='store_true')
         parser.add_argument('--all', '-a', help='Show all containers, including stopped', action='store_true')
 
-    def run(self, context: ExecutionContext) -> bool:
+    def run(self, ctx: ExecutionContext) -> bool:
         params = []
 
-        if context.get_arg('--quiet'):
+        if ctx.get_arg('--quiet'):
             params.append('--quiet')
 
-        if context.get_arg('--all'):
+        if ctx.get_arg('--all'):
             params.append('--all')
 
-        self.compose(['ps'] + params)
+        self.containers(ctx).ps(params)
         return True
 
 
@@ -50,9 +50,8 @@ class StartTask(BaseProfileSupportingTask):
         return ':start'
 
     def run(self, context: ExecutionContext) -> bool:
-        self.compose(['up', '-d'] + self.get_matching_service_names(context))
-
-        return True
+        # @todo: Rewrite to use service.py
+        return False
 
 
 class StopTask(BaseProfileSupportingTask):
@@ -63,9 +62,8 @@ class StopTask(BaseProfileSupportingTask):
         return ':stop'
 
     def run(self, context: ExecutionContext) -> bool:
-        self.compose(['stop', '-t', '300'] + self.get_matching_service_names(context))
-
-        return True
+        # @todo: Rewrite to use service.py
+        return False
 
 
 class RestartTask(BaseProfileSupportingTask):
@@ -76,9 +74,8 @@ class RestartTask(BaseProfileSupportingTask):
         return ':restart'
 
     def run(self, context: ExecutionContext) -> bool:
-        self.compose(['stop', '-t', '300'] + self.get_matching_service_names(context))
-
-        return True
+        # @todo: Rewrite to use service.py
+        return False
 
 
 class StopAndRemoveTask(BaseProfileSupportingTask):
@@ -89,9 +86,8 @@ class StopAndRemoveTask(BaseProfileSupportingTask):
         return ':remove'
 
     def run(self, context: ExecutionContext) -> bool:
-        self.compose(['rm', '-f', '--stop'] + self.get_matching_service_names(context))
-
-        return True
+        # @todo: Rewrite to use service.py
+        return False
 
 
 class PullTask(BaseProfileSupportingTask):
@@ -101,8 +97,8 @@ class PullTask(BaseProfileSupportingTask):
     def get_name(self) -> str:
         return ':pull'
 
-    def run(self, context: ExecutionContext) -> bool:
-        self.compose(['pull'] + self.get_matching_service_names(context))
+    def run(self, ctx: ExecutionContext) -> bool:
+        self.containers(ctx).pull(self.get_matching_service_names(ctx))
 
         return True
 

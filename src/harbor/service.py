@@ -61,6 +61,12 @@ class ServiceDeclaration(object):
         except KeyError:
             return 1
 
+    def get_update_strategy(self, default: str = 'compose') -> str:
+        try:
+            return str(self.get_definition()['labels']['org.riotkit.updateStrategy'])
+        except KeyError:
+            return default
+
 
 class ServiceSelector(object):
     """Acts as a service filter"""

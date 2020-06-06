@@ -12,16 +12,14 @@ class ListDefinedServices(BaseProfileSupportingTask):
     def get_name(self) -> str:
         return ':list'
 
-    def get_running_services(self):
-        """Gets all running services"""
-        return self.compose(['ps', '--services'], capture=True).strip().split("\n")
-
-    def run(self, context: ExecutionContext) -> bool:
-        services = self.get_matching_services(context)
+    def run(self, ctx: ExecutionContext) -> bool:
+        #@todo: Support group-by?
+ 
+        services = self.get_matching_services(ctx)
         table_headers = ['Name', 'Running', 'URL', 'Ports', 'Watchtower', 'Maintenance mode']
         table_body = []
 
-        running = self.get_running_services()
+        running = self.containers(ctx).get_running_containers()
 
         for service in services:
             domains = service.get_domains()

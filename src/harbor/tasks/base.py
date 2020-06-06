@@ -4,14 +4,13 @@ import yaml
 from argparse import ArgumentParser
 from abc import ABC
 from abc import abstractmethod
-from typing import Optional
 from typing import Dict
 from typing import List
 from rkd.contract import ExecutionContext
 from ..service import ProfileLoader
 from ..service import ServiceDeclaration
 from ..service import ServiceLocator
-from ..container import ComposeContainerOperator
+from ..driver import ComposeDriver
 from ..cached_loader import CachedLoader
 from ..interface import HarborTaskInterface
 
@@ -40,11 +39,12 @@ class HarborBaseTask(HarborTaskInterface):
     #
     # Lazy-dependencies
     #
-    def services(self) -> ServiceLocator:
-        return CachedLoader.cached('services', lambda: ServiceLocator(self.get_services_as_raw_dict()))
+    def services(self, ctx: ExecutionContext) -> ServiceLocator:
+        return CachedLoader.cached('services', lambda: ServiceLocator(self.get_services_as_raw_dict(ctx)))
 
-    def containers(self, ctx: ExecutionContext) -> ComposeContainerOperator:
-        return CachedLoader.cached('containers', lambda: ComposeContainerOperator(self, self.get_project_name(ctx)))
+    def containers(self, ctx: ExecutionContext) -> ComposeDriver:
+        return CachedLoader.cached('containers',
+                                   lambda: ComposeDriver(self, ctx, self.get_project_name(ctx)))
 
     def profile_loader(self, ctx: ExecutionContext) -> ProfileLoader:
         """Loads profile of a ServiceSelector to filter out"""
@@ -73,16 +73,16 @@ class HarborBaseTask(HarborTaskInterface):
     def get_project_name(ctx: ExecutionContext) -> str:
         return ctx.get_env('COMPOSE_PROJECT_NAME')
 
-    def get_compose_yaml_as_dict(self):
+    def get_compose_yaml_as_dict(self, ctx: ExecutionContext):
         """Return's parsed docker-compose file as one big dictionary"""
 
         return CachedLoader.load_compose_definition(
-            lambda: yaml.load(self.compose(['config'], capture=True), yaml.FullLoader)
+            lambda: yaml.load(self.containers(ctx).compose(['config'], capture=True), yaml.FullLoader)
         )
 
-    def get_services_as_raw_dict(self):
+    def get_services_as_raw_dict(self, ctx: ExecutionContext):
         """Gets services from YAMLS"""
-        parsed = self.get_compose_yaml_as_dict()
+        parsed = self.get_compose_yaml_as_dict(ctx)
 
         return parsed['services'] if 'services' in parsed else {}
 
@@ -106,38 +106,16 @@ class HarborBaseTask(HarborTaskInterface):
             self.io().error_msg('COMPOSE_PROJECT_NAME environment variable is not defined, cannot proceed')
             return False
 
-        self._compose_args = self.containers(context).build_operator_commandline_arguments(
-            context.get_env('APPS_PATH'),
-            is_dev=True
-        )
-
-        self.io().debug('Compose args: %s' % self._compose_args)
-
         return self.run(context)
-
-    #
-    # Methods to spawn processes in shell
-    #
-    def compose(self, arguments: list, capture: bool = False) -> Optional[str]:
-        """Makes a call to docker-compose with all prepared arguments that should be"""
-
-        cmd = 'docker-compose %s %s' % ( self._compose_args, ' '.join(arguments))
-        self.io().debug('Calling compose: %s' % cmd)
-
-        return self.sh(cmd, capture=capture)
-
-    def exec_in_container(self, container_name: str, command: str) -> str:
-        """Executes a command in given container"""
-        return self.compose(['exec', '-T', container_name, 'sh', '-c', '"', command, '"'], capture=True)
 
 
 class BaseProfileSupportingTask(HarborBaseTask, ABC):
     def configure_argparse(self, parser: ArgumentParser):
         parser.add_argument('--profile', '-p', help='Services profile', default='')
 
-    def get_matching_services(self, context: ExecutionContext) -> List[ServiceDeclaration]:
-        service_selector = self.profile_loader(context).load_profile(context.get_arg('--profile'))
-        matched = service_selector.find_matching_services(self.get_services_as_raw_dict())
+    def get_matching_services(self, ctx: ExecutionContext) -> List[ServiceDeclaration]:
+        service_selector = self.profile_loader(ctx).load_profile(ctx.get_arg('--profile'))
+        matched = service_selector.find_matching_services(self.get_services_as_raw_dict(ctx))
 
         return matched
 

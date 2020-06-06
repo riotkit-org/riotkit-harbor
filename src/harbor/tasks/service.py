@@ -1,6 +1,4 @@
-import re
 import subprocess
-from contextlib import contextmanager
 from argparse import ArgumentParser
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
@@ -19,7 +17,7 @@ class BaseHarborServiceTask(HarborBaseTask):
         super().configure_argparse(parser)
 
         parser.add_argument('--name', '-n', required=True, help='Service name')
-        parser.add_argument('--compose-args', '-c', help='Optional compose arguments', default='')
+        parser.add_argument('--extra-args', '-c', help='Optional compose arguments', default='')
 
 
 class ServiceUpTask(BaseHarborServiceTask):
@@ -32,6 +30,8 @@ class ServiceUpTask(BaseHarborServiceTask):
            NOTICE: Do not use with databases
 
         2) enforced: Perform an enforced update with a downtime (regular docker-compose behavior)
+
+        3) auto (default): Performs automatic selection basing on label "org.riotkit.updateStrategy", defaults to "compose"
     """
 
     def get_name(self) -> str:
@@ -40,20 +40,29 @@ class ServiceUpTask(BaseHarborServiceTask):
     def configure_argparse(self, parser: ArgumentParser):
         super().configure_argparse(parser)
         parser.add_argument('--dont-recreate', '-d', action='store_true', help='Don\'t recreate the container if' +
-                                                                               ' already existing (enforced only)')
-        parser.add_argument('--strategy', '-s', default='rolling', help='Deployment strategy: rolling, enforced')
+                                                                               ' already existing (compose only)')
+        parser.add_argument('--strategy', '-s', default='auto', help='Deployment strategy: rolling, compose, auto')
 
     def run(self, context: ExecutionContext) -> bool:
         service_name = context.get_arg('--name')
         strategy = context.get_arg('--strategy')
-        service = self.services().get_by_name(service_name)
+        service = self.services(context).get_by_name(service_name)
 
-        if strategy == 'rolling':
-            return self.deploy_rolling(service, context)
-        elif strategy == 'enforced':
-            return self.deploy_enforced(service, context)
+        strategies = {
+            'rolling': lambda: self.deploy_rolling(service, context),
+            'compose': lambda: self.deploy_enforced(service, context)
+        }
+
+        if strategy in strategies:
+            return strategies[strategy]()
         else:
-            self.io().error_msg('Invalid value for --strategy switch')
+            if strategy == 'auto':
+                strategy = service.get_update_strategy(default='compose')
+
+                if strategy in strategies:
+                    return strategies[strategy]()
+
+            self.io().error_msg('Invalid strategy selected')
             return False
 
     def deploy_rolling(self, service: ServiceDeclaration, ctx: ExecutionContext) -> bool:
@@ -73,20 +82,20 @@ class ServiceUpTask(BaseHarborServiceTask):
         for replica_num in range(1, desired_replicas + 1):
             self.io().info('Processing instance #%i/%i' % (replica_num, desired_replicas))
 
-            with self._service_discovery_stopped():
+            with self.containers(ctx).service_discovery_stopped():
                 try:
-                    new_replica_name = self._scale_one_up(service)
+                    new_replica_name = self.containers(ctx).scale_one_up(service)
                     self.rkd([
                         ':harbor:service:wait-for',
                         '--name=%s' % service.get_name(),
                         '--instance=%s' % new_replica_name]
                     )
 
-                    self._kill_older_replica_than(new_replica_name, processed)
+                    self.containers(ctx).kill_older_replica_than(new_replica_name, processed)
 
                 except Exception as e:
                     self.io().error('Scaling back to declared state as error happened: %s' % str(e))
-                    self._scale_to_desired_state(service)
+                    self.containers(ctx).scale_to_desired_state(service)
                     raise e
 
                 processed += 1
@@ -96,67 +105,12 @@ class ServiceUpTask(BaseHarborServiceTask):
     def deploy_enforced(self, service: ServiceDeclaration, ctx: ExecutionContext) -> bool:
         """Regular docker-compose up deployment (with downtime)"""
 
-        recreate = '--no-recreate' if ctx.get_arg('--dont-recreate') else ''
-
         self.io().info('Performing "enforced" deployment for "%s"' % service.get_name())
+        self.containers(ctx).up(service,
+                                norecreate=bool(ctx.get_arg('--dont-recreate')),
+                                extra_args=ctx.get_arg('--extra-args'))
 
-        self.compose([
-            'up', '-d', recreate,
-            '--scale %s=%i' % (service.get_name(), service.get_desired_replicas_count()),
-            service.get_name(),
-            ctx.get_arg('--compose-args')
-        ])
         return True
-
-    def _kill_older_replica_than(self, replica_name: str, already_killed: int = 0):
-        """Kill first old replica on the list"""
-
-        current_num = int(replica_name.split('_')[-1])
-        previous_num = current_num - already_killed - 1
-        service_full_name = '_'.join(replica_name.split('_')[:-1])
-
-        self.io().info('Replica "%s" was spawned, killing older instance' % replica_name)
-        self.io().info('Killing replica num=%i' % previous_num)
-        self.sh('docker rm -f "%s_%i"' % (service_full_name, previous_num))
-
-    def _scale_one_up(self, service: ServiceDeclaration) -> str:
-        """Scale up and return last instance name (docker container name)"""
-
-        desired_replicas = service.get_desired_replicas_count()
-        self.io().info('Scaling up to %i' % (desired_replicas + 1))
-
-        out = self.compose(['up', '-d', '--scale %s=%i' %
-                            (service.get_name(), desired_replicas + 1), service.get_name(), '2>&1'],
-                           capture=True)
-
-        self.io().info('Finding last instance name...')
-        results = re.findall('([A-Za-z\-_]+)_([0-9]+)', out)
-        container_numbers = list(map(lambda matches: int(matches[1]), results))
-
-        last_instance_name = results[0][0] + '_' + str(max(container_numbers))
-        self.io().info('OK, it is "%s"' % last_instance_name)
-
-        return last_instance_name
-
-    def _scale_to_desired_state(self, service: ServiceDeclaration):
-        """Scale to declared state - eg. in case of a failure"""
-
-        self.compose(
-            ['up', '-d',
-             '--scale %s=%i' % (service.get_name(), service.get_desired_replicas_count()), service.get_name(), '2>&1']
-        )
-
-    @contextmanager
-    def _service_discovery_stopped(self):
-        """Stops a service discovery for a moment"""
-
-        try:
-            self.io().info('Suspending service discovery')
-            self.compose(['stop', 'gateway_proxy_gen'])
-            yield
-        finally:
-            self.io().info('Starting service discovery')
-            self.compose(['start', 'gateway_proxy_gen'])
 
 
 class ServiceRemoveTask(BaseHarborServiceTask):
@@ -173,6 +127,7 @@ class ServiceRemoveTask(BaseHarborServiceTask):
 
     def run(self, ctx: ExecutionContext) -> bool:
         service_name = ctx.get_arg('--name')
+        service = self.services(ctx).get_by_name(service_name)
         is_removing_image = ctx.get_arg('--with-image')
         img_to_remove = ''
 
@@ -182,11 +137,11 @@ class ServiceRemoveTask(BaseHarborServiceTask):
             if inspected:
                 img_to_remove = inspected['Image']
 
-        self.compose(['rm', '--stop', '--force', service_name, ctx.get_arg('--compose-args')])
+        self.containers(ctx).rm(service, extra_args=ctx.get_arg('--extra-args'))
 
         if img_to_remove:
             try:
-                self.sh('docker rmi %s' % img_to_remove)
+                self.containers(ctx).rm_image(img_to_remove)
             except:
                 pass
 
@@ -200,10 +155,10 @@ class ServiceDownTask(BaseHarborServiceTask):
     def get_name(self) -> str:
         return ':down'
 
-    def run(self, context: ExecutionContext) -> bool:
-        service_name = context.get_arg('--name')
+    def run(self, ctx: ExecutionContext) -> bool:
+        service_name = ctx.get_arg('--name')
+        self.containers(ctx).stop(service_name, extra_args=ctx.get_arg('--extra-args'))
 
-        self.compose(['stop', service_name, context.get_arg('--compose-args')])
         return True
 
 
@@ -223,7 +178,7 @@ class WaitForServiceTask(BaseHarborServiceTask):
         timeout = int(ctx.get_arg('--timeout'))
 
         instance_num = int(ctx.get_arg('--instance').split('_')[-1])
-        container = self.containers(ctx).inspect(self.containers(ctx).get_container_name_for_service(service_name))
+        container = self.containers(ctx).inspect(self.containers(ctx).get_last_container_name_for_service(service_name))
         started_at = time()
 
         self.io().info('Checking health of "%s" service - instance #%i' % (service_name, instance_num))
@@ -241,13 +196,11 @@ class WaitForServiceTask(BaseHarborServiceTask):
                     self.io().warn('Docker reports "starting" - performing a manual check, we wont wait for docker')
 
                     try:
-                        self.compose([
-                            'exec', '-T',
-                            '--index=%i' % instance_num,
-                            service_name,
-                            '/bin/sh', '-c', '"%s"' % container.get_health_check_command(),
-                            '>/dev/null', '2>&1'
-                        ], capture=True)
+                        self.containers(ctx).exec_in_container(
+                            service_name=service_name,
+                            command='/bin/sh -c "%s" >/dev/null 2>&1',
+                            instance_num=instance_num
+                        )
 
                         self.io().success_msg('Service healthy after %is' % (time() - started_at))
                         return True
