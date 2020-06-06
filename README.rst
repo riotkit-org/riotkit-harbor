@@ -14,8 +14,9 @@ Is Kubernetes or OKD too big overhead or not suitable for your environment?
 Is standard docker-compose too primitive to use in production?
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-Harbor would fit perfectly, while providing some of Kubernetes-like solutions in docker-compose
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+Harbor fits perfectly, while providing some of Kubernetes-like solutions in docker-compose!
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 
 
 **Features:**
