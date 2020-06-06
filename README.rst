@@ -3,7 +3,7 @@ RiotKit's Harbor
 
 [![Documentation Status](https://readthedocs.org/projects/riotkit-docker-template/badge/?version=latest)](https://environment.docs.riotkit.org/en/latest/?badge=latest)
 
-`docker-compose` based framework for building production-like environments - starting on your local computer, deploying to your server or cluster.
+`docker-compose` based framework for building production-like environments - developing and testing on your local computer, deploying to your server or cluster from shell or from CI.
 
 Harbor
 ^^^^^^
