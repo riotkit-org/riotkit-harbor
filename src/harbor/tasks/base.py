@@ -6,6 +6,7 @@ from abc import ABC
 from abc import abstractmethod
 from typing import Dict
 from typing import List
+from enum import Enum
 from rkd.contract import ExecutionContext
 from ..service import ProfileLoader
 from ..service import ServiceDeclaration
@@ -15,6 +16,16 @@ from ..cached_loader import CachedLoader
 from ..interface import HarborTaskInterface
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
+
+
+class UpdateStrategy(Enum):
+    rolling = 'rolling'
+    recreate = 'recreate'
+    compose = 'compose'
+    auto = 'auto'
+
+    def __str__(self):
+        return self.value
 
 
 class HarborBaseTask(HarborTaskInterface):

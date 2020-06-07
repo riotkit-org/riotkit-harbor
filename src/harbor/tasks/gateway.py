@@ -16,17 +16,27 @@ class GatewayBaseTask(HarborBaseTask):
 
         return envs
 
+    def make_sure_ssl_service_is_up(self, ctx: ExecutionContext):
+        service = self.services(ctx).get_by_name('gateway_letsencrypt')
+
+        self.containers(ctx).up(service, norecreate=True)
+        self.containers(ctx).wait_for_log_message('Sleep for', service, timeout=60)
+
 
 class ReloadGatewayTask(GatewayBaseTask):
     """Reload gateway, regenerate missing SSL certificates"""
 
-    def run(self, context: ExecutionContext) -> bool:
-        self.io().h2('Reloading NGINX configuration')
-        self.exec_in_container('gateway', 'nginx -t && nginx -s reload')
+    def run(self, ctx: ExecutionContext) -> bool:
+        self.io().h2('Validating NGINX configuration')
+        self.containers(ctx).exec_in_container('gateway', 'nginx -t')
 
-        if context.get_env('DISABLE_SSL').lower() != 'true':
+        self.io().h2('Reloading NGINX configuration')
+        self.containers(ctx).exec_in_container('gateway', 'nginx -s reload')
+
+        if ctx.get_env('DISABLE_SSL').lower() != 'true':
             self.io().h2('Reloading SSL configuration')
-            self.exec_in_container('gateway_letsencrypt', '/app/signal_le_service')
+            self.make_sure_ssl_service_is_up(ctx)
+            self.containers(ctx).exec_in_container('gateway_letsencrypt', '/app/signal_le_service')
 
         return True
 
@@ -40,9 +50,10 @@ class ReloadGatewayTask(GatewayBaseTask):
 class ShowSSLStatusTask(GatewayBaseTask):
     """Show status of SSL certificates"""
 
-    def run(self, context: ExecutionContext) -> bool:
-        if context.get_env('DISABLE_SSL').lower() != 'true':
-            self.io().out(self.exec_in_container('gateway_letsencrypt', '/app/cert_status'))
+    def run(self, ctx: ExecutionContext) -> bool:
+        if ctx.get_env('DISABLE_SSL').lower() != 'true':
+            self.make_sure_ssl_service_is_up(ctx)
+            self.io().out(self.containers(ctx).exec_in_container('gateway_letsencrypt', '/app/cert_status'))
 
         return True
 
@@ -56,9 +67,10 @@ class ShowSSLStatusTask(GatewayBaseTask):
 class ForceReloadSSLTask(GatewayBaseTask):
     """Regenerate all certificates with force"""
 
-    def run(self, context: ExecutionContext) -> bool:
-        if context.get_env('DISABLE_SSL').lower() != 'true':
-            self.io().out(self.exec_in_container('gateway_letsencrypt', '/app/force_renew'))
+    def run(self, ctx: ExecutionContext) -> bool:
+        if ctx.get_env('DISABLE_SSL').lower() != 'true':
+            self.make_sure_ssl_service_is_up(ctx)
+            self.io().out(self.containers(ctx).exec_in_container('gateway_letsencrypt', '/app/force_renew'))
 
         return True
 

@@ -8,6 +8,7 @@ Interacts directly with Docker and Docker-Compose. In the future it will be poss
 
 import os
 import re
+from time import time
 from contextlib import contextmanager
 from typing import Optional
 from typing import Dict
@@ -16,6 +17,7 @@ from json import loads as json_loads
 from rkd.contract import ExecutionContext
 from .interface import HarborTaskInterface
 from .service import ServiceDeclaration
+from .exception import ServiceNotReadyException
 
 
 class Container(object):
@@ -117,6 +119,10 @@ class ComposeDriver(object):
 
     def exec_in_container(self, service_name: str, command: str, instance_num: int = None, capture: bool = True) -> str:
         """Executes a command in given container"""
+
+        if instance_num is None:
+            instance_num = int(self.get_last_container_name_for_service(service_name).split('_')[-1])
+
         return self.compose([
             'exec', '-T',
             '--index=%i' % instance_num if instance_num else '',
@@ -165,6 +171,59 @@ class ComposeDriver(object):
             service.get_name(),
             extra_args
         ])
+
+    def create_container_name(self, service: ServiceDeclaration, instance_num: int = None) -> str:
+        if not instance_num:
+            return self.get_last_container_name_for_service(service.get_name())
+
+        containers = self.get_created_containers(only_running=False)
+
+        if not service.get_name() in containers:
+            raise Exception('Invalid service name')
+
+        service_containers = containers[service.get_name()]
+        instance_num = list(service_containers.items())[-1][0]
+
+        return self.project_name + '_' + service.get_name() + '_' + str(instance_num)
+
+    def get_logs(self, service: ServiceDeclaration, instance_num: int = None) -> str:
+        """Gets logs from given container
+
+        Args:
+            service: Service declaration
+            instance_num: Replica number
+
+        Returns:
+            Logs in text format
+        """
+
+        return self.scope.sh('docker logs "%s" 2>&1' %
+                             self.create_container_name(service, instance_num), capture=True)
+
+    def wait_for_log_message(self, text: str, service: ServiceDeclaration, instance_num: int = None,
+                             timeout: int = 300):
+
+        """Waits for a text to appear in docker log
+
+        Args:
+            text: Text to wait for
+            service: Service declaration
+            instance_num: Replica number
+            timeout: Timeout in seconds
+
+        Raises:
+            ServiceNotReadyException
+        """
+
+        timeout_at = time() + timeout
+
+        while time() < timeout_at:
+            logs = self.get_logs(service, instance_num)
+
+            if text in logs:
+                return
+
+        raise ServiceNotReadyException(service.get_name(), text, instance_num)
 
     def rm(self, service: ServiceDeclaration, extra_args: str = ''):
         self.compose(['rm', '--stop', '--force', service.get_name(), extra_args])

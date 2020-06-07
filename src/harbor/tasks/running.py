@@ -1,8 +1,9 @@
 from argparse import ArgumentParser
+from subprocess import CalledProcessError
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
 from .base import BaseProfileSupportingTask
-from subprocess import CalledProcessError
+from .base import UpdateStrategy
 
 
 class ListContainersTask(HarborBaseTask):
@@ -38,7 +39,10 @@ class StartTask(BaseProfileSupportingTask):
     
     def configure_argparse(self, parser: ArgumentParser):
         super().configure_argparse(parser)
-        parser.add_argument('--strategy', '-s', default='', help='Enforce an update strategy (optional)')
+        parser.add_argument('--strategy', '-s',
+                            help='Enforce an update strategy (optional)',
+                            default='auto',
+                            type=UpdateStrategy, choices=list(UpdateStrategy))
 
     def get_name(self) -> str:
         return ':start'
@@ -59,15 +63,17 @@ class StartTask(BaseProfileSupportingTask):
                         '--name=%s' % service.get_name(),
                         ('--strategy=%s' % strategy) if strategy else ''
                     ],
-                    capture=not self.io().is_log_level_at_least('debug')
+                    capture=not self.io().is_log_level_at_least('info')
                 )
 
                 self.io().success_msg('Service "%s" was started' % service.get_name())
 
             except CalledProcessError as e:
-                print(e)
+                self.io().err(str(e))
                 self.io().error_msg('Cannot start service "%s"' % service.get_name())
                 result = False
+
+            self.io().print_opt_line()
 
         return result
 
@@ -125,23 +131,33 @@ class UpgradeTask(BaseProfileSupportingTask):
     """Begin an upgrade procedure
 
     Behavior:
-    1. Pull all images
-    2. Pull all git repositories
-    3. Upgrade services one-by-one
-    4. Restart gateway
-    5. Call SSL to refresh
+     1. Pull all images
+     2. Pull all git repositories
+     3. Upgrade services one-by-one
+     4. Restart gateway
+     5. Call SSL to refresh
     """
 
     def get_name(self) -> str:
         return ':upgrade'
 
+    def configure_argparse(self, parser: ArgumentParser):
+        super(UpgradeTask, self).configure_argparse(parser)
+        parser.add_argument('--strategy', '-s',
+                            help='Enforce an update strategy (optional)',
+                            default='auto',
+                            type=UpdateStrategy, choices=list(UpdateStrategy))
+
     def run(self, context: ExecutionContext) -> bool:
         profile = context.get_arg('--profile')
+        strategy = context.get_arg('--strategy')
         success = True
 
-        self.io().h2('Pulling images')
-        self.rkd(['--no-ui', ':harbor:pull', '--profile=%s' % profile])
-        self.rkd(['--no-ui', ':harbor:start', '--profile=%s' % profile])
-        self.rkd(['--no-ui', ':harbor:gateway:update'])
+        self.rkd([
+            '--no-ui',
+            ':harbor:pull', '--profile=%s' % profile,
+            ':harbor:start', '--profile=%s' % profile, '--strategy=%s' % strategy,
+            ':harbor:prod:gateway:reload'
+        ])
 
         return success

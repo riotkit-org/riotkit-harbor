@@ -1,10 +1,11 @@
 import subprocess
+from time import time
+from time import sleep
 from argparse import ArgumentParser
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
+from .base import UpdateStrategy
 from ..service import ServiceDeclaration
-from time import time
-from time import sleep
 
 
 class BaseHarborServiceTask(HarborBaseTask):
@@ -43,7 +44,10 @@ class ServiceUpTask(BaseHarborServiceTask):
         super().configure_argparse(parser)
         parser.add_argument('--dont-recreate', '-d', action='store_true', help='Don\'t recreate the container if' +
                                                                                ' already existing (compose only)')
-        parser.add_argument('--strategy', '-s', default='auto', help='Deployment strategy: rolling, compose, recreate, auto')
+        parser.add_argument('--strategy', '-s',
+                            help='Enforce an update strategy (optional)',
+                            default='auto',
+                            type=UpdateStrategy, choices=list(UpdateStrategy))
 
     def run(self, context: ExecutionContext) -> bool:
         service_name = context.get_arg('--name')
@@ -117,7 +121,7 @@ class ServiceUpTask(BaseHarborServiceTask):
     def deploy_compose_like(self, service: ServiceDeclaration, ctx: ExecutionContext) -> bool:
         """Regular docker-compose up deployment (with downtime)"""
 
-        self.io().info('Performing "enforced" deployment for "%s"' % service.get_name())
+        self.io().info('Performing "compose" deployment for "%s"' % service.get_name())
         self.containers(ctx).up(service,
                                 norecreate=bool(ctx.get_arg('--dont-recreate')),
                                 extra_args=ctx.get_arg('--extra-args'))
@@ -137,6 +141,8 @@ class ServiceUpTask(BaseHarborServiceTask):
 
 class ServiceRemoveTask(BaseHarborServiceTask):
     """Stops and removes a container and it's images
+
+    Use --with-image to clean up older image
     """
 
     def get_name(self) -> str:
@@ -153,6 +159,7 @@ class ServiceRemoveTask(BaseHarborServiceTask):
         is_removing_image = ctx.get_arg('--with-image')
         img_to_remove = ''
 
+        # todo repair bug: use container_name not service_name
         if is_removing_image:
             inspected = self.containers(ctx).inspect(service_name)
 

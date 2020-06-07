@@ -10,3 +10,15 @@ class ProfileNotFoundException(TaskException):
 class ServiceNotFoundInYaml(TaskException):
     def __init__(self, name: str):
         super().__init__('Service "%s" not found in any of loaded docker-compose YAMLs' % name)
+
+
+class ServiceNotRunningException(TaskException):
+    def __init__(self, name: str, instance_num='last'):
+        super().__init__('Service "%s" seems to be not running, at least at instance #%s' % (name, instance_num))
+
+
+class ServiceNotReadyException(TaskException):
+    def __init__(self, name: str, text: str, instance_num='last'):
+        super().__init__('Service "%s" #%s is not ready yet. "%s" text not found in logs' % (
+            name, instance_num, text
+        ))
