@@ -12,6 +12,11 @@ class ServiceNotFoundInYaml(TaskException):
         super().__init__('Service "%s" not found in any of loaded docker-compose YAMLs' % name)
 
 
+class ServiceNotCreatedException(TaskException):
+    def __init__(self, name: str):
+        super().__init__('Service "%s" was not yet created by docker engine, please start it first' % name)
+
+
 class ServiceNotRunningException(TaskException):
     def __init__(self, name: str, instance_num='last'):
         super().__init__('Service "%s" seems to be not running, at least at instance #%s' % (name, instance_num))

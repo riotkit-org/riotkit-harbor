@@ -1,10 +1,12 @@
 import subprocess
 from time import time
 from time import sleep
+from contextlib import contextmanager
 from argparse import ArgumentParser
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
 from .base import UpdateStrategy
+from ..exception import ServiceNotCreatedException
 from ..service import ServiceDeclaration
 
 
@@ -48,10 +50,13 @@ class ServiceUpTask(BaseHarborServiceTask):
                             help='Enforce an update strategy (optional)',
                             default='auto',
                             type=UpdateStrategy, choices=list(UpdateStrategy))
+        parser.add_argument('--remove-previous-images', action='store_true',
+                            help='Remove previous images if service had changed docker image')
 
     def run(self, context: ExecutionContext) -> bool:
         service_name = context.get_arg('--name')
-        strategy = context.get_arg('--strategy')
+        strategy = str(context.get_arg('--strategy'))
+        remove_previous_images = bool(context.get_arg('--remove-previous-images'))
         service = self.services(context).get_by_name(service_name)
 
         strategies = {
@@ -60,17 +65,52 @@ class ServiceUpTask(BaseHarborServiceTask):
             'recreate': lambda: self.deploy_recreate(service, context)
         }
 
-        if strategy in strategies:
-            return strategies[strategy]()
-        else:
-            if strategy == 'auto':
-                strategy = service.get_update_strategy(default='compose')
+        with self._old_images_clean_up(context, service, clear_images=remove_previous_images):
+            if strategy in strategies:
+                return strategies[strategy]()
+            else:
+                if strategy == 'auto':
+                    strategy = service.get_update_strategy(default='compose')
 
-                if strategy in strategies:
-                    return strategies[strategy]()
+                    if strategy in strategies:
+                        return strategies[strategy]()
 
-            self.io().error_msg('Invalid strategy selected')
-            return False
+                self.io().error_msg('Invalid strategy selected: %s' % strategy)
+                return False
+
+    @contextmanager
+    def _old_images_clean_up(self, ctx: ExecutionContext, service: ServiceDeclaration, clear_images: bool):
+        """Collects images, performs callback, then removes old images
+        """
+
+        if not clear_images:
+            yield
+            return
+
+        self.io().debug('Finding all container names for service "%s"' % service.get_name())
+
+        try:
+            container_names = self.containers(ctx).find_all_container_names_for_service(service)
+            inspected = self.containers(ctx).inspect_containers(container_names)
+            images = map(lambda container: container.get_image(), inspected)
+
+        except ServiceNotCreatedException:
+            # case: the service is just created, wasn't started yet
+            images = []
+
+        self.io().debug('OK, images collected')
+        yield
+
+        for image in images:
+            # docker build was run locally
+            if image is None:
+                continue
+
+            try:
+                self.io().info('Trying to clean up image "%s"' % image)
+                self.containers(ctx).rm_image(image, capture=True)
+            except:
+                self.io().warn('Cannot clean up image: "%s" [ignored, may be in use]' % image)
 
     def deploy_rolling(self, service: ServiceDeclaration, ctx: ExecutionContext) -> bool:
         """Rolling-update (without a downtime)
@@ -148,32 +188,11 @@ class ServiceRemoveTask(BaseHarborServiceTask):
     def get_name(self) -> str:
         return ':rm'
 
-    def configure_argparse(self, parser: ArgumentParser):
-        super().configure_argparse(parser)
-        parser.add_argument('--with-image', '-i',
-                            help='Decide if want to also untag/delete image locally', action='store_true')
-
     def run(self, ctx: ExecutionContext) -> bool:
         service_name = ctx.get_arg('--name')
         service = self.services(ctx).get_by_name(service_name)
-        is_removing_image = ctx.get_arg('--with-image')
-        img_to_remove = ''
-
-        # todo repair bug: use container_name not service_name
-        if is_removing_image:
-            inspected = self.containers(ctx).inspect(service_name)
-
-            if inspected:
-                img_to_remove = inspected['Image']
 
         self.containers(ctx).rm(service, extra_args=ctx.get_arg('--extra-args'))
-
-        if img_to_remove:
-            try:
-                self.containers(ctx).rm_image(img_to_remove)
-            except:
-                pass
-
         return True
 
 
@@ -207,7 +226,8 @@ class WaitForServiceTask(BaseHarborServiceTask):
         timeout = int(ctx.get_arg('--timeout'))
 
         instance_num = int(ctx.get_arg('--instance').split('_')[-1])
-        container = self.containers(ctx).inspect(self.containers(ctx).get_last_container_name_for_service(service_name))
+        container = self.containers(ctx).inspect_container(
+            self.containers(ctx).get_last_container_name_for_service(service_name))
         started_at = time()
 
         self.io().info('Checking health of "%s" service - instance #%i' % (service_name, instance_num))

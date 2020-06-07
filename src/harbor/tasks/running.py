@@ -43,6 +43,8 @@ class StartTask(BaseProfileSupportingTask):
                             help='Enforce an update strategy (optional)',
                             default='auto',
                             type=UpdateStrategy, choices=list(UpdateStrategy))
+        parser.add_argument('--remove-previous-images', action='store_true',
+                            help='Remove previous images if service had changed docker image')
 
     def get_name(self) -> str:
         return ':start'
@@ -61,6 +63,7 @@ class StartTask(BaseProfileSupportingTask):
                         '--no-ui',
                         ':harbor:service:up',
                         '--name=%s' % service.get_name(),
+                        '--remove-previous-images' if context.get_arg('--remove-previous-images') else '',
                         ('--strategy=%s' % strategy) if strategy else ''
                     ],
                     capture=not self.io().is_log_level_at_least('info')
@@ -147,6 +150,8 @@ class UpgradeTask(BaseProfileSupportingTask):
                             help='Enforce an update strategy (optional)',
                             default='auto',
                             type=UpdateStrategy, choices=list(UpdateStrategy))
+        parser.add_argument('--remove-previous-images', action='store_true',
+                            help='Remove previous images if service had changed docker image')
 
     def run(self, context: ExecutionContext) -> bool:
         profile = context.get_arg('--profile')
@@ -156,7 +161,10 @@ class UpgradeTask(BaseProfileSupportingTask):
         self.rkd([
             '--no-ui',
             ':harbor:pull', '--profile=%s' % profile,
+
             ':harbor:start', '--profile=%s' % profile, '--strategy=%s' % strategy,
+            '--remove-previous-images' if context.get_arg('--remove-previous-images') else '',
+
             ':harbor:prod:gateway:reload'
         ])
 

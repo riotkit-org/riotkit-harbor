@@ -18,6 +18,7 @@ from rkd.contract import ExecutionContext
 from .interface import HarborTaskInterface
 from .service import ServiceDeclaration
 from .exception import ServiceNotReadyException
+from .exception import ServiceNotCreatedException
 
 
 class Container(object):
@@ -47,6 +48,12 @@ class Container(object):
     def get_health_check_command(self) -> Optional[str]:
         try:
             return ' '.join(self.inspection['Config']['Healthcheck']['Test'][1:])
+        except KeyError:
+            return None
+
+    def get_image(self) -> Optional[str]:
+        try:
+            return self.inspection['Config']['Image']
         except KeyError:
             return None
 
@@ -83,7 +90,7 @@ class ComposeDriver(object):
 
         return service_name + str(max(instance_numbers))
 
-    def inspect(self, container_name: str):
+    def inspect_container(self, container_name: str):
         """Inspects a running/stopped container"""
 
         out = self.scope.sh('docker inspect %s' % container_name, capture=True)
@@ -93,6 +100,26 @@ class ComposeDriver(object):
             raise Exception('Cannot inspect container, unknown docker inspect output: %s' % out)
 
         return Container(container_name, as_json[0])
+
+    def inspect_containers(self, names: list):
+        """Inspect multiple containers by name at once (does same as inspect_container()
+        but has better performance for multiple containers at once)
+        """
+
+        out = self.scope.sh('docker inspect %s' % ' '.join(names), capture=True)
+        as_json = json_loads(out)
+
+        if not as_json:
+            raise Exception('Cannot inspect container, unknown docker inspect output: %s' % out)
+
+        containers = []
+        num = 0
+
+        for sub_json in as_json:
+            containers.append(Container(names[num], sub_json))
+            num += 1
+
+        return containers
 
     @contextmanager
     def service_discovery_stopped(self):
@@ -172,7 +199,7 @@ class ComposeDriver(object):
             extra_args
         ])
 
-    def create_container_name(self, service: ServiceDeclaration, instance_num: int = None) -> str:
+    def find_container_name(self, service: ServiceDeclaration, instance_num: int = None) -> str:
         if not instance_num:
             return self.get_last_container_name_for_service(service.get_name())
 
@@ -184,6 +211,9 @@ class ComposeDriver(object):
         service_containers = containers[service.get_name()]
         instance_num = list(service_containers.items())[-1][0]
 
+        return self.create_container_name(service, instance_num)
+
+    def create_container_name(self, service: ServiceDeclaration, instance_num: int) -> str:
         return self.project_name + '_' + service.get_name() + '_' + str(instance_num)
 
     def get_logs(self, service: ServiceDeclaration, instance_num: int = None) -> str:
@@ -198,7 +228,7 @@ class ComposeDriver(object):
         """
 
         return self.scope.sh('docker logs "%s" 2>&1' %
-                             self.create_container_name(service, instance_num), capture=True)
+                             self.find_container_name(service, instance_num), capture=True)
 
     def wait_for_log_message(self, text: str, service: ServiceDeclaration, instance_num: int = None,
                              timeout: int = 300):
@@ -273,8 +303,8 @@ class ComposeDriver(object):
              '2>&1']
         )
 
-    def rm_image(self, img_to_remove: str):
-        self.scope.sh('docker rmi %s' % img_to_remove)
+    def rm_image(self, img_to_remove: str, capture: bool = False):
+        self.scope.sh('docker rmi %s 2>&1' % img_to_remove, capture=capture)
 
     def stop(self, service_name: str, extra_args: str = ''):
         self.compose(['stop', service_name, extra_args])
@@ -315,6 +345,25 @@ class ComposeDriver(object):
             counted_and_sorted[service] = OrderedDict(sorted(counted[service].items()))
 
         return counted
+
+    def find_all_container_names_for_service(self, service: ServiceDeclaration) -> list:
+        """Finds all created container names for given service name
+
+        Args:
+            service: Service declaration object
+        """
+
+        created = self.get_created_containers(only_running=False)
+
+        if not service.get_name() in created:
+            raise ServiceNotCreatedException(service.get_name())
+
+        return list(
+            map(
+                lambda instance_num: self.create_container_name(service, instance_num),
+                created[service.get_name()].keys()
+            )
+        )
 
 
 def build_compose_files_list(src_root: str, is_dev: bool) -> list:
