@@ -72,6 +72,7 @@ def env_or_default(env_name: str, default: str):
 
 
 def main():
+    os.environ['RKD_PATH'] = os.path.dirname(os.path.realpath(__file__)) + '/internal:' + os.getenv('RKD_PATH', '')
     os.environ['RKD_WHITELIST_GROUPS'] = env_or_default('RKD_WHITELIST_GROUPS', ':env,:harbor,')
     os.environ['RKD_ALIAS_GROUPS'] = env_or_default('RKD_ALIAS_GROUPS', '->:harbor')
     os.environ['RKD_UI'] = env_or_default('RKD_UI', 'false')
