@@ -210,6 +210,63 @@ class ServiceDownTask(BaseHarborServiceTask):
         return True
 
 
+class ExecTask(BaseHarborServiceTask):
+    """Execute a command in a container"""
+
+    def configure_argparse(self, parser: ArgumentParser):
+        super().configure_argparse(parser)
+        parser.add_argument('--instance-num', '-i', default=None, help='Instance number. If None, then will pick last.')
+        parser.add_argument('--command', '-e', default='/bin/sh', help='Command to execute')
+        parser.add_argument('--shell', '-s', default='/bin/sh', help='Shell to use eg. bash or sh')
+
+    def get_name(self) -> str:
+        return ':exec'
+
+    def run(self, ctx: ExecutionContext) -> bool:
+        service_name = ctx.get_arg('--name')
+        service = self.services(ctx).get_by_name(service_name)
+        instance_num = int(ctx.get_arg('--instance-num')) if ctx.get_arg('--instance-num') else None
+        command = ctx.get_arg('--command')
+        shell = ctx.get_arg('--shell')
+
+        if shell != '/bin/sh' and command == '/bin/sh':
+            command = shell
+
+        container_name = self.containers(ctx).find_container_name(service, instance_num)
+
+        if not container_name:
+            self.io().error_msg('Container not found')
+            return False
+
+        self.containers(ctx).exec_in_container_passthrough(command, service, instance_num, shell=shell)
+        return True
+
+
+class LogsTask(BaseHarborServiceTask):
+    """Execute a command in a container"""
+
+    def configure_argparse(self, parser: ArgumentParser):
+        super().configure_argparse(parser)
+        parser.add_argument('--instance-num', '-i', default=None, help='Instance number')
+
+    def get_name(self) -> str:
+        return ':logs'
+
+    def run(self, ctx: ExecutionContext) -> bool:
+        service_name = ctx.get_arg('--name')
+        service = self.services(ctx).get_by_name(service_name)
+        instance_num = int(ctx.get_arg('--instance-num')) if ctx.get_arg('--instance-num') else None
+
+        container_name = self.containers(ctx).find_container_name(service, instance_num)
+
+        if not container_name:
+            self.io().error_msg('Container not found')
+            return False
+
+        self.containers(ctx).get_logs(service, instance_num, raw=True)
+        return True
+
+
 class WaitForServiceTask(BaseHarborServiceTask):
     """Wait for service to be online"""
 

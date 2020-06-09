@@ -8,6 +8,7 @@ Interacts directly with Docker and Docker-Compose. In the future it will be poss
 
 import os
 import re
+import subprocess
 from time import time
 from contextlib import contextmanager
 from typing import Optional
@@ -88,6 +89,9 @@ class ComposeDriver(object):
             if matches:
                 instance_numbers.append(int(matches[0]))
 
+        if not instance_numbers:
+            raise ServiceNotCreatedException(service_name)
+
         return service_name + str(max(instance_numbers))
 
     def inspect_container(self, container_name: str):
@@ -157,6 +161,12 @@ class ComposeDriver(object):
             'sh', '-c', '"', command, '"'
         ], capture=capture)
 
+    def exec_in_container_passthrough(self, command: str, service: ServiceDeclaration, instance_num: int = None,
+                                      shell: str = '/bin/sh'):
+        container_name = self.find_container_name(service, instance_num)
+
+        return subprocess.call(['docker', 'exec', '-it', container_name, shell, '-c', command])
+
     #
     # Basics - compose arguments present in all commands
     #
@@ -206,29 +216,32 @@ class ComposeDriver(object):
         containers = self.get_created_containers(only_running=False)
 
         if not service.get_name() in containers:
-            raise Exception('Invalid service name')
-
-        service_containers = containers[service.get_name()]
-        instance_num = list(service_containers.items())[-1][0]
+            raise ServiceNotCreatedException('Invalid service name or no any containers were created')
 
         return self.create_container_name(service, instance_num)
 
     def create_container_name(self, service: ServiceDeclaration, instance_num: int) -> str:
         return self.project_name + '_' + service.get_name() + '_' + str(instance_num)
 
-    def get_logs(self, service: ServiceDeclaration, instance_num: int = None) -> str:
+    def get_logs(self, service: ServiceDeclaration, instance_num: int = None, raw: bool = False) -> str:
         """Gets logs from given container
 
         Args:
             service: Service declaration
             instance_num: Replica number
+            raw: Do not return result, pass it directly to stdout and to stderr
 
         Returns:
             Logs in text format
         """
 
-        return self.scope.sh('docker logs "%s" 2>&1' %
-                             self.find_container_name(service, instance_num), capture=True)
+        command = 'docker logs "%s" 2>&1' % self.find_container_name(service, instance_num)
+
+        if raw:
+            subprocess.call(command, shell=True)
+            return ''
+
+        return self.scope.sh(command, capture=True)
 
     def wait_for_log_message(self, text: str, service: ServiceDeclaration, instance_num: int = None,
                              timeout: int = 300):
