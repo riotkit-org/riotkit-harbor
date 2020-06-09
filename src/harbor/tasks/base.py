@@ -30,6 +30,7 @@ class UpdateStrategy(Enum):
 
 class HarborBaseTask(HarborTaskInterface):
     _compose_args: str
+    is_dev_env: bool
 
     #
     # TaskInterface
@@ -44,7 +45,8 @@ class HarborBaseTask(HarborTaskInterface):
         return {
             'APPS_PATH': './apps/',
             'DATA_PATH': './data/',
-            'COMPOSE_PROJECT_NAME': None
+            'COMPOSE_PROJECT_NAME': None,
+            'DOMAIN_SUFFIX': ''
         }
 
     #
@@ -111,6 +113,7 @@ class HarborBaseTask(HarborTaskInterface):
             self.io().error_msg('Missing .env file')
             return False
 
+        self.is_dev_env = self.detect_dev_env(context)
         project_name = context.get_env('COMPOSE_PROJECT_NAME')
 
         if not project_name:
@@ -118,6 +121,12 @@ class HarborBaseTask(HarborTaskInterface):
             return False
 
         return self.run(context)
+
+    @staticmethod
+    def detect_dev_env(context: ExecutionContext) -> bool:
+        suffix = context.get_env('DOMAIN_SUFFIX')
+
+        return suffix in ['.localhost', '.xip.io', '.localhost.xip.io', '.127.0.0.1.xip.io']
 
 
 class BaseProfileSupportingTask(HarborBaseTask, ABC):

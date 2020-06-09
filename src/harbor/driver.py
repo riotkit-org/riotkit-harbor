@@ -143,7 +143,11 @@ class ComposeDriver(object):
     def compose(self, arguments: list, capture: bool = False) -> Optional[str]:
         """Makes a call to docker-compose with all prepared arguments that should be"""
 
-        cmd = 'docker-compose %s %s' % (self.get_compose_args(), ' '.join(arguments))
+        cmd = 'IS_DEBUG_ENVIRONMENT=%s docker-compose %s %s' % (
+            self.scope.is_dev_env,
+            self.get_compose_args(),
+            ' '.join(arguments)
+        )
         self.scope.io().debug('Calling compose: %s' % cmd)
 
         return self.scope.sh(cmd, capture=capture)
