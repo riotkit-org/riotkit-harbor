@@ -26,6 +26,16 @@ Harbor fits perfectly, while providing some of Kubernetes-like solutions in dock
 - Automatic Letsencrypt SSL
 - Standardized directory structures and design patterns
 - Ready to use snippets of code and solutions
+- Ansible integration to prepare your production/testing server and deploy updates
+
+
+**Roadmap:**
+
+**Harbor 2.1**
+
+- Init containers support (basing on Kubernetes idea) (`#5 <https://github.com/riotkit-org/riotkit-harbor/issues/5>`_)
+- delayed-request update strategy (zero-downtime deployment with holding all HTTP requests waiting for new application) (`#11 <https://github.com/riotkit-org/riotkit-harbor/issues/11>`_)
+- Webhook handling update daemon to trigger (`#10 <https://github.com/riotkit-org/riotkit-harbor/issues/10>`_)
 
 Read documentation for more: https://environment.docs.riotkit.org/en/latest/?badge=latest
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
