@@ -1,6 +1,8 @@
 
 import os
 import yaml
+import re
+from subprocess import check_output
 from argparse import ArgumentParser
 from abc import ABC
 from abc import abstractmethod
@@ -31,6 +33,8 @@ class UpdateStrategy(Enum):
 class HarborBaseTask(HarborTaskInterface):
     _compose_args: str
     is_dev_env: bool
+    app_user: str
+    app_group_id: int
 
     #
     # TaskInterface
@@ -113,14 +117,42 @@ class HarborBaseTask(HarborTaskInterface):
             self.io().error_msg('Missing .env file')
             return False
 
+        self.app_user, self.app_group_id = self.detect_repository_owning_user_and_group()
         self.is_dev_env = self.detect_dev_env(context)
         project_name = context.get_env('COMPOSE_PROJECT_NAME')
+
+        # project directory has to have owner that will manage files, that should be a deployment user
+        self.io().debug('Project owner: USER=%s, GID=%i' % (self.app_user, self.app_group_id))
 
         if not project_name:
             self.io().error_msg('COMPOSE_PROJECT_NAME environment variable is not defined, cannot proceed')
             return False
 
         return self.run(context)
+
+    @staticmethod
+    def detect_repository_owning_user_and_group() -> tuple:
+        """Detects user and group that should be owner of the project repository"""
+
+        usr = os.getenv('APP_USER', '')
+        grp = os.getenv('APP_GROUP_ID', '')
+
+        if not usr and os.getenv('SUDO_USER'):
+            usr = os.getenv('SUDO_USER')
+
+        if not grp and os.getenv('SUDO_GID'):
+            grp = os.getenv('SUDO_GID')
+
+        if not usr:
+            usr = os.getenv('USER')
+
+        if not grp:
+            out = check_output(['id', usr])
+            matches = re.match('gid=([0-9]+)', out)
+
+            grp = matches.group(1)
+
+        return usr, int(grp)
 
     @staticmethod
     def detect_dev_env(context: ExecutionContext) -> bool:
