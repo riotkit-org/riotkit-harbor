@@ -67,6 +67,12 @@ class ServiceDeclaration(object):
         except KeyError:
             return default
 
+    def get_image(self):
+        try:
+            return str(self.get_definition()['image'])
+        except KeyError:
+            return '_docker_build_local:latest'
+
     def get_declared_version(self):
         try:
             return str(self.get_definition()['image'].split(':')[1])

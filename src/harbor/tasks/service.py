@@ -1,4 +1,5 @@
 import subprocess
+import json
 from time import time
 from time import sleep
 from contextlib import contextmanager
@@ -21,6 +22,18 @@ class BaseHarborServiceTask(HarborBaseTask):
 
         parser.add_argument('--name', '-n', required=True, help='Service name')
         parser.add_argument('--extra-args', '-c', help='Optional compose arguments', default='')
+
+    def prepare_single_for_single_container(self, ctx: ExecutionContext) -> tuple:
+        service_name = ctx.get_arg('--name')
+        service = self.services(ctx).get_by_name(service_name)
+        instance_num = int(ctx.get_arg('--instance-num')) if ctx.get_arg('--instance-num') else None
+        container_name = self.containers(ctx).find_container_name(service, instance_num)
+
+        if not container_name:
+            self.io().error_msg('Container not found')
+            return None, None, None
+
+        return container_name, service, instance_num
 
 
 class ServiceUpTask(BaseHarborServiceTask):
@@ -223,23 +236,97 @@ class ExecTask(BaseHarborServiceTask):
         return ':exec'
 
     def run(self, ctx: ExecutionContext) -> bool:
-        service_name = ctx.get_arg('--name')
-        service = self.services(ctx).get_by_name(service_name)
-        instance_num = int(ctx.get_arg('--instance-num')) if ctx.get_arg('--instance-num') else None
         command = ctx.get_arg('--command')
         shell = ctx.get_arg('--shell')
+
+        container_name, service, instance_num = self.prepare_single_for_single_container(ctx)
+
+        if not service:
+            return False
 
         if shell != '/bin/sh' and command == '/bin/sh':
             command = shell
 
-        container_name = self.containers(ctx).find_container_name(service, instance_num)
-
-        if not container_name:
-            self.io().error_msg('Container not found')
-            return False
-
         self.containers(ctx).exec_in_container_passthrough(command, service, instance_num, shell=shell)
         return True
+
+
+class InspectContainerTask(BaseHarborServiceTask):
+    """Inspect a single container"""
+
+    def configure_argparse(self, parser: ArgumentParser):
+        super().configure_argparse(parser)
+        parser.add_argument('--instance-num', '-i', default=None, help='Instance number')
+
+    def get_name(self) -> str:
+        return ':inspect'
+
+    def run(self, ctx: ExecutionContext) -> bool:
+        container_name, service, instance_num = self.prepare_single_for_single_container(ctx)
+
+        if not service:
+            return False
+
+        container = self.containers(ctx).inspect_container(container_name)
+
+        self.io().outln(json.dumps(container.to_dict(), indent=4, sort_keys=True))
+        return True
+
+
+class AnalyzeServiceTask(BaseHarborServiceTask):
+    """Report status of a service"""
+
+    def get_name(self) -> str:
+        return ':report'
+
+    def run(self, ctx: ExecutionContext) -> bool:
+        service_name = ctx.get_arg('--name')
+        service = self.services(ctx).get_by_name(service_name)
+
+        if not service:
+            self.io().error_msg('Service not found')
+            return False
+
+        containers = self.containers(ctx).find_all_container_names_for_service(service)
+
+        self.print_service_summary(ctx, service, containers)
+        self.io().print_line()
+        self.print_containers_summary(ctx, service, containers)
+
+        return True
+
+    def print_service_summary(self, ctx: ExecutionContext, service: ServiceDeclaration, containers: list):
+        summary_body = [
+            ['Replicas:', '%i of %i' % (len(containers), service.get_desired_replicas_count())],
+            ['Update strategy:', service.get_update_strategy()],
+            ['Declared image:', service.get_image()]
+        ]
+
+        self.io().outln(self.table(
+            [],
+            summary_body
+        ))
+
+    def print_containers_summary(self, ctx: ExecutionContext, service: ServiceDeclaration, containers: list):
+        inspected = self.containers(ctx).inspect_containers(containers)
+
+        #
+        # containers summary
+        #
+        summary_body = []
+
+        for container in inspected:
+            summary_body.append([
+                container.get_name(),
+                ('(!!) ' if service.get_image() != container.get_image() else '') + container.get_image(),
+                container.get_health_status(),
+                container.get_start_time()
+            ])
+
+        self.io().outln(self.table(
+            ['Name', 'Actual image', 'Status', 'Started'],
+            summary_body
+        ))
 
 
 class LogsTask(BaseHarborServiceTask):
@@ -253,14 +340,9 @@ class LogsTask(BaseHarborServiceTask):
         return ':logs'
 
     def run(self, ctx: ExecutionContext) -> bool:
-        service_name = ctx.get_arg('--name')
-        service = self.services(ctx).get_by_name(service_name)
-        instance_num = int(ctx.get_arg('--instance-num')) if ctx.get_arg('--instance-num') else None
+        container_name, service, instance_num = self.prepare_single_for_single_container(ctx)
 
-        container_name = self.containers(ctx).find_container_name(service, instance_num)
-
-        if not container_name:
-            self.io().error_msg('Container not found')
+        if not service:
             return False
 
         self.containers(ctx).get_logs(service, instance_num, raw=True)

@@ -11,6 +11,8 @@ from .tasks.running import StopAndRemoveTask
 from .tasks.running import RestartTask
 from .tasks.running import PullTask
 from .tasks.service import LogsTask
+from .tasks.service import AnalyzeServiceTask
+from .tasks.service import InspectContainerTask
 from .tasks.service import ExecTask
 from .tasks.service import ServiceRemoveTask
 from .tasks.service import ServiceUpTask
@@ -46,6 +48,8 @@ def imports():
         TaskDeclaration(ServiceRemoveTask()),
         TaskDeclaration(ExecTask()),
         TaskDeclaration(LogsTask()),
+        TaskDeclaration(AnalyzeServiceTask()),
+        TaskDeclaration(InspectContainerTask()),
         TaskDeclaration(PullTask()),
         TaskDeclaration(RestartTask()),
         TaskDeclaration(ListConfigsTask()),

@@ -13,6 +13,7 @@ from time import time
 from contextlib import contextmanager
 from typing import Optional
 from typing import Dict
+from typing import List
 from collections import OrderedDict
 from json import loads as json_loads
 from rkd.contract import ExecutionContext
@@ -22,7 +23,7 @@ from .exception import ServiceNotReadyException
 from .exception import ServiceNotCreatedException
 
 
-class Container(object):
+class InspectedContainer(object):
     """Running or stopped container model retrieved from docker inspection"""
 
     name: str
@@ -31,6 +32,9 @@ class Container(object):
     def __init__(self, name: str, inspection: dict):
         self.name = name
         self.inspection = inspection
+
+    def get_id(self) -> str:
+        return self.inspection['Id']
 
     def get_health_status(self) -> str:
         try:
@@ -52,11 +56,20 @@ class Container(object):
         except KeyError:
             return None
 
+    def get_name(self) -> str:
+        return self.name
+
     def get_image(self) -> Optional[str]:
         try:
             return self.inspection['Config']['Image']
         except KeyError:
             return None
+
+    def get_start_time(self) -> str:
+        return self.inspection['State']['StartedAt'][0:19]
+
+    def to_dict(self) -> dict:
+        return self.inspection
 
 
 class ComposeDriver(object):
@@ -103,7 +116,7 @@ class ComposeDriver(object):
         if not as_json:
             raise Exception('Cannot inspect container, unknown docker inspect output: %s' % out)
 
-        return Container(container_name, as_json[0])
+        return InspectedContainer(container_name, as_json[0])
 
     def inspect_containers(self, names: list):
         """Inspect multiple containers by name at once (does same as inspect_container()
@@ -120,7 +133,7 @@ class ComposeDriver(object):
         num = 0
 
         for sub_json in as_json:
-            containers.append(Container(names[num], sub_json))
+            containers.append(InspectedContainer(names[num], sub_json))
             num += 1
 
         return containers
@@ -363,7 +376,7 @@ class ComposeDriver(object):
 
         return counted
 
-    def find_all_container_names_for_service(self, service: ServiceDeclaration) -> list:
+    def find_all_container_names_for_service(self, service: ServiceDeclaration) -> List[str]:
         """Finds all created container names for given service name
 
         Args:
