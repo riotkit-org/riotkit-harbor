@@ -297,8 +297,8 @@ class ComposeDriver(object):
         previous_instance_num = list(existing_containers.items())[instance_index][0]
         service_full_name = project_name + '_' + service.get_name() + '_' + str(previous_instance_num)
 
-        self.scope.io().info('Instances: ' + str(list(existing_containers.items())))
-        self.scope.io().info('Previous instance selector: %i' % instance_index)
+        self.scope.io().debug('Instances: ' + str(list(existing_containers.items())))
+        self.scope.io().debug('Previous instance selector: %i' % instance_index)
 
         self.scope.io().info('Replica "%s" was spawned, killing older instance' % service_full_name)
         self.scope.io().info('Killing replica num=%i' % previous_instance_num)
