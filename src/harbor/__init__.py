@@ -3,7 +3,7 @@ from rkd.syntax import TaskDeclaration
 from rkd import main as rkd_main
 from rkd.standardlib.env import GetEnvTask
 from rkd.standardlib.env import SetEnvTask
-from .tasks.running import ListContainersTask
+from .tasks.diagnostic import ListContainersTask
 from .tasks.running import StartTask
 from .tasks.running import UpgradeTask
 from .tasks.running import StopTask
@@ -19,7 +19,8 @@ from .tasks.service import ServiceUpTask
 from .tasks.service import ServiceDownTask
 from .tasks.service import WaitForServiceTask
 from .tasks.listing import ListDefinedServices
-from .tasks.listing import DumpComposeArguments
+from .tasks.diagnostic import DumpComposeArguments
+from .tasks.diagnostic import DumpComposeConfigTask
 from .tasks.gateway import ReloadGatewayTask
 from .tasks.gateway import ShowSSLStatusTask
 from .tasks.gateway import ForceReloadSSLTask
@@ -56,6 +57,7 @@ def imports():
         TaskDeclaration(EnableConfigTask()),
         TaskDeclaration(DisableConfigTask()),
         TaskDeclaration(DumpComposeArguments()),
+        TaskDeclaration(DumpComposeConfigTask()),
 
         # production-related
         TaskDeclaration(ReloadGatewayTask()),

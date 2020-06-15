@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from typing import Dict
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
+from ..formatting import prod_formatting
 
 
 class GatewayBaseTask(HarborBaseTask):
@@ -21,6 +22,9 @@ class GatewayBaseTask(HarborBaseTask):
 
         self.containers(ctx).up(service, norecreate=True)
         self.containers(ctx).wait_for_log_message('Sleep for', service, timeout=60)
+
+    def format_task_name(self, name) -> str:
+        return prod_formatting(name)
 
 
 class ReloadGatewayTask(GatewayBaseTask):
@@ -44,7 +48,7 @@ class ReloadGatewayTask(GatewayBaseTask):
         return ':reload'
 
     def get_group_name(self) -> str:
-        return ':harbor:prod:gateway'
+        return ':harbor:gateway'
 
 
 class ShowSSLStatusTask(GatewayBaseTask):
@@ -61,7 +65,7 @@ class ShowSSLStatusTask(GatewayBaseTask):
         return ':status'
 
     def get_group_name(self) -> str:
-        return ':harbor:prod:gateway:ssl'
+        return ':harbor:gateway:ssl'
 
 
 class ForceReloadSSLTask(GatewayBaseTask):
@@ -78,4 +82,4 @@ class ForceReloadSSLTask(GatewayBaseTask):
         return ':regenerate'
 
     def get_group_name(self) -> str:
-        return ':harbor:prod:gateway:ssl'
+        return ':harbor:gateway:ssl'

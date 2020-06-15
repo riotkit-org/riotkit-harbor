@@ -35,6 +35,17 @@ class BaseHarborServiceTask(HarborBaseTask):
 
         return container_name, service, instance_num
 
+    def get_all_images_for_service(self, ctx: ExecutionContext, service: ServiceDeclaration):
+        try:
+            container_names = self.containers(ctx).find_all_container_names_for_service(service)
+            inspected = self.containers(ctx).inspect_containers(container_names)
+
+            return list(map(lambda container: container.get_image(), inspected))
+
+        except ServiceNotCreatedException:
+            # case: the service is just created, wasn't started yet
+            return []
+
 
 class ServiceUpTask(BaseHarborServiceTask):
     """Starts a single service
@@ -101,15 +112,7 @@ class ServiceUpTask(BaseHarborServiceTask):
             return
 
         self.io().debug('Finding all container names for service "%s"' % service.get_name())
-
-        try:
-            container_names = self.containers(ctx).find_all_container_names_for_service(service)
-            inspected = self.containers(ctx).inspect_containers(container_names)
-            images = map(lambda container: container.get_image(), inspected)
-
-        except ServiceNotCreatedException:
-            # case: the service is just created, wasn't started yet
-            images = []
+        images = self.get_all_images_for_service(ctx, service)
 
         self.io().debug('OK, images collected')
         yield
@@ -201,11 +204,24 @@ class ServiceRemoveTask(BaseHarborServiceTask):
     def get_name(self) -> str:
         return ':rm'
 
+    def configure_argparse(self, parser: ArgumentParser):
+        super().configure_argparse(parser)
+        parser.add_argument('--with-image', '-w', help='Remove also images', action='store_true')
+
     def run(self, ctx: ExecutionContext) -> bool:
         service_name = ctx.get_arg('--name')
         service = self.services(ctx).get_by_name(service_name)
+        with_image = ctx.get_arg('--with-image')
+        images = self.get_all_images_for_service(ctx, service) if with_image else []
 
         self.containers(ctx).rm(service, extra_args=ctx.get_arg('--extra-args'))
+
+        for image in images:
+            try:
+                self.containers(ctx).rm_image(image, capture=True)
+            except:
+                pass
+
         return True
 
 
@@ -330,11 +346,12 @@ class AnalyzeServiceTask(BaseHarborServiceTask):
 
 
 class LogsTask(BaseHarborServiceTask):
-    """Execute a command in a container"""
+    """Display logs"""
 
     def configure_argparse(self, parser: ArgumentParser):
         super().configure_argparse(parser)
         parser.add_argument('--instance-num', '-i', default=None, help='Instance number')
+        parser.add_argument('--follow', '-f', help='Follow the output', action='store_true')
 
     def get_name(self) -> str:
         return ':logs'
@@ -345,7 +362,8 @@ class LogsTask(BaseHarborServiceTask):
         if not service:
             return False
 
-        self.containers(ctx).get_logs(service, instance_num, raw=True)
+        self.containers(ctx).get_logs(service, instance_num, raw=True, follow=bool(ctx.get_arg('--follow')))
+
         return True
 
 

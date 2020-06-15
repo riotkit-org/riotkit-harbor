@@ -1,36 +1,8 @@
 from argparse import ArgumentParser
 from subprocess import CalledProcessError
 from rkd.contract import ExecutionContext
-from .base import HarborBaseTask
 from .base import BaseProfileSupportingTask
 from .base import UpdateStrategy
-
-
-class ListContainersTask(HarborBaseTask):
-    """List all containers
-    """
-
-    def get_group_name(self) -> str:
-        return ':harbor:compose'
-
-    def get_name(self) -> str:
-        return ':ps'
-
-    def configure_argparse(self, parser: ArgumentParser):
-        parser.add_argument('--quiet', '-q', help='Only display IDs', action='store_true')
-        parser.add_argument('--all', '-a', help='Show all containers, including stopped', action='store_true')
-
-    def run(self, ctx: ExecutionContext) -> bool:
-        params = []
-
-        if ctx.get_arg('--quiet'):
-            params.append('--quiet')
-
-        if ctx.get_arg('--all'):
-            params.append('--all')
-
-        self.containers(ctx).ps(params)
-        return True
 
 
 class StartTask(BaseProfileSupportingTask):
@@ -82,15 +54,20 @@ class StartTask(BaseProfileSupportingTask):
 
 
 class StopTask(BaseProfileSupportingTask):
-    """Stop running containers
+    """Stop running containers (preserving the order - the gateway should be turned off first)
     """
 
     def get_name(self) -> str:
         return ':stop'
 
-    def run(self, context: ExecutionContext) -> bool:
-        # @todo: Rewrite to use service.py
-        return False
+    def run(self, ctx: ExecutionContext) -> bool:
+        services = self.get_matching_services(ctx)
+
+        for service in services:
+            self.io().info('Stopping "%s"' % service.get_name())
+            self.containers(ctx).stop(service.get_name())
+
+        return True
 
 
 class RestartTask(BaseProfileSupportingTask):
@@ -100,21 +77,37 @@ class RestartTask(BaseProfileSupportingTask):
     def get_name(self) -> str:
         return ':restart'
 
-    def run(self, context: ExecutionContext) -> bool:
-        # @todo: Rewrite to use service.py
-        return False
+    def run(self, ctx: ExecutionContext) -> bool:
+        services = self.get_matching_services(ctx)
+
+        for service in services:
+            self.io().info('Restarting "%s"' % service.get_name())
+            self.containers(ctx).restart(service.get_name())
+
+        return True
 
 
 class StopAndRemoveTask(BaseProfileSupportingTask):
     """Forcibly stop running containers and remove (keeps volumes)
+
+    Use --with-image to delete image of each service
     """
 
     def get_name(self) -> str:
         return ':remove'
 
-    def run(self, context: ExecutionContext) -> bool:
-        # @todo: Rewrite to use service.py
-        return False
+    def run(self, ctx: ExecutionContext) -> bool:
+        services = self.get_matching_services(ctx)
+
+        for service in services:
+            self.io().info('Restarting "%s"' % service.get_name())
+            self.rkd([
+                ':harbor:service:rm',
+                '--name=%s' % service.get_name(),
+                '--with-image' if ctx.get_arg('--with-image') else ''
+            ])
+
+        return True
 
 
 class PullTask(BaseProfileSupportingTask):

@@ -75,26 +75,6 @@ class ListDefinedServices(BaseProfileSupportingTask):
         ])
 
 
-class DumpComposeArguments(BaseProfileSupportingTask):
-    """Lists all defined containers in YAML files (can be limited by --profile selector)"""
-
-    def get_group_name(self) -> str:
-        return ':harbor:diagnostic'
-
-    def get_name(self) -> str:
-        return ':dump-compose-args'
-
-    def run(self, context: ExecutionContext) -> bool:
-        try:
-            self.io().outln(self.containers(context).get_compose_args())
-
-        except AttributeError as e:
-            self.io().error_msg('Cannot retrieve compose arguments, possibly not using docker-compose. ' +
-                                'Details: %s' % str(e))
-            return False
-
-        return True
-
 
 def bool2str(val: bool, y: str = 'Active', n: str = 'Not active'):
     return y if val else n

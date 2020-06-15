@@ -5,11 +5,15 @@ from typing import Optional
 from argparse import ArgumentParser
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
+from ..formatting import prod_formatting
 
 
 class BaseRepositoryTask(HarborBaseTask):
     def get_group_name(self) -> str:
         return ':harbor:git:apps'
+
+    def format_task_name(self, name) -> str:
+        return prod_formatting(name)
 
     def get_app_repository_path(self, app_name: str, context: ExecutionContext) -> Optional[str]:
         return self.get_apps_path(context) + '/repos-enabled/%s.sh' % app_name

@@ -5,6 +5,7 @@ from abc import abstractmethod
 from tabulate import tabulate
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
+from ..formatting import development_formatting
 
 
 class ListConfigsTask(HarborBaseTask):
@@ -15,6 +16,9 @@ class ListConfigsTask(HarborBaseTask):
 
     def get_group_name(self) -> str:
         return ':harbor:config'
+
+    def format_task_name(self, name) -> str:
+        return development_formatting(name)
 
     def run(self, context: ExecutionContext) -> bool:
         src_root = self.get_apps_path(context)
@@ -45,6 +49,9 @@ class AbstractManageConfigTask(HarborBaseTask):
 
     def get_group_name(self) -> str:
         return ':harbor:config'
+
+    def format_task_name(self, name) -> str:
+        return development_formatting(name)
 
     def run(self, context: ExecutionContext) -> bool:
         config_name = context.get_arg('--name').replace('..', '')

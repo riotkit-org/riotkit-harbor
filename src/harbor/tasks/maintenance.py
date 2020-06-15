@@ -3,11 +3,12 @@ from argparse import ArgumentParser
 from abc import abstractmethod
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
+from ..formatting import prod_formatting
 
 
 class BaseMaintenanceManagementTask(HarborBaseTask):
     def get_group_name(self) -> str:
-        return ':harbor:prod:maintenance'
+        return ':harbor:maintenance'
 
     def configure_argparse(self, parser: ArgumentParser):
         parser.add_argument('--domain', '-d', help='Domain name', default='')
@@ -37,6 +38,9 @@ class BaseMaintenanceManagementTask(HarborBaseTask):
     @abstractmethod
     def act(self, path: str) -> bool:
         pass
+
+    def format_task_name(self, name) -> str:
+        return prod_formatting(name)
 
 
 class MaintenanceOnTask(BaseMaintenanceManagementTask):

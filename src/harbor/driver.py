@@ -240,19 +240,26 @@ class ComposeDriver(object):
     def create_container_name(self, service: ServiceDeclaration, instance_num: int) -> str:
         return self.project_name + '_' + service.get_name() + '_' + str(instance_num)
 
-    def get_logs(self, service: ServiceDeclaration, instance_num: int = None, raw: bool = False) -> str:
+    def get_logs(self, service: ServiceDeclaration, instance_num: int = None, raw: bool = False,
+                 follow: bool = False) -> str:
         """Gets logs from given container
 
         Args:
             service: Service declaration
             instance_num: Replica number
             raw: Do not return result, pass it directly to stdout and to stderr
+            follow: Follow the output
 
         Returns:
             Logs in text format
         """
 
-        command = 'docker logs "%s" 2>&1' % self.find_container_name(service, instance_num)
+        args = ''
+
+        if follow:
+            args += ' --follow '
+
+        command = 'docker logs %s "%s" 2>&1' % (args, self.find_container_name(service, instance_num))
 
         if raw:
             subprocess.call(command, shell=True)
@@ -335,6 +342,9 @@ class ComposeDriver(object):
 
     def rm_image(self, img_to_remove: str, capture: bool = False):
         self.scope.sh('docker rmi %s 2>&1' % img_to_remove, capture=capture)
+
+    def restart(self, service_name: str, extra_args: str = ''):
+        self.compose(['restart', service_name, extra_args])
 
     def stop(self, service_name: str, extra_args: str = ''):
         self.compose(['stop', service_name, extra_args])
