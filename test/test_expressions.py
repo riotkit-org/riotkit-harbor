@@ -22,7 +22,7 @@ class SafeEvalTests(unittest.TestCase):
         self.assertRaises(ValueError, safe_eval, "a == None2", {'a': 2})
 
     def test_attr(self):
-        self.assertRaises(ValueError, safe_eval, "a.__dict__", {'a': 2})
+        self.assertRaises(AttributeError, safe_eval, "a.__dict__", {'a': 2})
 
     def test_eval(self):
         self.assertRaises(ValueError, safe_eval, "eval('os.exit()')", {})
