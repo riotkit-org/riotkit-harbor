@@ -1,0 +1,21 @@
+version: '2'
+services:
+    healthcheck:
+        image: quay.io/riotkit/infracheck:v1.7-x86_64
+        command: " --directory=/data --server-path-prefix=/${HEALTH_CHECK_CODE}"
+        volumes:
+            - "./apps/healthchecks:/data"
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+            - "./data/maintenance-mode:/maintenance"
+        expose:
+            - "8000"
+        environment:
+            # gateway configuration
+            - VIRTUAL_HOST=health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+            - VIRTUAL_PORT=8000
+            - LETSENCRYPT_HOST=health.${MAIN_DOMAIN}${DOMAIN_SUFFIX}
+            - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+        labels:
+            com.centurylinklabs.watchtower.enable: true
+            org.riotkit.useMaintenanceMode: false
+            org.riotkit.updateStrategy: rolling

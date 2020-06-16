@@ -1,0 +1,59 @@
+version: '2'
+
+volumes:
+    nginx-confd:
+    nginx-certs:
+    nginx-vhostd:
+    nginx-html:
+
+services:
+
+    #
+    # Public gateway
+    #  It's just a normal nginx that is running GENERATED configurations by other container - gateway_proxy_gen
+    #
+    gateway:
+        image: nginx:1.17
+        restart: always
+        labels:
+            - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true
+            - com.centurylinklabs.watchtower.enable=true
+        ports:
+          - "80:80"
+          - "443:443"
+        volumes:
+            - nginx-confd:/etc/nginx/conf.d    # communication with docker-gen container
+            - nginx-certs:/etc/nginx/certs:rw  # communication with letsencrypt container
+            - nginx-vhostd:/etc/nginx/vhost.d/ # communication with docker-gen/ssl containers
+            - nginx-html:/usr/share/nginx/html # letsencrypt requires to store tokens there
+            - ./containers/nginx/vhost.d:/etc/nginx/vhost-static.d/          # custom configuration
+            - ./containers/auth:/etc/nginx/htpasswd:ro                         # basic auth
+            - ./containers/nginx/maintenance:/usr/share/nginx/maintenance:ro # RiotKit's maintenance page HTML files
+            - ./data/maintenance-mode:/maintenance:ro                        # RiotKit's maintenance page toggle
+
+    #
+    # Service auto-discovery
+    #  Allows to expose all applications under their domains when they specify at least VIRTUAL_HOST env variable
+    #  Generates configuration files for NGINX and then restarts the NGINX
+    #
+    gateway_proxy_gen:
+        image: jwilder/docker-gen:0.7.0
+        # during startup the letsencrypt container will kill this container after certificates generation
+        # so it is necessary to bring it up quickly back, else the gateway will be unconfigured and not working
+        restart: always
+        labels:
+            - com.github.jrcs.letsencrypt_nginx_proxy_companion.docker_gen=true
+            - com.centurylinklabs.watchtower.enable=true
+        command: "-notify-sighup ${COMPOSE_PROJECT_NAME}_gateway_1 -watch -wait 5s:30s /etc/docker-gen/templates/nginx.tmpl /etc/nginx/conf.d/default.conf"
+        volumes_from:
+            - gateway
+        volumes:
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+            - ./containers/nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
+
+        environment:
+            - HTTPS_METHOD=redirect
+            - SSL_POLICY=Mozilla-Modern
+
+            # @debugging: It may be useful to disable HSTS when the SSL setup is not ready yet
+            - HSTS=on
