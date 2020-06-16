@@ -1,7 +1,7 @@
 language: python
 os: linux
 dist: bionic
-if: branch = master or tag IS present
+#if: branch = master or tag IS present
 python: 3.6
 
 # important: with limited depth the tags are not cloned properly - the PBR does not work
