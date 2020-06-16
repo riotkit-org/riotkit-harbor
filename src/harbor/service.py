@@ -3,7 +3,7 @@
 """
 
 import os
-from traceback import print_exc
+from traceback import format_exc
 from typing import List
 from typing import Optional
 from rkd.inputoutput import IO
@@ -83,7 +83,7 @@ class ServiceDeclaration(object):
 
 
 class ServiceSelector(object):
-    """Acts as a service filter"""
+    """Acts as a service filter. Simple reduce() implementation"""
 
     _selector: str
     _io: IO
@@ -98,7 +98,7 @@ class ServiceSelector(object):
         try:
             return safe_eval(self._selector, {'service': definition, 'name': name})
         except Exception:
-            print_exc()
+            self._io.errln(format_exc())
             self._io.error_msg('Exception raised, while attempting to evaluate --profile selector')
             return False
 
