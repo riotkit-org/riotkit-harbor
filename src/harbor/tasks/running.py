@@ -34,7 +34,7 @@ class StartTask(BaseProfileSupportingTask):
                     [
                         '--no-ui',
                         ':harbor:service:up',
-                        '--name=%s' % service.get_name(),
+                        service.get_name(),
                         '--remove-previous-images' if context.get_arg('--remove-previous-images') else '',
                         ('--strategy=%s' % strategy) if strategy else ''
                     ],
@@ -103,7 +103,7 @@ class StopAndRemoveTask(BaseProfileSupportingTask):
             self.io().info('Restarting "%s"' % service.get_name())
             self.rkd([
                 ':harbor:service:rm',
-                '--name=%s' % service.get_name(),
+                service.get_name(),
                 '--with-image' if ctx.get_arg('--with-image') else ''
             ])
 

@@ -20,7 +20,7 @@ class BaseHarborServiceTask(HarborBaseTask):
     def configure_argparse(self, parser: ArgumentParser):
         super().configure_argparse(parser)
 
-        parser.add_argument('--name', '-n', required=True, help='Service name')
+        parser.add_argument('name', help='Service name')
         parser.add_argument('--extra-args', '-c', help='Optional compose arguments', default='')
 
     def prepare_single_for_single_container(self, ctx: ExecutionContext) -> tuple:
@@ -78,7 +78,7 @@ class ServiceUpTask(BaseHarborServiceTask):
                             help='Remove previous images if service had changed docker image')
 
     def run(self, context: ExecutionContext) -> bool:
-        service_name = context.get_arg('--name')
+        service_name = context.get_arg('name')
         strategy = str(context.get_arg('--strategy'))
         remove_previous_images = bool(context.get_arg('--remove-previous-images'))
         service = self.services(context).get_by_name(service_name)
@@ -152,7 +152,7 @@ class ServiceUpTask(BaseHarborServiceTask):
                     self.rkd([
                         '--no-ui',
                         ':harbor:service:wait-for',
-                        '--name=%s' % service.get_name(),
+                        service.get_name(),
                         '--instance=%s' % max(existing_containers.keys())
                     ])
 
@@ -209,7 +209,7 @@ class ServiceRemoveTask(BaseHarborServiceTask):
         parser.add_argument('--with-image', '-w', help='Remove also images', action='store_true')
 
     def run(self, ctx: ExecutionContext) -> bool:
-        service_name = ctx.get_arg('--name')
+        service_name = ctx.get_arg('name')
         service = self.services(ctx).get_by_name(service_name)
         with_image = ctx.get_arg('--with-image')
         images = self.get_all_images_for_service(ctx, service) if with_image else []
@@ -233,7 +233,7 @@ class ServiceDownTask(BaseHarborServiceTask):
         return ':down'
 
     def run(self, ctx: ExecutionContext) -> bool:
-        service_name = ctx.get_arg('--name')
+        service_name = ctx.get_arg('name')
         self.containers(ctx).stop(service_name, extra_args=ctx.get_arg('--extra-args'))
 
         return True
@@ -296,7 +296,7 @@ class AnalyzeServiceTask(BaseHarborServiceTask):
         return ':report'
 
     def run(self, ctx: ExecutionContext) -> bool:
-        service_name = ctx.get_arg('--name')
+        service_name = ctx.get_arg('name')
         service = self.services(ctx).get_by_name(service_name)
 
         if not service:
@@ -379,7 +379,7 @@ class WaitForServiceTask(BaseHarborServiceTask):
         parser.add_argument('--timeout', '-t', default='120', help='Timeout in seconds')
 
     def run(self, ctx: ExecutionContext) -> bool:
-        service_name = ctx.get_arg('--name')
+        service_name = ctx.get_arg('name')
         timeout = int(ctx.get_arg('--timeout'))
 
         instance_num = int(ctx.get_arg('--instance').split('_')[-1])
