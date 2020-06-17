@@ -191,8 +191,8 @@ class ComposeDriver(object):
         """Gets arguments to use with docker-compose"""
 
         if not self._compose_args:
-            # @todo: IS DEV implementation
-            self._compose_args = self.create_compose_arguments(self.ctx.get_env('APPS_PATH'), is_dev=True)
+            self._compose_args = self.create_compose_arguments(self.ctx.get_env('APPS_PATH'),
+                                                               is_dev=self.scope.is_dev_env)
 
             self.scope.io().debug('Compose args: %s' % self._compose_args)
 
@@ -216,6 +216,9 @@ class ComposeDriver(object):
     def up(self, service: ServiceDeclaration, norecreate: bool = False, force_recreate: bool = False,
            extra_args: str = ''):
         """Bring up the service"""
+
+        if norecreate and force_recreate:
+            raise Exception('Logic exception, cannot set --no-recreate and --force-recreate at one time')
 
         self.compose([
             'up', '-d',

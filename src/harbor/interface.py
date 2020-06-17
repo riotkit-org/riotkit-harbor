@@ -5,4 +5,4 @@ from rkd.contract import TaskInterface
 
 
 class HarborTaskInterface(TaskInterface, ABC):
-    pass
+    is_dev_env: bool
