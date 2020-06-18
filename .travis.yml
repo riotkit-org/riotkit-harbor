@@ -15,4 +15,5 @@ jobs:
   include:
     - stage: Test on Python 3.6
       script:
+          - pip install docker-compose
           - rkd :test
