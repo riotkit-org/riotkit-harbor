@@ -27,7 +27,7 @@ class ComposeDriverTest(BaseHarborTestClass):
         io_str = StringIO()
         io = IO()
 
-        with io.capture_descriptors(target_file=None, stream=io_str, enable_standard_out=False):
+        with io.capture_descriptors(stream=io_str, enable_standard_out=False):
             drv = self._get_prepared_compose_driver()
             drv.ps([])
 

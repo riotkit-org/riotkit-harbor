@@ -14,6 +14,8 @@ services:
 jobs:
   include:
     - stage: Test on Python 3.6
-      script:
+      before_script:
           - pip install docker-compose
+          - pip show rkd
+      script:
           - rkd :test
