@@ -72,6 +72,29 @@ class InspectedContainer(object):
         return self.inspection
 
 
+def build_compose_files_list(src_root: str, is_dev: bool) -> list:
+    """Lists all YAML files to include in docker-compose arguments
+    """
+
+    yamls = {
+        'conf': ['docker-compose.yml'],
+        'conf.dev': []
+    }
+
+    for env_type in yamls.keys():
+        for root, subdirs, files in os.walk(src_root + '/' + env_type):
+            for file in files:
+                if not file.endswith('.yml') and not file.endswith('.yaml'):
+                    continue
+
+                yamls[env_type].append(root + '/' + file)
+
+    if is_dev:
+        return yamls['conf'] + yamls['conf.dev']
+
+    return yamls['conf']
+
+
 class ComposeDriver(object):
     """Performs container operations using docker-compose
     """
@@ -93,7 +116,12 @@ class ComposeDriver(object):
         """
 
         service_name = self.project_name + '_' + service_name + '_'
-        ps = self.scope.sh('docker ps --format=\'{{ .Names }}\' | grep "%s"' % service_name, capture=True).split("\n")
+
+        try:
+            ps = self.scope.sh('docker ps --format=\'{{ .Names }}\' | grep "%s"' % service_name, capture=True).split("\n")
+        except subprocess.CalledProcessError:
+            ps = ''
+
         instance_numbers = []
 
         for instance in ps:
@@ -214,7 +242,7 @@ class ComposeDriver(object):
     # Domain specific methods
     #
     def up(self, service: ServiceDeclaration, norecreate: bool = False, force_recreate: bool = False,
-           extra_args: str = ''):
+           extra_args: str = '', capture: bool = False):
         """Bring up the service"""
 
         if norecreate and force_recreate:
@@ -227,7 +255,7 @@ class ComposeDriver(object):
             '--scale %s=%i' % (service.get_name(), service.get_desired_replicas_count()),
             service.get_name(),
             extra_args
-        ])
+        ], capture=capture)
 
     def find_container_name(self, service: ServiceDeclaration, instance_num: int = None) -> str:
         if not instance_num:
@@ -237,6 +265,13 @@ class ComposeDriver(object):
 
         if not service.get_name() in containers:
             raise ServiceNotCreatedException('Invalid service name or no any containers were created')
+
+        matches = dict(containers[service.get_name()]).keys()
+
+        if instance_num not in matches:
+            raise ServiceNotCreatedException(
+                'Service has not enough instances, the instance %i is not running' % instance_num
+            )
 
         return self.create_container_name(service, instance_num)
 
@@ -271,7 +306,7 @@ class ComposeDriver(object):
         return self.scope.sh(command, capture=True)
 
     def wait_for_log_message(self, text: str, service: ServiceDeclaration, instance_num: int = None,
-                             timeout: int = 300):
+                             timeout: int = 300) -> bool:
 
         """Waits for a text to appear in docker log
 
@@ -291,12 +326,12 @@ class ComposeDriver(object):
             logs = self.get_logs(service, instance_num)
 
             if text in logs:
-                return
+                return True
 
         raise ServiceNotReadyException(service.get_name(), text, instance_num)
 
-    def rm(self, service: ServiceDeclaration, extra_args: str = ''):
-        self.compose(['rm', '--stop', '--force', service.get_name(), extra_args])
+    def rm(self, service: ServiceDeclaration, extra_args: str = '', capture: bool = False):
+        self.compose(['rm', '--stop', '--force', service.get_name(), extra_args], capture=capture)
 
     def kill_older_replica_than(self, service: ServiceDeclaration, project_name: str,
                                 existing_containers: Dict[int, bool],
@@ -320,11 +355,15 @@ class ComposeDriver(object):
         desired_replicas = service.get_desired_replicas_count()
         self.scope.io().info('Scaling up to %i' % (desired_replicas + 1))
 
-        self.compose(
-            ['up', '-d', '--no-deps',
-             '--scale %s=%i' % (service.get_name(), desired_replicas + 1), service.get_name(), '2>&1'],
-            capture=True
-        )
+        try:
+            self.compose(
+                ['up', '-d', '--no-deps',
+                 '--scale %s=%i' % (service.get_name(), desired_replicas + 1), service.get_name(), '2>&1'],
+                capture=True
+            )
+        except subprocess.CalledProcessError as e:
+            self.scope.io().err(e.output.decode('utf-8'))
+            raise e
 
         self.scope.io().info('Finding last instance name...')
         instances: Dict[int, bool] = self.get_created_containers(only_running=False)[service.get_name()]
@@ -407,26 +446,3 @@ class ComposeDriver(object):
                 created[service.get_name()].keys()
             )
         )
-
-
-def build_compose_files_list(src_root: str, is_dev: bool) -> list:
-    """Lists all YAML files to include in docker-compose arguments
-    """
-
-    yamls = {
-        'conf': ['docker-compose.yml'],
-        'conf.dev': []
-    }
-
-    for env_type in yamls.keys():
-        for root, subdirs, files in os.walk(src_root + '/' + env_type):
-            for file in files:
-                if not file.endswith('.yml') and not file.endswith('.yaml'):
-                    continue
-
-                yamls[env_type].append(root + '/' + file)
-
-    if is_dev:
-        return yamls['conf'] + yamls['conf.dev']
-
-    return yamls['conf']

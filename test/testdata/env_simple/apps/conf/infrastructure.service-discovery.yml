@@ -19,8 +19,7 @@ services:
             - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true
             - com.centurylinklabs.watchtower.enable=true
         ports:
-          - "80:80"
-          - "443:443"
+          - "8000:80"
         volumes:
             - nginx-confd:/etc/nginx/conf.d    # communication with docker-gen container
             - nginx-certs:/etc/nginx/certs:rw  # communication with letsencrypt container
