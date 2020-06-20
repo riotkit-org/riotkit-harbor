@@ -247,6 +247,8 @@ class ExecTask(BaseHarborServiceTask):
         parser.add_argument('--instance-num', '-i', default=None, help='Instance number. If None, then will pick last.')
         parser.add_argument('--command', '-e', default='/bin/sh', help='Command to execute')
         parser.add_argument('--shell', '-s', default='/bin/sh', help='Shell to use eg. bash or sh')
+        parser.add_argument('--no-tty', help='Do not allocate tty', action='store_false')
+        parser.add_argument('--no-interactive', help='Do not open interactive session', action='store_false')
 
     def get_name(self) -> str:
         return ':exec'
@@ -254,6 +256,8 @@ class ExecTask(BaseHarborServiceTask):
     def run(self, ctx: ExecutionContext) -> bool:
         command = ctx.get_arg('--command')
         shell = ctx.get_arg('--shell')
+        tty = bool(ctx.get_arg('--no-tty'))
+        interactive = bool(ctx.get_arg('--no-interactive'))
 
         container_name, service, instance_num = self.prepare_single_for_single_container(ctx)
 
@@ -263,7 +267,10 @@ class ExecTask(BaseHarborServiceTask):
         if shell != '/bin/sh' and command == '/bin/sh':
             command = shell
 
-        self.containers(ctx).exec_in_container_passthrough(command, service, instance_num, shell=shell)
+        self.containers(ctx).exec_in_container_passthrough(
+            command, service, instance_num, shell=shell, tty=tty, interactive=interactive
+        )
+
         return True
 
 

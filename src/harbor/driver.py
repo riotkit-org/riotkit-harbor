@@ -207,10 +207,18 @@ class ComposeDriver(object):
         ], capture=capture)
 
     def exec_in_container_passthrough(self, command: str, service: ServiceDeclaration, instance_num: int = None,
-                                      shell: str = '/bin/sh'):
+                                      shell: str = '/bin/sh', tty: bool = True, interactive: bool = True):
         container_name = self.find_container_name(service, instance_num)
 
-        return subprocess.call(['docker', 'exec', '-it', container_name, shell, '-c', command])
+        opts = []
+
+        if tty:
+            opts.append('-t')
+
+        if interactive:
+            opts.append('-i')
+
+        return subprocess.call(['docker', 'exec'] + opts + [container_name, shell, '-c', command])
 
     #
     # Basics - compose arguments present in all commands
