@@ -388,8 +388,8 @@ class ComposeDriver(object):
     def restart(self, service_name: str, extra_args: str = ''):
         self.compose(['restart', service_name, extra_args])
 
-    def stop(self, service_name: str, extra_args: str = ''):
-        self.compose(['stop', service_name, extra_args])
+    def stop(self, service_name: str, extra_args: str = '', capture: bool = False):
+        self.compose(['stop', service_name, extra_args], capture=capture)
 
     def ps(self, params: list):
         self.compose(['ps'] + params)

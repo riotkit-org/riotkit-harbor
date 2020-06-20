@@ -1,5 +1,6 @@
 import unittest
 import os
+from io import StringIO
 from typing import Dict
 from copy import deepcopy
 from argparse import ArgumentParser
@@ -12,6 +13,7 @@ from rkd.syntax import TaskDeclaration
 from .tasks.base import HarborBaseTask
 from .service import ServiceDeclaration
 from .driver import ComposeDriver
+from dotenv import dotenv_values
 
 
 class TestTask(HarborBaseTask):
@@ -49,8 +51,11 @@ def create_mocked_task(io: IO) -> TestTask:
 
 class BaseHarborTestClass(unittest.TestCase):
     def setUp(self) -> None:
-        os.environ['APPS_PATH'] = os.path.dirname(os.path.realpath(__file__)) + '/../../test/testdata/env_simple/apps'
-        os.chdir(os.path.dirname(os.path.realpath(__file__)) + '/../../test/testdata/env_simple')
+        env_simple_path = os.path.dirname(os.path.realpath(__file__)) + '/../../test/testdata/env_simple'
+
+        os.environ.update(dotenv_values(env_simple_path + '/.env'))
+        os.environ['APPS_PATH'] = env_simple_path + '/apps'
+        os.chdir(env_simple_path)
 
     def _get_prepared_compose_driver(self, args: dict = {}, env: dict = {}) -> ComposeDriver:
         merged_env = deepcopy(os.environ)
@@ -61,6 +66,31 @@ class BaseHarborTestClass(unittest.TestCase):
         ctx = ExecutionContext(declaration, args=args, env=merged_env)
 
         return ComposeDriver(task, ctx, 'test')
+
+    def prepare_task(self, task: HarborBaseTask, args: dict = {}, env: dict = {}, debug: bool = False) -> str:
+        ctx = ApplicationContext([], [])
+        ctx.io = BufferedSystemIO()
+
+        task.internal_inject_dependencies(
+            io=ctx.io,
+            ctx=ctx,
+            executor=OneByOneTaskExecutor(ctx=ctx)
+        )
+
+        merged_env = deepcopy(os.environ)
+        merged_env.update(env)
+
+        r_io = IO()
+        str_io = StringIO()
+
+        with r_io.capture_descriptors(enable_standard_out=debug, stream=str_io):
+            task.execute(ExecutionContext(
+                TaskDeclaration(task),
+                args=args,
+                env=merged_env
+            ))
+
+        return ctx.io.get_value() + "\n" + str_io.getvalue()
 
     def prepare_example_service(self, name: str) -> ComposeDriver:
         drv = self._get_prepared_compose_driver()
