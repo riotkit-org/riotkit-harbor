@@ -148,7 +148,7 @@ class HarborBaseTask(HarborTaskInterface):
 
         if not grp:
             out = check_output(['id', usr])
-            matches = re.match('gid=([0-9]+)', out)
+            matches = re.match('gid=([0-9]+)', out.decode('utf-8'))
 
             grp = matches.group(1)
 
