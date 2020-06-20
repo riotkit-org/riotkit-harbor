@@ -1,5 +1,3 @@
-from rkd.contract import ExecutionContext
-from rkd.syntax import TaskDeclaration
 from harbor.test import BaseHarborTestClass
 from harbor.tasks.service import ServiceUpTask
 from harbor.service import ServiceDeclaration
