@@ -94,7 +94,7 @@ class HarborBaseTask(HarborTaskInterface):
         """Return's parsed docker-compose file as one big dictionary"""
 
         return CachedLoader.load_compose_definition(
-            lambda: yaml.load(self.containers(ctx).compose(['config'], capture=True), yaml.UnsafeLoader)
+            lambda: yaml.load(self.containers(ctx).compose(['config'], capture=True), yaml.Loader)
         )
 
     def get_services_as_raw_dict(self, ctx: ExecutionContext):
