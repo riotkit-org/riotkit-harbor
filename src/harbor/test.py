@@ -124,6 +124,13 @@ class BaseHarborTestClass(unittest.TestCase):
 
         return images
 
+    def assertContainerIsNotRunning(self, service_name: str, driver: ComposeDriver):
+        container_name_without_instance_num = driver.project_name + '_' + service_name + '_'
+
+        for name, state in self.get_containers_state(driver).items():
+            if name.startswith(container_name_without_instance_num) and state is True:
+                self.fail('"%s" is running, but should not' % name)
+
     def assertLocalRegistryHasImage(self, image_name):
         self.assertIn(image_name, self.get_locally_pulled_docker_images(),
                       msg='Expected that "docker images" will contain image "%s"' % image_name)

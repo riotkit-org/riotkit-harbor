@@ -35,13 +35,13 @@ class ServiceRemoveTaskTest(BaseHarborTestClass):
         self.assertIn('Removing test_website_2', out)
 
     def test_functional_service_is_removed_together_with_image(self):
-        service = ServiceDeclaration('pulling_test', {})
+        service = ServiceDeclaration('alpine_3', {})
 
         drv = self._get_prepared_compose_driver()
         drv.up(service, capture=True)
 
         self.execute_task(ServiceRemoveTask(), debug=False, args={
-            'name': 'pulling_test',
+            'name': 'alpine_3',
             '--with-image': True,
             '--extra-args': ''
         })

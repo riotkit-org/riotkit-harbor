@@ -225,12 +225,12 @@ class ServiceRemoveTask(BaseHarborServiceTask):
         return True
 
 
-class ServiceDownTask(BaseHarborServiceTask):
+class ServiceStopTask(BaseHarborServiceTask):
     """Brings down the service without deleting the container
     """
 
     def get_name(self) -> str:
-        return ':down'
+        return ':stop'
 
     def run(self, ctx: ExecutionContext) -> bool:
         service_name = ctx.get_arg('name')

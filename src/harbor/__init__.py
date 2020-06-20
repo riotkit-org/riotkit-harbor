@@ -16,7 +16,7 @@ from .tasks.service import InspectContainerTask
 from .tasks.service import ExecTask
 from .tasks.service import ServiceRemoveTask
 from .tasks.service import ServiceUpTask
-from .tasks.service import ServiceDownTask
+from .tasks.service import ServiceStopTask
 from .tasks.service import WaitForServiceTask
 from .tasks.listing import ListDefinedServices
 from .tasks.diagnostic import DumpComposeArguments
@@ -44,7 +44,7 @@ def imports():
         TaskDeclaration(StopAndRemoveTask()),
         TaskDeclaration(ListDefinedServices()),
         TaskDeclaration(ServiceUpTask()),
-        TaskDeclaration(ServiceDownTask()),
+        TaskDeclaration(ServiceStopTask()),
         TaskDeclaration(WaitForServiceTask()),
         TaskDeclaration(ServiceRemoveTask()),
         TaskDeclaration(ExecTask()),
