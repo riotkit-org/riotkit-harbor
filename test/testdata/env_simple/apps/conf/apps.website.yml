@@ -1,4 +1,4 @@
 version: '2'
 services:
     website:
-        image: nginx:1.19
+        image: nginx:1.19-alpine
