@@ -27,6 +27,9 @@ class ServiceUpTaskTest(BaseHarborTestClass):
         drv.rm(ServiceDeclaration('website', {}), capture=True)
         drv.up(ServiceDeclaration('website', {}), capture=True)
 
+        # start gateway (it needs to be later checked if it is stopped an then started)
+        drv.up(ServiceDeclaration('gateway_proxy_gen', {}), capture=True)
+
         out = self.execute_task(ServiceUpTask(), debug=True, args={
             'name': 'website',
             '--strategy': 'rolling',
