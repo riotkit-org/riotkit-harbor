@@ -27,7 +27,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
         drv.rm(ServiceDeclaration('website', {}), capture=True)
         drv.up(ServiceDeclaration('website', {}), capture=True)
 
-        out = self.execute_task(ServiceUpTask(), debug=False, args={
+        out = self.execute_task(ServiceUpTask(), debug=True, args={
             'name': 'website',
             '--strategy': 'rolling',
             '--remove-previous-images': False,
