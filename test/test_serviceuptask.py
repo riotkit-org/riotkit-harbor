@@ -18,7 +18,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
                 '--extra-args': ''
             })
 
-            self.assertIn('Recreating env_simple_website_1', out)
+            self.assertIn('Recreating test_website_1', out)
 
     def test_functional_service_is_rolling_updated(self):
         """Test that service rolling update is performed"""
