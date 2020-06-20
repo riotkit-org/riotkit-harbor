@@ -359,17 +359,22 @@ class LogsTask(BaseHarborServiceTask):
         super().configure_argparse(parser)
         parser.add_argument('--instance-num', '-i', default=None, help='Instance number')
         parser.add_argument('--follow', '-f', help='Follow the output', action='store_true')
+        parser.add_argument('--buffered', help='Buffer output', action='store_true')
 
     def get_name(self) -> str:
         return ':logs'
 
     def run(self, ctx: ExecutionContext) -> bool:
         container_name, service, instance_num = self.prepare_single_for_single_container(ctx)
+        buffered = bool(ctx.get_arg('--buffered'))
 
         if not service:
+            self.io().error_msg('Service not found')
             return False
 
-        self.containers(ctx).get_logs(service, instance_num, raw=True, follow=bool(ctx.get_arg('--follow')))
+        self.io().outln(
+            self.containers(ctx).get_logs(service, instance_num, raw=not buffered, follow=bool(ctx.get_arg('--follow')))
+        )
 
         return True
 

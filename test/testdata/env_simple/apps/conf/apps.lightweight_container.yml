@@ -5,4 +5,4 @@ services:
     #
     alpine_3:
         image: alpine:3.11
-        command: sleep 3600
+        command: "/bin/sh -c 'echo Hello; sleep 3600'"
