@@ -1,0 +1,8 @@
+version: '2'
+services:
+    #
+    # Container used to test pulling - has only 5MB
+    #
+    pulling_test:
+        image: alpine:3.11
+        command: sleep 3600

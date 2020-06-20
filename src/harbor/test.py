@@ -1,5 +1,6 @@
 import unittest
 import os
+import subprocess
 from io import StringIO
 from typing import Dict
 from copy import deepcopy
@@ -116,3 +117,17 @@ class BaseHarborTestClass(unittest.TestCase):
 
         return containers
 
+    def get_locally_pulled_docker_images(self) -> list:
+        images = subprocess.check_output(['docker', 'images', '--format', '{{ .Repository }}:{{ .Tag }}'])\
+            .decode('utf-8')\
+            .split("\n")
+
+        return images
+
+    def assertLocalRegistryHasImage(self, image_name):
+        self.assertIn(image_name, self.get_locally_pulled_docker_images(),
+                      msg='Expected that "docker images" will contain image "%s"' % image_name)
+
+    def assertLocalRegistryHasNoPulledImage(self, image_name):
+        self.assertNotIn(image_name, self.get_locally_pulled_docker_images(),
+                         msg='Expected that "docker images" will not contain image "%s"' % image_name)

@@ -198,7 +198,7 @@ class ServiceUpTask(BaseHarborServiceTask):
 class ServiceRemoveTask(BaseHarborServiceTask):
     """Stops and removes a container and it's images
 
-    Use --with-image to clean up older image
+    Use --with-image to remove images of all service instances
     """
 
     def get_name(self) -> str:
