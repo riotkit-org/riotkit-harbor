@@ -68,7 +68,7 @@ class BaseHarborTestClass(unittest.TestCase):
 
         return ComposeDriver(task, ctx, 'test')
 
-    def prepare_task(self, task: HarborBaseTask, args: dict = {}, env: dict = {}, debug: bool = False) -> str:
+    def execute_task(self, task: HarborBaseTask, args: dict = {}, env: dict = {}, debug: bool = False) -> str:
         ctx = ApplicationContext([], [])
         ctx.io = BufferedSystemIO()
 
