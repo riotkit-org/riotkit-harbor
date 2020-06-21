@@ -30,12 +30,12 @@ jobs:
       script:
           - rkd :test
 
-    - stage: "Test on Python 3.8 and LATEST docker-compose"
+    - stage: "Test on Python 3.8, LATEST docker-compose and LATEST RKD"
       python: 3.8
       before_script:
           - ./setup.py install
-          - pip install --upgrade docker-compose
-          - pip shw docker-compose
+          - pip install --upgrade docker-compose rkd
+          - pip show docker-compose
           - pip show rkd
       script:
           - rkd :test
