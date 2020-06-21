@@ -13,8 +13,10 @@ class ServiceNotFoundInYaml(TaskException):
 
 
 class ServiceNotCreatedException(TaskException):
-    def __init__(self, name: str):
-        super().__init__('Service "%s" was not yet created by docker engine, please start it first' % name)
+    def __init__(self, name: str, instance_num: int = None):
+        super().__init__('Service "%s" (instance=%s) was not yet created by docker engine, please start it first' % (
+            name, str(instance_num)
+        ))
 
 
 class ServiceNotRunningException(TaskException):

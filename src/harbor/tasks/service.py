@@ -387,19 +387,26 @@ class WaitForServiceTask(BaseHarborServiceTask):
 
     def configure_argparse(self, parser: ArgumentParser):
         super().configure_argparse(parser)
-        parser.add_argument('--instance', '-i', required=True, help='Instance name, full container name')
+        parser.add_argument('--instance', '-i', required=False, help='Instance name, full container name')
         parser.add_argument('--timeout', '-t', default='120', help='Timeout in seconds')
 
     def run(self, ctx: ExecutionContext) -> bool:
         service_name = ctx.get_arg('name')
         timeout = int(ctx.get_arg('--timeout'))
+        instance_num = int(ctx.get_arg('--instance')) if ctx.get_arg('--instance') else None
 
-        instance_num = int(ctx.get_arg('--instance').split('_')[-1])
-        container = self.containers(ctx).inspect_container(
-            self.containers(ctx).get_last_container_name_for_service(service_name))
+        service = self.services(ctx).get_by_name(service_name)
+
+        try:
+            container_name = self.containers(ctx).find_container_name(service, instance_num)
+            container = self.containers(ctx).inspect_container(container_name)
+        except ServiceNotCreatedException as e:
+            self.io().error_msg(str(e))
+            return False
+
         started_at = time()
 
-        self.io().info('Checking health of "%s" service - instance #%i' % (service_name, instance_num))
+        self.io().info('Checking health of "%s" service - %s' % (service_name, container_name))
 
         if container.has_health_check():
             while True:
@@ -414,16 +421,19 @@ class WaitForServiceTask(BaseHarborServiceTask):
                     self.io().warn('Docker reports "starting" - performing a manual check, we wont wait for docker')
 
                     try:
+                        command = container.get_health_check_command().replace('"', '\\"')
+
                         self.containers(ctx).exec_in_container(
                             service_name=service_name,
-                            command='/bin/sh -c "%s" >/dev/null 2>&1',
+                            command='/bin/sh -c "%s"' % command,
                             instance_num=instance_num
                         )
 
                         self.io().success_msg('Service healthy after %is' % (time() - started_at))
                         return True
 
-                    except subprocess.CalledProcessError:
+                    except subprocess.CalledProcessError as e:
+                        self.io().debug(str(e.output)[0:128])
                         sleep(1)
                         continue
 

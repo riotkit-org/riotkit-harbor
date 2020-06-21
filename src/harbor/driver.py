@@ -203,7 +203,7 @@ class ComposeDriver(object):
             'exec', '-T',
             '--index=%i' % instance_num if instance_num else '',
             service_name,
-            'sh', '-c', '"', command, '"'
+            'sh', '-c', '"', command.replace('"', '\\"'), '"'
         ], capture=capture)
 
     def exec_in_container_passthrough(self, command: str, service: ServiceDeclaration, instance_num: int = None,
@@ -272,14 +272,12 @@ class ComposeDriver(object):
         containers = self.get_created_containers(only_running=False)
 
         if not service.get_name() in containers:
-            raise ServiceNotCreatedException('Invalid service name or no any containers were created')
+            raise ServiceNotCreatedException(service.get_name(), instance_num=instance_num)
 
         matches = dict(containers[service.get_name()]).keys()
 
         if instance_num not in matches:
-            raise ServiceNotCreatedException(
-                'Service has not enough instances, the instance %i is not running' % instance_num
-            )
+            raise ServiceNotCreatedException(service.get_name(), instance_num=instance_num)
 
         return self.create_container_name(service, instance_num)
 

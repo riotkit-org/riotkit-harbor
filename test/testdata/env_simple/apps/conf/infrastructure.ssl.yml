@@ -1,4 +1,4 @@
-version: "2"
+version: "3.4"
 services:
     #
     # SSL certification service
@@ -8,10 +8,19 @@ services:
     gateway_letsencrypt:
         image: jrcs/letsencrypt-nginx-proxy-companion:v1.12
         restart: always
-        volumes_from:
-            - gateway
-            - gateway_proxy_gen
         volumes:
+            # gateway volumes
+            - nginx-confd:/etc/nginx/conf.d    # communication with docker-gen container
+            - nginx-certs:/etc/nginx/certs:rw  # communication with letsencrypt container
+            - nginx-vhostd:/etc/nginx/vhost.d/ # communication with docker-gen/ssl containers
+            - nginx-html:/usr/share/nginx/html # letsencrypt requires to store tokens there
+            - ./containers/nginx/vhost.d:/etc/nginx/vhost-static.d/          # custom configuration
+            - ./containers/auth:/etc/nginx/htpasswd:ro                         # basic auth
+            - ./containers/nginx/maintenance:/usr/share/nginx/maintenance:ro # RiotKit's maintenance page HTML files
+            - ./data/maintenance-mode:/maintenance:ro                        # RiotKit's maintenance page toggle
+
+            # gateway_proxy_gen volumes
+            - ./containers/nginx/nginx.tmpl:/etc/docker-gen/templates/nginx.tmpl
             - /var/run/docker.sock:/var/run/docker.sock:ro
         environment:
             - NGINX_DOCKER_GEN_CONTAINER=${COMPOSE_PROJECT_NAME}_gateway_proxy_gen_1

@@ -1,4 +1,4 @@
-version: '2'
+version: '3.4'
 services:
     healthcheck:
         image: quay.io/riotkit/infracheck:v1.7-x86_64
