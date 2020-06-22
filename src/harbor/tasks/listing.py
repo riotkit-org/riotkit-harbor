@@ -75,6 +75,5 @@ class ListDefinedServices(BaseProfileSupportingTask):
         ])
 
 
-
 def bool2str(val: bool, y: str = 'Active', n: str = 'Not active'):
     return y if val else n
