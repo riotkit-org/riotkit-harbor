@@ -73,8 +73,15 @@ class BaseHarborTestClass(unittest.TestCase):
 
     @classmethod
     def remove_all_containers(cls):
-        subprocess.check_output("docker rm -f $(docker ps -a --format '{{ .Names }}' | grep " + TEST_PROJECT_NAME + ")",
-                                shell=True)
+        try:
+            subprocess.check_output("docker rm -f $(docker ps -a --format '{{ .Names }}' | grep " + TEST_PROJECT_NAME + ")",
+                                    shell=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            # no containers found - it's OK
+            if "requires at least 1 argument" in str(e.output):
+                return
+
+            raise e
 
     @classmethod
     def setup_environment(cls):
