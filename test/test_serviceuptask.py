@@ -8,6 +8,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
         """Test that service is recreated"""
 
         drv = self._get_prepared_compose_driver()
+        drv.up(ServiceDeclaration('website', {}), capture=True)
         drv.stop('website', capture=True)
 
         for i in range(1, 2):

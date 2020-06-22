@@ -18,7 +18,7 @@ class AnalyzeServiceTaskTest(BaseHarborTestClass):
         self.assertIn('Update strategy:  compose', out)
         self.assertIn('Replicas:         1 of 1', out)
         self.assertIn('alpine:3.11', out)
-        self.assertIn('test_alpine_3_1', out)
+        self.assertIn('env_simple_alpine_3_1', out)
 
     def test_shows_service_not_found_when_service_name_is_invalid(self):
         self.assertRaises(
