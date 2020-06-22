@@ -18,7 +18,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
                 '--extra-args': ''
             })
 
-            self.assertIn('Recreating test_website_1', out)
+            self.assertIn('Recreating env_simple_website_1', out)
 
     def test_functional_service_is_rolling_updated(self):
         """Test that service rolling update is performed"""
@@ -37,16 +37,16 @@ class ServiceUpTaskTest(BaseHarborTestClass):
             '--extra-args': ''
         })
 
-        self.assertIn('Stopping test_gateway_proxy_gen_1', out,
+        self.assertIn('Stopping env_simple_gateway_proxy_gen_1', out,
                       msg='Expected the rolling strategy will stop proxy_gen')
-        self.assertIn('Starting test_gateway_proxy_gen_1', out,
+        self.assertIn('Starting env_simple_gateway_proxy_gen_1', out,
                       msg='Expected the rolling strategy will start proxy_gen')
 
         running_containers = self.get_containers_state(drv)
 
-        self.assertIn('test_website_2', running_containers,
+        self.assertIn('env_simple_website_2', running_containers,
                       msg='Expected that a new instance would be in place of old one')
-        self.assertNotIn('test_website_1', running_containers,
+        self.assertNotIn('env_simple_website_1', running_containers,
                          msg='Expected that the old container will be turned off')
 
     def test_functional_compose_method_is_executed(self):
@@ -64,7 +64,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
             '--dont-recreate': False
         })
 
-        self.assertIn('test_website_1 is up-to-date', out)
+        self.assertIn('env_simple_website_1 is up-to-date', out)
 
     def test_strategy_is_automatically_selected_from_service_definition(self):
         """Strategy if not defined in YAML will be fallback to default: 'compose'"""

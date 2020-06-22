@@ -84,19 +84,19 @@ class ComposeDriverTest(BaseHarborTestClass):
 
         # 1) Start
         drv.up(ServiceDeclaration('gateway', {}))
-        self.assertTrue(self.get_containers_state(drv)['test_gateway_1'])
+        self.assertTrue(self.get_containers_state(drv)['env_simple_gateway_1'])
 
         # 2) Restart
         drv.restart('gateway')
-        self.assertTrue(self.get_containers_state(drv)['test_gateway_1'])
+        self.assertTrue(self.get_containers_state(drv)['env_simple_gateway_1'])
 
         # 3) Stop
         drv.stop('gateway')
-        self.assertFalse(self.get_containers_state(drv)['test_gateway_1'])
+        self.assertFalse(self.get_containers_state(drv)['env_simple_gateway_1'])
 
         # 4) Remove
         drv.rm(ServiceDeclaration('gateway', {}))
-        self.assertNotIn('test_gateway_1', self.get_containers_state(drv))
+        self.assertNotIn('env_simple_gateway_1', self.get_containers_state(drv))
 
     def test_get_last_container_name_for_service(self):
         drv = self._get_prepared_compose_driver()
@@ -105,7 +105,7 @@ class ComposeDriverTest(BaseHarborTestClass):
         drv.rm(ServiceDeclaration('gateway', {}), capture=True)  # there may be more instances, so remove them
         drv.up(ServiceDeclaration('gateway', {}), capture=True)  # bring one instance
 
-        self.assertEqual('test_gateway_1', drv.get_last_container_name_for_service('gateway'))
+        self.assertEqual('env_simple_gateway_1', drv.get_last_container_name_for_service('gateway'))
 
     def test_find_container_name_case_service_not_created_raises_exception(self):
         drv = self._get_prepared_compose_driver()
@@ -119,13 +119,13 @@ class ComposeDriverTest(BaseHarborTestClass):
         drv = self.prepare_example_service('gateway')
 
         instance_name = drv.find_container_name(ServiceDeclaration('gateway', {}))
-        self.assertEqual('test_gateway_1', instance_name)
+        self.assertEqual('env_simple_gateway_1', instance_name)
 
     def test_find_container_name_finds_first_instance_by_specyfing_instance_num(self):
         drv = self.prepare_example_service('gateway')
 
         self.assertEqual(
-            'test_gateway_1',
+            'env_simple_gateway_1',
             drv.find_container_name(ServiceDeclaration('gateway', {}), instance_num=1)
         )
 
@@ -133,7 +133,7 @@ class ComposeDriverTest(BaseHarborTestClass):
         drv = self.prepare_example_service('gateway')
 
         # for single works
-        self.assertEqual('test_gateway_1', drv.find_container_name(ServiceDeclaration('gateway', {}), instance_num=1))
+        self.assertEqual('env_simple_gateway_1', drv.find_container_name(ServiceDeclaration('gateway', {}), instance_num=1))
 
         self.assertRaises(
             ServiceNotCreatedException,
@@ -176,18 +176,18 @@ class ComposeDriverTest(BaseHarborTestClass):
         drv.scale_one_up(ServiceDeclaration('website', {}))
 
         running_containers = self.get_containers_state(drv)
-        self.assertIn('test_website_1', running_containers)
-        self.assertIn('test_website_2', running_containers)
+        self.assertIn('env_simple_website_1', running_containers)
+        self.assertIn('env_simple_website_2', running_containers)
 
     def test_find_all_container_names_for_service_finds_containers(self):
         drv = self.prepare_example_service('website')
 
-        self.assertEqual(['test_website_1'],
+        self.assertEqual(['env_simple_website_1'],
                          drv.find_all_container_names_for_service(ServiceDeclaration('website', {})))
 
         drv.scale_one_up(ServiceDeclaration('website', {}))
 
-        self.assertEqual(['test_website_1', 'test_website_2'],
+        self.assertEqual(['env_simple_website_1', 'env_simple_website_2'],
                          drv.find_all_container_names_for_service(ServiceDeclaration('website', {})))
 
     def test_find_all_container_names_for_service_raises_exception_on_invalid_service_name(self):

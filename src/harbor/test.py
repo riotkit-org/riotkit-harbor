@@ -1,6 +1,7 @@
 import unittest
 import os
 import subprocess
+import time
 from io import StringIO
 from typing import Dict
 from copy import deepcopy
@@ -15,6 +16,10 @@ from .tasks.base import HarborBaseTask
 from .service import ServiceDeclaration
 from .driver import ComposeDriver
 from dotenv import dotenv_values
+
+HARBOR_MODULE_PATH = os.path.dirname(os.path.realpath(__file__))
+ENV_SIMPLE_PATH = os.path.dirname(os.path.realpath(__file__)) + '/../../test/testdata/env_simple'
+TEST_PROJECT_NAME = 'env_simple'
 
 
 class TestTask(HarborBaseTask):
@@ -52,11 +57,30 @@ def create_mocked_task(io: IO) -> TestTask:
 
 class BaseHarborTestClass(unittest.TestCase):
     def setUp(self) -> None:
-        env_simple_path = os.path.dirname(os.path.realpath(__file__)) + '/../../test/testdata/env_simple'
+        self.setup_environment()
+        self.recreate_structure()
+        self.remove_all_containers()
 
-        os.environ.update(dotenv_values(env_simple_path + '/.env'))
-        os.environ['APPS_PATH'] = env_simple_path + '/apps'
-        os.chdir(env_simple_path)
+    @classmethod
+    def recreate_structure(cls):
+        """Within each class recreate the project structure, as it could be changed by tests itself"""
+
+        for directory in ['containers', 'data', 'hooks.d']:
+            subprocess.check_call('rm -rf %s/%s' % (ENV_SIMPLE_PATH, directory), shell=True)
+            subprocess.check_call('cp -pr %s/project/%s %s/%s' % (
+                HARBOR_MODULE_PATH, directory, ENV_SIMPLE_PATH, directory
+            ), shell=True)
+
+    @classmethod
+    def remove_all_containers(cls):
+        subprocess.check_output("docker rm -f $(docker ps -a --format '{{ .Names }}' | grep " + TEST_PROJECT_NAME + ")",
+                                shell=True)
+
+    @classmethod
+    def setup_environment(cls):
+        os.environ.update(dotenv_values(ENV_SIMPLE_PATH + '/.env'))
+        os.environ['APPS_PATH'] = ENV_SIMPLE_PATH + '/apps'
+        os.chdir(ENV_SIMPLE_PATH)
 
     def _get_prepared_compose_driver(self, args: dict = {}, env: dict = {}) -> ComposeDriver:
         merged_env = deepcopy(os.environ)
@@ -66,7 +90,7 @@ class BaseHarborTestClass(unittest.TestCase):
         declaration = TaskDeclaration(task)
         ctx = ExecutionContext(declaration, args=args, env=merged_env)
 
-        return ComposeDriver(task, ctx, 'test')
+        return ComposeDriver(task, ctx, TEST_PROJECT_NAME)
 
     def execute_task(self, task: HarborBaseTask, args: dict = {}, env: dict = {}, debug: bool = False) -> str:
         ctx = ApplicationContext([], [])
@@ -93,12 +117,23 @@ class BaseHarborTestClass(unittest.TestCase):
 
         return ctx.io.get_value() + "\n" + str_io.getvalue()
 
-    def prepare_example_service(self, name: str) -> ComposeDriver:
+    @staticmethod
+    def prepare_service_discovery(driver: ComposeDriver):
+        driver.up(ServiceDeclaration('gateway', {}), capture=True, force_recreate=True)
+        driver.up(ServiceDeclaration('gateway_proxy_gen', {}), capture=True, force_recreate=True)
+        driver.up(ServiceDeclaration('website', {}), capture=True)
+
+    def prepare_example_service(self, name: str, uses_service_discovery: bool = False) -> ComposeDriver:
         drv = self._get_prepared_compose_driver()
 
         # prepare
         drv.rm(ServiceDeclaration(name, {}))
         drv.up(ServiceDeclaration(name, {}))
+
+        if uses_service_discovery:
+            # give service discovery some time
+            # @todo: This can be improved possibly
+            time.sleep(5)
 
         return drv
 
@@ -123,6 +158,16 @@ class BaseHarborTestClass(unittest.TestCase):
             .split("\n")
 
         return images
+
+    def exec_in_container(self, container_name: str, cmd: list) -> str:
+        return subprocess.check_output(
+            ['docker', 'exec', '-i', container_name] + cmd,
+            stderr=subprocess.STDOUT
+        ).decode('utf-8')
+
+    def fetch_page_content(self, host: str):
+        return self.exec_in_container(TEST_PROJECT_NAME + '_gateway_1', ['curl', '-s', '-vv', '--header',
+                                                                         'Host: %s' % host, 'http://127.0.0.1'])
 
     def assertContainerIsNotRunning(self, service_name: str, driver: ComposeDriver):
         container_name_without_instance_num = driver.project_name + '_' + service_name + '_'

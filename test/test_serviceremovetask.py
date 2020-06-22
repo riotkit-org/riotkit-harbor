@@ -28,11 +28,11 @@ class ServiceRemoveTaskTest(BaseHarborTestClass):
         containers = self.get_containers_state(drv)
 
         for container_name, state in containers.items():
-            if container_name.startswith('test_website_'):
+            if container_name.startswith('env_simple_website_'):
                 self.fail('Found %s container, which should be removed by calling :harbor:service:rm')
 
-        self.assertIn('Removing test_website_1', out)
-        self.assertIn('Removing test_website_2', out)
+        self.assertIn('Removing env_simple_website_1', out)
+        self.assertIn('Removing env_simple_website_2', out)
 
     def test_functional_service_is_removed_together_with_image(self):
         service = ServiceDeclaration('alpine_3', {})

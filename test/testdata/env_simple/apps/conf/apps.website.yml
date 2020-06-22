@@ -2,3 +2,13 @@ version: '3.4'
 services:
     website:
         image: nginx:1.19-alpine
+        environment:
+            VIRTUAL_HOST: "nginx.local,www.nginx.local"
+
+    website_with_maintenance:
+        image: nginx:1.19-alpine
+        environment:
+            VIRTUAL_HOST: "nginx-with-maintenance-mode.local,www.nginx-with-maintenance-mode.local"
+        labels:
+            org.riotkit.useMaintenanceMode: true
+            org.riotkit.redirectFromWWW: true

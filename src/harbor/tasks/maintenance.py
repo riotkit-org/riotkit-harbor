@@ -53,6 +53,8 @@ class MaintenanceOnTask(BaseMaintenanceManagementTask):
         with open(path, 'w') as f:
             f.write('We are on strike ;)')
 
+        os.chmod(path, 0o755)
+
         self.io().success_msg('Maintenance mode is on')
 
         return True

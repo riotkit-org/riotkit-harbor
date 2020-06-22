@@ -6,3 +6,5 @@
 *.egg-info
 *.pyc
 /.venv
+/test/testdata/env_simple/data/
+/test/testdata/env_simple/containers/
