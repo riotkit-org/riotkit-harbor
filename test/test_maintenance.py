@@ -3,7 +3,7 @@ from harbor.tasks.maintenance import MaintenanceOnTask
 from harbor.tasks.maintenance import MaintenanceOffTask
 
 
-class TestMaintenanceMode(BaseHarborTestClass):
+class TestMaintenanceModeFeature(BaseHarborTestClass):
     """Functional tests for the maintenance feature
 
     Includes coverage of:

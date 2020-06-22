@@ -3,12 +3,18 @@ services:
     website:
         image: nginx:1.19-alpine
         environment:
-            VIRTUAL_HOST: "nginx.local,www.nginx.local"
+            VIRTUAL_HOST: "nginx.local"
 
     website_with_maintenance:
         image: nginx:1.19-alpine
         environment:
-            VIRTUAL_HOST: "nginx-with-maintenance-mode.local,www.nginx-with-maintenance-mode.local"
+            VIRTUAL_HOST: "nginx-with-maintenance-mode.local"
         labels:
             org.riotkit.useMaintenanceMode: true
+
+    website_with_redirect_to_www:
+        image: nginx:1.19-alpine
+        environment:
+            VIRTUAL_HOST: "nginx-redirect-to-www.local,www.nginx-redirect-to-www.local"
+        labels:
             org.riotkit.redirectFromWWW: true
