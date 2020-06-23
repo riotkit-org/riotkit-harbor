@@ -57,6 +57,13 @@ def create_mocked_task(io: IO) -> TestTask:
 
 class BaseHarborTestClass(unittest.TestCase):
     def setUp(self) -> None:
+        print('')
+        print('==================================================================================================' +
+              '=====================================')
+        print('Test name: ' + self.__class__.__name__ + ' :: ' + self._testMethodName)
+        print('----------')
+        print('')
+
         self.setup_environment()
         self.recreate_structure()
         self.remove_all_containers()
