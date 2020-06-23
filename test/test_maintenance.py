@@ -2,6 +2,7 @@ from harbor.test import BaseHarborTestClass
 from harbor.tasks.maintenance import MaintenanceOnTask
 from harbor.tasks.maintenance import MaintenanceOffTask
 
+
 class TestMaintenanceModeFeature(BaseHarborTestClass):
     """Functional tests for the maintenance feature
 
@@ -19,18 +20,20 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
         self.prepare_example_service('website_with_maintenance', uses_service_discovery=True)
 
         # 1) maintenance on
-        self.execute_task(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
-        content = self.fetch_page_content('nginx-with-maintenance-mode.local')
+        with self.subTest('Maintenance mode on'):
+            self.execute_task(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
+            content = self.fetch_page_content('nginx-with-maintenance-mode.local')
 
-        self.assertIn('503: Page maintenance', content)
-        self.assertIn('HTTP/1.1 503', content)
+            self.assertIn('503: Page maintenance', content)
+            self.assertIn('HTTP/1.1 503', content)
 
         # 2) maintenance mode off
-        self.execute_task(MaintenanceOffTask(), args={'--global': True, '--domain': '', '--service': ''})
-        content = self.fetch_page_content('nginx-with-maintenance-mode.local')
+        with self.subTest('Maintenance mode off'):
+            self.execute_task(MaintenanceOffTask(), args={'--global': True, '--domain': '', '--service': ''})
+            content = self.fetch_page_content('nginx-with-maintenance-mode.local')
 
-        self.assertNotIn('503: Page maintenance', content)
-        self.assertIn('HTTP/1.1 200', content)
+            self.assertNotIn('503: Page maintenance', content)
+            self.assertIn('HTTP/1.1 200', content)
 
     def test_functional_global_maintenance_mode_not_affects_service_that_has_maintenance_off(self):
         """Verify that service that does not have `org.riotkit.useMaintenanceMode` label should not display maintenance
@@ -54,22 +57,24 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
         self.prepare_example_service('website_with_multiple_domains', uses_service_discovery=True)
 
         # 1) maintenance on
-        self.execute_task(MaintenanceOnTask(), args={
-            '--global': False, '--domain': '', '--service': 'website_with_multiple_domains'
-        })
+        with self.subTest('Turning maintenance on'):
+            self.execute_task(MaintenanceOnTask(), args={
+                '--global': False, '--domain': '', '--service': 'website_with_multiple_domains'
+            })
 
-        self.assertIn('HTTP/1.1 503', self.fetch_page_content('web1.local'))
-        self.assertIn('HTTP/1.1 503', self.fetch_page_content('web2.local'))
-        self.assertIn('HTTP/1.1 503', self.fetch_page_content('web3.local'))
+            self.assertIn('HTTP/1.1 503', self.fetch_page_content('web1.local'))
+            self.assertIn('HTTP/1.1 503', self.fetch_page_content('web2.local'))
+            self.assertIn('HTTP/1.1 503', self.fetch_page_content('web3.local'))
 
         # 2) maintenance off
-        self.execute_task(MaintenanceOffTask(), args={
-            '--global': False, '--domain': '', '--service': 'website_with_multiple_domains'
-        })
+        with self.subTest('Turning off the maintenance'):
+            self.execute_task(MaintenanceOffTask(), args={
+                '--global': False, '--domain': '', '--service': 'website_with_multiple_domains'
+            })
 
-        self.assertIn('HTTP/1.1 200', self.fetch_page_content('web1.local'))
-        self.assertIn('HTTP/1.1 200', self.fetch_page_content('web2.local'))
-        self.assertIn('HTTP/1.1 200', self.fetch_page_content('web3.local'))
+            self.assertIn('HTTP/1.1 200', self.fetch_page_content('web1.local'))
+            self.assertIn('HTTP/1.1 200', self.fetch_page_content('web2.local'))
+            self.assertIn('HTTP/1.1 200', self.fetch_page_content('web3.local'))
 
     def test_functional_maintenance_mode_for_single_domain_under_service_that_has_multiple_domains(self):
         """Test that we can set a maintenance for domain web1.local, while web2.local stays normal
