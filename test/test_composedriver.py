@@ -15,7 +15,7 @@ class ComposeDriverTest(BaseHarborTestClass):
         args = drv.get_compose_args()
 
         self.assertIn('--project-directory=', args, msg='Project directory should be set')
-        self.assertIn('-p test', args, msg='Project name should be set')
+        self.assertIn('-p env_simple', args, msg='Project name should be set')
         self.assertIn('-f docker-compose.yml', args, msg='Basic docker-compose.yml should be considered')
         self.assertIn('infrastructure.ssl.yml', args)
         self.assertIn('infrastructure.service-discovery.yml', args)

@@ -1,9 +1,12 @@
 import os
+from typing import List
 from argparse import ArgumentParser
 from abc import abstractmethod
 from rkd.contract import ExecutionContext
 from .base import HarborBaseTask
 from ..formatting import prod_formatting
+from ..exception import ServiceNotFoundInYamlLookedByCriteria
+from ..exception import ServiceNotFoundInYaml
 
 
 class BaseMaintenanceManagementTask(HarborBaseTask):
@@ -12,35 +15,82 @@ class BaseMaintenanceManagementTask(HarborBaseTask):
 
     def configure_argparse(self, parser: ArgumentParser):
         parser.add_argument('--domain', '-d', help='Domain name', default='')
+        parser.add_argument('--service', '-s', help='Service name', default='')
         parser.add_argument('--global', '-g', help='Set maintenance for all domains', action='store_true')
 
     def run(self, context: ExecutionContext) -> bool:
-        path = self.get_data_path(context) + '/maintenance-mode'
+        """Validate parameters and select action"""
 
-        if context.get_arg('--global') and context.get_arg('--domain'):
-            self.io().error_msg('Cannot use both --global and --domain switch')
-            return False
+        is_global = context.get_arg('--global')
+        domain = context.get_arg('--domain')
+        service = context.get_arg('--service')
 
-        if context.get_arg('--global'):
-            path += '/on'
-        elif context.get_arg('--domain'):
-            path += '/%s-on' % context.get_arg('--domain')
-        else:
-            self.io().error_msg('Must specify --global or --domain switch')
+        directory = self.get_data_path(context) + '/maintenance-mode'
+
+        if not self._validate_switches(is_global, domain, service):
+            self.io().error_msg('Cannot use together --global, --domain and --service switch. Pick one of them.')
             return False
 
         try:
-            return self.act(path)
+            if is_global:
+                return self.act([directory + '/on'], 'globally')
+
+            elif service:
+                return self.act_for_service(directory, service, context)
+
+            elif domain:
+                return self.act_for_domain(directory, domain, context)
+            else:
+                self.io().error_msg('Must specify --global or --domain switch')
+                return False
+
         except PermissionError as e:
-            self.io().error_msg('No permissions to write to "%s". Set permissions or use sudo?' % path)
+            self.io().error_msg('No write permissions. Set permissions or use sudo? %s' % str(e))
             return False
 
+    def act_for_service(self, directory: str, service: str, ctx: ExecutionContext):
+        try:
+            domains = self.services(ctx).get_by_name(service).get_domains()
+
+        except ServiceNotFoundInYaml:
+            self.io().error_msg('Service "%s" was not defined' % service)
+            return False
+
+        return self.act(
+            list(map(lambda domain: directory + '/%s-on' % domain, domains)),
+            'for service "%s"' % service
+        )
+
+    def act_for_domain(self, directory, domain, context):
+        try:
+            self.services(context).find_by_domain(domain)
+        except ServiceNotFoundInYamlLookedByCriteria:
+            self.io().error_msg('Domain is not valid')
+            return False
+
+        return self.act([directory + '/%s-on' % domain], 'for domain "%s"' % domain)
+
     @abstractmethod
-    def act(self, path: str) -> bool:
+    def act(self, paths: List[str], subject: str) -> bool:
         pass
 
     def format_task_name(self, name) -> str:
         return prod_formatting(name)
+
+    @staticmethod
+    def _validate_switches(is_global, domain, service):
+        switches = 0
+
+        if is_global:
+            switches += 1
+
+        if domain:
+            switches += 1
+
+        if service:
+            switches += 1
+
+        return switches == 1
 
 
 class MaintenanceOnTask(BaseMaintenanceManagementTask):
@@ -49,13 +99,14 @@ class MaintenanceOnTask(BaseMaintenanceManagementTask):
     def get_name(self) -> str:
         return ':on'
 
-    def act(self, path: str) -> bool:
-        with open(path, 'w') as f:
-            f.write('We are on strike ;)')
+    def act(self, paths: List[str], subject: str) -> bool:
+        for path in paths:
+            with open(path, 'w') as f:
+                f.write('We are on strike ;)')
 
-        os.chmod(path, 0o755)
+            os.chmod(path, 0o777)
 
-        self.io().success_msg('Maintenance mode is on')
+        self.io().success_msg('Maintenance mode %s is on' % subject)
 
         return True
 
@@ -66,11 +117,12 @@ class MaintenanceOffTask(BaseMaintenanceManagementTask):
     def get_name(self) -> str:
         return ':off'
 
-    def act(self, path: str) -> bool:
-        if os.path.isfile(path):
-            os.unlink(path)
+    def act(self, paths: List[str], subject: str) -> bool:
+        for path in paths:
+            if os.path.isfile(path):
+                os.unlink(path)
 
-        self.io().success_msg('Maintenance mode is off')
+        self.io().success_msg('Maintenance mode %s is off' % subject)
 
         return True
 

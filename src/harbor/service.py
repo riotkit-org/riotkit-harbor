@@ -3,13 +3,15 @@
 """
 
 import os
-from traceback import format_exc
 from typing import List
 from typing import Optional
+from typing import Dict
+from traceback import format_exc
 from rkd.inputoutput import IO
 from .expressions import safe_eval
 from .exception import ProfileNotFoundException
 from .exception import ServiceNotFoundInYaml
+from .exception import ServiceNotFoundInYamlLookedByCriteria
 
 DEFAULT_SELECTOR = 'service is not None'  # passes all containers
 BOOLEANS = ['true', 'TRUE', 'True', True]
@@ -81,6 +83,9 @@ class ServiceDeclaration(object):
         except IndexError:
             return 'latest'
 
+    def has_domain(self, domain: str):
+        return domain in self.get_domains()
+
 
 class ServiceSelector(object):
     """Acts as a service filter. Simple reduce() implementation"""
@@ -145,14 +150,23 @@ class ProfileLoader(object):
 class ServiceLocator(object):
     """Declarations repository"""
 
-    _services: dict
+    _services: Dict[str, ServiceDeclaration]
 
     def __init__(self, services: dict):
-        self._services = services
+        self._services = {}
+
+        for name, yaml_dict in services.items():
+            self._services[name] = ServiceDeclaration(name, yaml_dict)
 
     def get_by_name(self, name: str) -> Optional[ServiceDeclaration]:
         try:
-            return ServiceDeclaration(name, self._services[name])
+            return self._services[name]
         except KeyError:
             raise ServiceNotFoundInYaml(name)
 
+    def find_by_domain(self, domain: str) -> Optional[ServiceDeclaration]:
+        for service in self._services.values():
+            if service.has_domain(domain):
+                return service
+
+        raise ServiceNotFoundInYamlLookedByCriteria('has domain "%s"' % domain)

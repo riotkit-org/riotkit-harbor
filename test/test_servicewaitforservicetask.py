@@ -10,6 +10,7 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
         was not defined"""
 
         drv = self._get_prepared_compose_driver()
+        drv.up(ServiceDeclaration('alpine_3', {}), capture=True)
         drv.stop('alpine_3', capture=True)
 
         out = self.execute_task(WaitForServiceTask(), args={
@@ -41,8 +42,6 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
         drv = self._get_prepared_compose_driver()
         drv.stop('alpine_3_health_check', capture=True)
         drv.up(ServiceDeclaration('alpine_3_health_check', {}), capture=True)
-
-        print('!!!', self.get_containers_state(drv))
 
         out = self.execute_task(WaitForServiceTask(), args={
             'name': 'alpine_3_health_check',
