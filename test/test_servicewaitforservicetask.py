@@ -29,7 +29,7 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
 
         self._restore_streams()
         import sys
-        sys.stderr.write(self.get_containers_state(drv))
+        sys.stderr.write(str(self.get_containers_state(drv)))
         self._restore_streams()
 
         out = self.execute_task(WaitForServiceTask(), args={
