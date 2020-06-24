@@ -406,11 +406,14 @@ class ComposeDriver(object):
     def get_created_containers(self, only_running: bool) -> Dict[str, Dict[int, bool]]:
         """Gets all running services"""
 
-        instances = self.scope.sh('docker ps --format="{{ .Names }}|{{ .Status }}"', capture=True).strip().split("\n")
+        instances = self.scope.sh('docker ps -a --format="{{ .Names }}|{{ .Status }}"', capture=True).strip().split("\n")
         counted = {}
 
         for instance in instances:
-            name, status = instance.split('|')
+            try:
+                name, status = instance.split('|')
+            except ValueError:
+                continue
 
             if not name.startswith(self.project_name + '_'):
                 continue
