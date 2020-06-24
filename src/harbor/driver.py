@@ -406,6 +406,8 @@ class ComposeDriver(object):
     def get_created_containers(self, only_running: bool) -> Dict[str, Dict[int, bool]]:
         """Gets all running services"""
 
+        # @todo: Cover with a test
+
         instances = self.scope.sh('docker ps -a --format="{{ .Names }}|{{ .Status }}"', capture=True).strip().split("\n")
         counted = {}
 
@@ -435,7 +437,7 @@ class ComposeDriver(object):
         for service in counted:
             counted_and_sorted[service] = OrderedDict(sorted(counted[service].items()))
 
-        return counted
+        return counted_and_sorted
 
     def find_all_container_names_for_service(self, service: ServiceDeclaration) -> List[str]:
         """Finds all created container names for given service name

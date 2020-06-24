@@ -186,9 +186,10 @@ class ComposeDriverTest(BaseHarborTestClass):
                          drv.find_all_container_names_for_service(ServiceDeclaration('website', {})))
 
         drv.scale_one_up(ServiceDeclaration('website', {}))
+        containers = drv.find_all_container_names_for_service(ServiceDeclaration('website', {}))
 
-        self.assertEqual(['env_simple_website_1', 'env_simple_website_2'],
-                         drv.find_all_container_names_for_service(ServiceDeclaration('website', {})))
+        self.assertIn('env_simple_website_1', containers)
+        self.assertIn('env_simple_website_2', containers)
 
     def test_find_all_container_names_for_service_raises_exception_on_invalid_service_name(self):
         drv = self._get_prepared_compose_driver()
