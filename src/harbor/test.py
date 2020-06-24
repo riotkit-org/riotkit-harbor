@@ -79,8 +79,7 @@ class BaseHarborTestClass(unittest.TestCase):
         if sys.stderr != self._stderr_bckp or sys.stdout != self._stdout_bckp:
             print('!!! Test ' + self.id() + ' is not cleaning up stdout/stderr')
 
-        sys.stderr = self._stderr_bckp
-        sys.stdout = self._stdout_bckp
+        self._restore_streams()
 
     @classmethod
     def mock_compose(cls, content: dict):
@@ -88,6 +87,10 @@ class BaseHarborTestClass(unittest.TestCase):
 
         with open(ENV_SIMPLE_PATH + '/apps/conf/mocked.yaml', 'wb') as f:
             f.write(yaml.dump(content).encode('utf-8'))
+
+    def _restore_streams(self):
+        sys.stderr = self._stderr_bckp
+        sys.stdout = self._stdout_bckp
 
     @classmethod
     def recreate_structure(cls):
