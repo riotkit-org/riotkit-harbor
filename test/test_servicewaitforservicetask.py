@@ -27,6 +27,7 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
         drv = self._get_prepared_compose_driver()
         drv.up(ServiceDeclaration('alpine_3_health_check', {}), capture=True)
 
+        print('!!!!!', self.get_containers_state(drv))
         out = self.execute_task(WaitForServiceTask(), args={
             'name': 'alpine_3_health_check',
             '--timeout': 0,
