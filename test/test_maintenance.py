@@ -19,14 +19,14 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
         self.prepare_service_discovery(drv)
         self.prepare_example_service('website_with_maintenance', uses_service_discovery=True)
 
-        print(drv.exec_in_container('gateway', 'mount'))
-
         # 1) maintenance on
         with self.subTest('Maintenance mode on'):
             self.execute_task(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
             content = self.fetch_page_content('nginx-with-maintenance-mode.local')
 
-            print(drv.exec_in_container('gateway', 'ls -la /maintenance'))
+            from harbor.test import ENV_SIMPLE_PATH
+            import subprocess
+            subprocess.call('find ' + ENV_SIMPLE_PATH, shell=True)
 
             self.assertIn('503: Page maintenance', content)
             self.assertIn('HTTP/1.1 503', content)
