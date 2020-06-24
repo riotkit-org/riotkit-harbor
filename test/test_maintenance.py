@@ -19,7 +19,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
         self.prepare_service_discovery(drv)
         self.prepare_example_service('website_with_maintenance', uses_service_discovery=True)
 
-        print(drv.exec_in_container('gateway', 'ls -la /maintenance'))
+        print(drv.exec_in_container('gateway', 'mount'))
 
         # 1) maintenance on
         with self.subTest('Maintenance mode on'):
