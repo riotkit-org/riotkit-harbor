@@ -406,22 +406,18 @@ class ComposeDriver(object):
     def get_created_containers(self, only_running: bool) -> Dict[str, Dict[int, bool]]:
         """Gets all running services"""
 
-        instances = self.compose(['ps'], capture=True).strip().split("\n")
+        instances = self.scope.sh('docker ps --format="{{ .Names }}|{{ .Status }}"', capture=True).strip().split("\n")
         counted = {}
 
-        print('instances [!!!]', self.compose(['ps'], capture=True).strip())
-
         for instance in instances:
-            matches = re.findall('([A-Za-z0-9\-_]+)_([0-9]+)\s*(.*)(Up|Exit)', instance)
+            name, status = instance.split('|')
 
-            print('matches [!!!]', matches)
-
-            if not matches:
+            if not name.startswith(self.project_name + '_'):
                 continue
 
-            matches = matches[0]
-            service_name = matches[0][len(self.project_name + '_'):]
-            is_up = matches[3].upper() == 'UP'
+            service_name = name[len(self.project_name + '_'):-2]
+            is_up = status.upper().startswith('UP')
+            service_num = name.split('_')[-1]
 
             if service_name not in counted:
                 counted[service_name] = OrderedDict()
@@ -429,7 +425,7 @@ class ComposeDriver(object):
             if only_running and not is_up:
                 continue
 
-            counted[service_name][int(matches[1])] = is_up
+            counted[service_name][int(service_num)] = is_up
 
         counted_and_sorted = {}
 
