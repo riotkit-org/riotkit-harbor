@@ -1,3 +1,4 @@
+import subprocess
 from argparse import ArgumentParser
 from typing import Dict
 from rkd.contract import ExecutionContext
@@ -20,6 +21,8 @@ class GatewayBaseTask(HarborBaseTask):
     def make_sure_ssl_service_is_up(self, ctx: ExecutionContext):
         service = self.services(ctx).get_by_name('gateway_letsencrypt')
 
+        self.containers(ctx).up(self.services(ctx).get_by_name('gateway'), norecreate=True)
+        self.containers(ctx).up(self.services(ctx).get_by_name('gateway_proxy_gen'), norecreate=True)
         self.containers(ctx).up(service, norecreate=True)
         self.containers(ctx).wait_for_log_message('Sleep for', service, timeout=60)
 
@@ -74,7 +77,14 @@ class ForceReloadSSLTask(GatewayBaseTask):
     def run(self, ctx: ExecutionContext) -> bool:
         if ctx.get_env('DISABLE_SSL').lower() != 'true':
             self.make_sure_ssl_service_is_up(ctx)
-            self.io().out(self.containers(ctx).exec_in_container('gateway_letsencrypt', '/app/force_renew'))
+
+            try:
+                self.io().out(self.containers(ctx).exec_in_container('gateway_letsencrypt', '/app/force_renew'))
+
+            except subprocess.CalledProcessError as err:
+                self.io().error_msg(str(err))
+                self.io().error('Output: ' + str(err.output))
+                return False
 
         return True
 

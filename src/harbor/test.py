@@ -3,6 +3,7 @@ import sys
 import unittest
 import subprocess
 import time
+import yaml
 from io import StringIO
 from typing import Dict
 from copy import deepcopy
@@ -80,6 +81,13 @@ class BaseHarborTestClass(unittest.TestCase):
 
         sys.stderr = self._stderr_bckp
         sys.stdout = self._stdout_bckp
+
+    @classmethod
+    def mock_compose(cls, content: dict):
+        content['version'] = '3.4'
+
+        with open(ENV_SIMPLE_PATH + '/apps/conf/mocked.yaml', 'wb') as f:
+            f.write(yaml.dump(content).encode('utf-8'))
 
     @classmethod
     def recreate_structure(cls):
