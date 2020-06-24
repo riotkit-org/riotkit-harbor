@@ -24,10 +24,6 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
             self.execute_task(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
             content = self.fetch_page_content('nginx-with-maintenance-mode.local')
 
-            from harbor.test import ENV_SIMPLE_PATH
-            import subprocess
-            subprocess.call('find ' + ENV_SIMPLE_PATH, shell=True)
-
             self.assertIn('503: Page maintenance', content)
             self.assertIn('HTTP/1.1 503', content)
 
