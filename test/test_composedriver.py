@@ -199,3 +199,26 @@ class ComposeDriverTest(BaseHarborTestClass):
             lambda: drv.find_all_container_names_for_service(ServiceDeclaration('not_existing', {}))
         )
 
+    def test_get_created_containers_is_returning_containers_in_proper_order(self):
+        """Test that get_created_containers() is preserving order"""
+
+        drv = self._get_prepared_compose_driver()
+
+        # create three instances of a service
+        drv.up(ServiceDeclaration('website', {}))
+        drv.scale_one_up(ServiceDeclaration('website', {}))
+
+        containers = drv.get_created_containers(only_running=False)
+        self.assertEqual([1, 2], list(containers['website'].keys()))
+
+    def test_get_created_containers_is_showing_only_running_containers(self):
+        """Test that 'website' service will be created, but will have no active containers"""
+
+        drv = self._get_prepared_compose_driver()
+
+        # create three instances of a service
+        drv.up(ServiceDeclaration('website', {}))
+        drv.stop('website')
+
+        containers = drv.get_created_containers(only_running=True)
+        self.assertEqual([], list(containers['website']))
