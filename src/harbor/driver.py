@@ -409,8 +409,12 @@ class ComposeDriver(object):
         instances = self.compose(['ps'], capture=True).strip().split("\n")
         counted = {}
 
+        print('instances [!!!]', instances)
+
         for instance in instances:
             matches = re.findall('([A-Za-z0-9\-_]+)_([0-9]+)\s*(.*)(Up|Exit)', instance)
+
+            print('matches [!!!]', matches)
 
             if not matches:
                 continue
