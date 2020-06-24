@@ -1,9 +1,9 @@
 
-import unittest
+from harbor.test import BaseHarborTestClass
 from harbor.service import ServiceDeclaration
 
 
-class ServiceDeclarationTest(unittest.TestCase):
+class ServiceDeclarationTest(BaseHarborTestClass):
     def test_get_domains(self):
         """Test get_domains() with multiple domains"""
 

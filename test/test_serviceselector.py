@@ -1,9 +1,9 @@
-import unittest
+from harbor.test import BaseHarborTestClass
 from harbor.service import ServiceSelector
 from rkd.inputoutput import BufferedSystemIO
 
 
-class ServiceSelectorTest(unittest.TestCase):
+class ServiceSelectorTest(BaseHarborTestClass):
     def _provide_test_data(self) -> dict:
         return {
             'web_phillyabc': {

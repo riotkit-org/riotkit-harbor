@@ -1,9 +1,9 @@
 
-import unittest
 from harbor.cached_loader import CachedLoader
+from harbor.test import BaseHarborTestClass
 
 
-class CachedLoaderTest(unittest.TestCase):
+class CachedLoaderTest(BaseHarborTestClass):
     def test_cached_calls_loader_once(self):
         test = 0
 

@@ -1,9 +1,9 @@
-import unittest
+from harbor.test import BaseHarborTestClass
 from harbor.service import ServiceLocator
 from harbor.exception import ServiceNotFoundInYaml
 
 
-class ServiceLocatorTest(unittest.TestCase):
+class ServiceLocatorTest(BaseHarborTestClass):
     def test_get_by_name_finds_service_and_returns_as_object(self):
         locator = ServiceLocator({
             'web_iwa_ait': {},

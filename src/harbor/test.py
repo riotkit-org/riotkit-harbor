@@ -1,5 +1,6 @@
-import unittest
 import os
+import sys
+import unittest
 import subprocess
 import time
 from io import StringIO
@@ -56,6 +57,9 @@ def create_mocked_task(io: IO) -> TestTask:
 
 
 class BaseHarborTestClass(unittest.TestCase):
+    _stderr_bckp = None
+    _stdout_bckp = None
+
     def setUp(self) -> None:
         print('')
         print('==================================================================================================' +
@@ -67,6 +71,15 @@ class BaseHarborTestClass(unittest.TestCase):
         self.setup_environment()
         self.recreate_structure()
         self.remove_all_containers()
+        self._stderr_bckp = sys.stderr
+        self._stdout_bckp = sys.stdout
+
+    def tearDown(self) -> None:
+        if sys.stderr != self._stderr_bckp or sys.stdout != self._stdout_bckp:
+            print('!!! Test ' + self.id() + ' is not cleaning up stdout/stderr')
+
+        sys.stderr = self._stderr_bckp
+        sys.stdout = self._stdout_bckp
 
     @classmethod
     def recreate_structure(cls):

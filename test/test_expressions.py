@@ -1,8 +1,8 @@
-import unittest
 from harbor.expressions import safe_eval
+from harbor.test import BaseHarborTestClass
 
 
-class SafeEvalTests(unittest.TestCase):
+class SafeEvalTests(BaseHarborTestClass):
     """author: https://stackoverflow.com/a/48135793/6782994
     """
 
