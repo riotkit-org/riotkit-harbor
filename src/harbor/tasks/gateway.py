@@ -86,6 +86,7 @@ class ForceReloadSSLTask(GatewayBaseTask):
                 self.io().error('Output: ' + str(err.output))
                 return False
 
+        self.io().info_msg('SSL is disabled, not regenerating anything')
         return True
 
     def get_name(self) -> str:

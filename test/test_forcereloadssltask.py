@@ -6,7 +6,7 @@ from harbor.tasks.gateway import ForceReloadSSLTask
 
 
 class TestForceReloadSSLTask(BaseHarborTestClass):
-    def test_force_reload_is_triggered_when_ssl_is_not_disabled(self):
+    def test_functional_force_reload_is_triggered_when_ssl_is_not_disabled(self):
         """We can only check if the container is taking the query
 
         Checks:
@@ -41,3 +41,10 @@ class TestForceReloadSSLTask(BaseHarborTestClass):
             self.assertIn('Renewing certificates...', out)
         finally:
             os.unlink(f.name)
+
+    def test_functional_ssl_regeneration_is_not_triggered_when_ssl_is_disabled(self):
+        """Checks that SSL container will not be touched, when DISABLE_SSL=true
+        """
+
+        out = self.execute_task(ForceReloadSSLTask(), args={}, env={'DISABLE_SSL': 'true'})
+        self.assertIn('not regenerating anything', out)
