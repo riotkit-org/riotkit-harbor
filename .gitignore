@@ -8,3 +8,5 @@
 /.venv
 /test/testdata/env_simple/data/
 /test/testdata/env_simple/containers/
+!/src/harbor/project/data/maintenance-mode
+/build/
