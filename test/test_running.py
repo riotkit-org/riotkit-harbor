@@ -1,6 +1,9 @@
+from rkd.contract import ExecutionContext
+from rkd.syntax import TaskDeclaration
 from harbor.test import BaseHarborTestClass
 from harbor.tasks.running import UpgradeTask
 from harbor.tasks.running import StopAndRemoveTask
+from harbor.tasks.running import RestartTask
 from harbor.exception import ProfileNotFoundException
 
 
@@ -67,3 +70,32 @@ class TestRunning(BaseHarborTestClass):
 
         args = list(map(lambda call: ' '.join(call[0]).strip(),recorded_calls))
         self.assertEqual([':harbor:service:rm gateway', ':harbor:service:rm website'], args)
+
+    def test_restart_calls_driver_restart_method_on_matched_services(self):
+        """Test calls restart on expected services in expected order"""
+
+        task = RestartTask()
+        restarted_services = []
+
+        ctx = ExecutionContext(
+            TaskDeclaration(task),
+            args={},
+            env={}
+        )
+        task.containers(ctx).restart = lambda service_name, args = '': restarted_services.append(service_name)
+
+        self.execute_task(task, args={
+            '--profile': 'profile1',
+            '--with-image': False
+        })
+
+        self.assertEqual(['gateway', 'website'], restarted_services)
+
+    def test_stop_task_executes_stopping_in_order(self):
+        pass
+
+    def test_start_task_executes_tasks_startup_in_order(self):
+        pass
+
+    def test_start_task_on_single_failure_continues_but_returns_false_at_the_end(self):
+        pass
