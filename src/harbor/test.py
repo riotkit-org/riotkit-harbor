@@ -102,6 +102,8 @@ class BaseHarborTestClass(unittest.TestCase):
                 HARBOR_MODULE_PATH, directory, ENV_SIMPLE_PATH, directory
             ), shell=True)
 
+        subprocess.check_call(['rm', '-f', ENV_SIMPLE_PATH + '/apps/conf/mocked.yaml'])
+
     @classmethod
     def remove_all_containers(cls):
         try:

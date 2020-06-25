@@ -39,6 +39,7 @@ class ListConfigsTask(HarborBaseTask):
                     rows.append([env_type + '/' + file, 'Yes'])
 
         self.io().out(tabulate(rows, headers=['Config file', 'Enabled']))
+        self.io().print_line()
 
         return True
 
