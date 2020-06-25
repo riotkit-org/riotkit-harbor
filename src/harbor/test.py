@@ -149,13 +149,13 @@ class BaseHarborTestClass(unittest.TestCase):
         str_io = StringIO()
 
         with r_io.capture_descriptors(enable_standard_out=debug, stream=str_io):
-            task.execute(ExecutionContext(
+            result = task.execute(ExecutionContext(
                 TaskDeclaration(task),
                 args=args,
                 env=merged_env
             ))
 
-        return ctx.io.get_value() + "\n" + str_io.getvalue()
+        return ctx.io.get_value() + "\n" + str_io.getvalue() + "\nTASK_EXIT_RESULT=" + str(result)
 
     @staticmethod
     def prepare_service_discovery(driver: ComposeDriver):
