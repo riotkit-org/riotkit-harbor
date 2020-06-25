@@ -310,19 +310,25 @@ class AnalyzeServiceTask(BaseHarborServiceTask):
             self.io().error_msg('Service not found')
             return False
 
-        containers = self.containers(ctx).find_all_container_names_for_service(service)
+        try:
+            containers = self.containers(ctx).find_all_container_names_for_service(service)
+        except ServiceNotCreatedException:
+            containers = []
 
-        self.print_service_summary(ctx, service, containers)
+        self.print_service_summary(ctx, service, len(containers))
         self.io().print_line()
-        self.print_containers_summary(ctx, service, containers)
+
+        if containers:
+            self.print_containers_summary(ctx, service, containers)
 
         return True
 
-    def print_service_summary(self, ctx: ExecutionContext, service: ServiceDeclaration, containers: list):
+    def print_service_summary(self, ctx: ExecutionContext, service: ServiceDeclaration, replicas_active: int):
         summary_body = [
-            ['Replicas:', '%i of %i' % (len(containers), service.get_desired_replicas_count())],
+            ['Replicas:', '%i of %i' % (replicas_active, service.get_desired_replicas_count())],
             ['Update strategy:', service.get_update_strategy()],
-            ['Declared image:', service.get_image()]
+            ['Declared image:', service.get_image()],
+            ['Startup priority:', service.get_priority_number()]
         ]
 
         self.io().outln(self.table(
