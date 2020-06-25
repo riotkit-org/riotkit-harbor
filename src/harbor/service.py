@@ -69,6 +69,12 @@ class ServiceDeclaration(object):
         except KeyError:
             return default
 
+    def get_priority_number(self):
+        try:
+            return int(self.get_definition()['labels']['org.riotkit.priority'])
+        except KeyError:
+            return 1000
+
     def get_image(self):
         try:
             return str(self.get_definition()['image'])
@@ -114,6 +120,8 @@ class ServiceSelector(object):
         for name, definition in services.items():
             if self.is_service_matching(definition, name):
                 matched.append(ServiceDeclaration(name, definition))
+
+        matched.sort(key=lambda declaration: declaration.get_priority_number())
 
         return matched
 

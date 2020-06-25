@@ -30,3 +30,4 @@ services:
             #- ACME_CA_URI=https://acme-staging.api.letsencrypt.org/directory
         labels:
             com.centurylinklabs.watchtower.enable: true
+            org.riotkit.priority: 200
