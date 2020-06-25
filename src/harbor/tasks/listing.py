@@ -24,7 +24,8 @@ class ListDefinedServices(BaseProfileSupportingTask):
         services = self.get_matching_services(ctx)
 
         # table
-        table_headers = ['Name', 'Declared version', 'Replicas', 'URL', 'Ports', 'Maintenance mode', 'Update strategy', 'Watchtower']
+        table_headers = ['Priority', 'Name', 'Declared version', 'Replicas', 'URL', 'Ports',
+                         'Maintenance mode', 'Update strategy', 'Watchtower']
         table_body = []
 
         running = self.containers(ctx).get_created_containers(only_running=True)
@@ -64,6 +65,7 @@ class ListDefinedServices(BaseProfileSupportingTask):
         )
 
         table_body.append([
+            service.get_priority_number(),
             service.get_name(),
             service.get_declared_version(),
             replicas_running,
