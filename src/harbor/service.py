@@ -117,11 +117,18 @@ class ServiceSelector(object):
         """Find names of matching services by current Service Selector"""
         matched = []
 
+        print('SELECTOR:', str(self._selector))
+
         for name, definition in services.items():
             if self.is_service_matching(definition, name):
+                print('IS MATCHING!!!', name)
                 matched.append(ServiceDeclaration(name, definition))
 
+
+        print('BEFORE SORTING', matched)
         matched.sort(key=lambda declaration: declaration.get_priority_number())
+
+        print('AFTER SORTING:', matched)
 
         return matched
 
