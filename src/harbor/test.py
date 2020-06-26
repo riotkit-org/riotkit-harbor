@@ -17,6 +17,7 @@ from rkd.syntax import TaskDeclaration
 from .tasks.base import HarborBaseTask
 from .service import ServiceDeclaration
 from .driver import ComposeDriver
+from .cached_loader import CachedLoader
 from dotenv import dotenv_values
 
 HARBOR_MODULE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -69,6 +70,7 @@ class BaseHarborTestClass(unittest.TestCase):
         print('----------')
         print('')
 
+        CachedLoader.is_cache_disabled = True   # avoid keeping the state between tests
         self.setup_environment()
         self.recreate_structure()
         self.remove_all_containers()
@@ -102,13 +104,14 @@ class BaseHarborTestClass(unittest.TestCase):
                 HARBOR_MODULE_PATH, directory, ENV_SIMPLE_PATH, directory
             ), shell=True)
 
-        subprocess.check_call(['rm', '-f', ENV_SIMPLE_PATH + '/apps/conf/mocked.yaml'])
+        cls.mock_compose({'services': {}})
 
     @classmethod
     def remove_all_containers(cls):
         try:
-            subprocess.check_output("docker rm -f $(docker ps -a --format '{{ .Names }}' | grep " + TEST_PROJECT_NAME + ")",
+            subprocess.check_output("docker rm -f -v $(docker ps -a --format '{{ .Names }}' | grep " + TEST_PROJECT_NAME + ")",
                                     shell=True, stderr=subprocess.STDOUT)
+
         except subprocess.CalledProcessError as e:
             # no containers found - it's OK
             if "requires at least 1 argument" in str(e.output):

@@ -40,6 +40,7 @@ class TestForceReloadSSLTask(BaseHarborTestClass):
             out = self.execute_task(ForceReloadSSLTask(), args={}, env={'DISABLE_SSL': ''})
             self.assertIn('Renewing certificates...', out)
         finally:
+            self.remove_all_containers()
             os.unlink(f.name)
 
     def test_functional_ssl_regeneration_is_not_triggered_when_ssl_is_disabled(self):

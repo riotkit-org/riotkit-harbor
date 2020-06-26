@@ -41,7 +41,7 @@ class ServiceSelectorTest(BaseHarborTestClass):
         names = list(map(lambda service: service.get_name(),
                          selector.find_matching_services(self._provide_test_data())))
 
-        self.assertEqual(['web_phillyabc', 'web_abc_international'], names)
+        self.assertEqual(['web_abc_international', 'web_phillyabc'], names)
 
     def test_find_matching_services_by_names(self):
         io = BufferedSystemIO()
@@ -50,7 +50,7 @@ class ServiceSelectorTest(BaseHarborTestClass):
         names = list(map(lambda service: service.get_name(),
                          selector.find_matching_services(self._provide_test_data())))
 
-        self.assertEqual(['web_phillyabc', 'web_abc_international', 'web_iwa_ait'], names)
+        self.assertEqual(['web_abc_international', 'web_phillyabc', 'web_iwa_ait'], names)
 
     def test_find_matching_skips_services_on_syntax_error_but_raises_error_in_log(self):
         io = BufferedSystemIO()

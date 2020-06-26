@@ -10,6 +10,8 @@ class CachedLoaderTest(BaseHarborTestClass):
         def loader(num: int):
             return num + 1
 
+        CachedLoader.is_cache_disabled = False
+
         # called triple, but number increased once - the result is cached so the callback is not called more times
         test = CachedLoader.cached('test', lambda: loader(test))
         test = CachedLoader.cached('test', lambda: loader(test))

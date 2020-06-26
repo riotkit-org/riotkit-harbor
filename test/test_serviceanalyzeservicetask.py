@@ -14,9 +14,9 @@ class AnalyzeServiceTaskTest(BaseHarborTestClass):
         # assert it will not raise an error
         out = self.execute_task(AnalyzeServiceTask(), debug=False, args={'name': 'alpine_3'})
 
-        self.assertIn('Declared image:   alpine:3.11', out)
-        self.assertIn('Update strategy:  compose', out)
-        self.assertIn('Replicas:         1 of 1', out)
+        self.assertIn('Declared image:    alpine:3.11', out)
+        self.assertIn('Update strategy:   compose', out)
+        self.assertIn('Replicas:          1 of 1', out)
         self.assertIn('alpine:3.11', out)
         self.assertIn('env_simple_alpine_3_1', out)
 

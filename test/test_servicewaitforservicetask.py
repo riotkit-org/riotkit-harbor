@@ -40,7 +40,7 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
         even if docker daemon is showing 'starting'"""
 
         drv = self._get_prepared_compose_driver()
-        drv.stop('alpine_3_health_check', capture=True)
+        drv.rm(ServiceDeclaration('alpine_3_health_check', {}), capture=True)
         drv.up(ServiceDeclaration('alpine_3_health_check', {}), capture=True)
 
         out = self.execute_task(WaitForServiceTask(), args={
