@@ -70,7 +70,7 @@ class BaseHarborTestClass(unittest.TestCase):
         print('----------')
         print('')
 
-        CachedLoader.is_cache_disabled = True   # avoid keeping the state between tests
+        CachedLoader.clear()   # avoid keeping the state between tests
         self.setup_environment()
         self.recreate_structure()
         self.remove_all_containers()
