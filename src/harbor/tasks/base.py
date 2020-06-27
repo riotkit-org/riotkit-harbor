@@ -1,7 +1,6 @@
 
 import os
 import yaml
-import re
 from subprocess import check_output
 from argparse import ArgumentParser
 from abc import ABC
@@ -155,7 +154,7 @@ class HarborBaseTask(HarborTaskInterface):
     def detect_dev_env(context: ExecutionContext) -> bool:
         suffix = context.get_env('DOMAIN_SUFFIX')
 
-        return suffix in ['.localhost', '.xip.io', '.localhost.xip.io', '.127.0.0.1.xip.io']
+        return suffix.endswith('.localhost') or suffix.endswith('.xip.io')
 
 
 class BaseProfileSupportingTask(HarborBaseTask, ABC):

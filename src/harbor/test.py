@@ -98,7 +98,7 @@ class BaseHarborTestClass(unittest.TestCase):
     def recreate_structure(cls):
         """Within each class recreate the project structure, as it could be changed by tests itself"""
 
-        for directory in ['containers', 'data', 'hooks.d']:
+        for directory in ['containers', 'data', 'hooks.d', 'apps/www-data']:
             subprocess.check_call('rm -rf %s/%s' % (ENV_SIMPLE_PATH, directory), shell=True)
             subprocess.check_call('cp -pr %s/project/%s %s/%s' % (
                 HARBOR_MODULE_PATH, directory, ENV_SIMPLE_PATH, directory
@@ -135,7 +135,7 @@ class BaseHarborTestClass(unittest.TestCase):
 
         return ComposeDriver(task, ctx, TEST_PROJECT_NAME)
 
-    def execute_task(self, task: HarborBaseTask, args: dict = {}, env: dict = {}, debug: bool = False) -> str:
+    def execute_task(self, task: HarborBaseTask, args: dict = {}, env: dict = {}) -> str:
         ctx = ApplicationContext([], [])
         ctx.io = BufferedSystemIO()
 
@@ -151,7 +151,7 @@ class BaseHarborTestClass(unittest.TestCase):
         r_io = IO()
         str_io = StringIO()
 
-        with r_io.capture_descriptors(enable_standard_out=debug, stream=str_io):
+        with r_io.capture_descriptors(enable_standard_out=True, stream=str_io):
             result = task.execute(ExecutionContext(
                 TaskDeclaration(task),
                 args=args,

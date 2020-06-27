@@ -1,6 +1,8 @@
 
 import os
 import json
+from traceback import format_exc
+from subprocess import CalledProcessError
 from typing import Optional
 from argparse import ArgumentParser
 from rkd.contract import ExecutionContext
@@ -19,7 +21,7 @@ class BaseRepositoryTask(HarborBaseTask):
         return self.get_apps_path(context) + '/repos-enabled/%s.sh' % app_name
 
     def configure_argparse(self, parser: ArgumentParser):
-        parser.add_argument('--name', '-n', required=True, help='Application name (based on data/repos-enabled/*.sh)')
+        parser.add_argument('name', help='Application name (based on data/repos-enabled/*.sh)')
 
     def contextual_sh(self, path: str, script: str, capture: bool = False):
         """Adds a context of pre/post hooks and configuration"""
@@ -66,6 +68,9 @@ class BaseRepositoryTask(HarborBaseTask):
 
         return names
 
+    def _get_permissions_command(self):
+        return 'sudo -E -u %s ' % self.app_user
+
 
 class FetchRepositoryTask(BaseRepositoryTask):
     """Fetch a git repository from the remote"""
@@ -91,10 +96,13 @@ class FetchRepositoryTask(BaseRepositoryTask):
 
         # 2a) clone fresh repository
         if not os.path.isdir(project_root_path):
+            self.io().info('Cloning a fresh repository at "%s"' % project_root_path)
+
             self._clone_new_repository(path, project_vars)
 
         # 2b) update existing repository - pull changes
         else:
+            self.io().info('Pulling in an existing repository at "%s"' % project_root_path)
             self._pull_changes_into_existing_repository(path, project_vars)
 
         # 3) run pre_update hook
@@ -117,16 +125,23 @@ class FetchRepositoryTask(BaseRepositoryTask):
         git_org_name = self._get_var(project_vars, config_path, 'GIT_ORG_NAME')
         git_project_name = self._get_var(project_vars, config_path, 'GIT_PROJECT_NAME')
 
-        return self.contextual_sh(config_path, '''
-            set -e
-            cd "./apps/www-data/''' + git_project_dir + '''"
+        command = '''
+                set -e
+                cd "./apps/www-data/''' + git_project_dir + '''"
+    
+                echo " >> Setting remote origin"
+                %sudo% git config pull.rebase false
+                %sudo% git remote remove origin 2>/dev/null || true
+                %sudo% git remote add origin ''' + git_proto + '''://''' + git_user + ''':''' + git_password + '''@''' + git_server + '''/''' + git_org_name + '''/''' + git_project_name + '''
+                %sudo% git pull origin master
+                %sudo% git remote remove origin 2>/dev/null || true
 
-            echo " >> Setting remote origin"
-            git remote remove origin 2>/dev/null || true
-            git remote add origin ''' + git_proto + '''://''' + git_user + ''':''' + git_password + '''@''' + git_server + '''/''' + git_org_name + '''/''' + git_project_name + '''
-            git pull origin master
-            git remote remove origin 2>/dev/null || true
-        ''')
+            '''
+
+        return self.contextual_sh(
+            config_path,
+            command.replace('%sudo%', self._get_permissions_command())
+        )
 
     def _clone_new_repository(self, config_path: str, project_vars: dict):
         """Clones a new repository"""
@@ -140,10 +155,19 @@ class FetchRepositoryTask(BaseRepositoryTask):
         git_org_name = self._get_var(project_vars, config_path, 'GIT_ORG_NAME')
         git_project_name = self._get_var(project_vars, config_path, 'GIT_PROJECT_NAME')
 
-        return self.contextual_sh(config_path, '''
-            git clone ''' + git_proto + '''://''' + git_user + ''':''' + git_password + '''@''' + git_server + '''/''' + git_org_name + '''/''' + git_project_name + ''' \
-                ./apps/www-data/''' + git_project_dir + ''' 
-        ''')
+        full_project_dir = os.path.realpath('./apps/www-data') + '/' + git_project_dir
+
+        command = '''
+                %sudo% git clone ''' + git_proto + '''://''' + git_user + ''':''' + git_password + '''@''' + git_server + '''/''' + git_org_name + '''/''' + git_project_name + ''' \
+                    ''' + full_project_dir + ''' 
+            '''
+
+        command = command.replace('%sudo%', self._get_permissions_command())
+
+        return self.contextual_sh(
+            config_path,
+            command
+        )
 
 
 class SetPermissionsForWritableDirectoriesTask(BaseRepositoryTask):
@@ -170,7 +194,7 @@ class SetPermissionsForWritableDirectoriesTask(BaseRepositoryTask):
         for writable_dir in writable_dirs:
             writable_dir = writable_dir.replace('@SPACE@', ' ')
 
-            command = 'chown %s "%s/%s"' % (container_user, project_root_path, writable_dir)
+            command = 'sudo chown %s "%s/%s"' % (container_user, project_root_path, writable_dir)
 
             self.io().info(command)
             self.sh(command)
@@ -188,16 +212,23 @@ class ListRepositoriesTask(BaseRepositoryTask):
         return ':list'
 
     def run(self, context: ExecutionContext) -> bool:
-        self.io().opt_outln('GIT repositories:')
+        header = ['Configured GIT repository']
+        body = []
 
         for name in self.list_repositories(context):
-            self.io().outln(name)
+            body.append([name])
+
+        self.io().outln(self.table(header=header, body=body))
 
         return True
 
 
 class FetchAllRepositories(BaseRepositoryTask):
-    """List GIT repositories"""
+    """List GIT repositories
+
+    Ignores intermediate errors. When at least one repository fails to update,
+    then overall status would be a failure.
+    """
 
     def configure_argparse(self, parser: ArgumentParser):
         pass
@@ -208,8 +239,17 @@ class FetchAllRepositories(BaseRepositoryTask):
     def run(self, context: ExecutionContext) -> bool:
         self.io().info('Fetching all repositories...')
 
+        result = True
+
         for name in self.list_repositories(context):
             self.io().info('Updating "%s"' % name)
-            self.rkd([':harbor:git:apps:update', '--name=%s' % name])
 
-        return True
+            try:
+                self.rkd([':harbor:git:apps:update', '--name=%s' % name])
+
+            except CalledProcessError:
+                self.io().err(format_exc())
+                self.io().error_msg('Failed updating "%s"' % name)
+                result = False
+
+        return result
