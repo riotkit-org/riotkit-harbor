@@ -16,7 +16,8 @@ before_install:
 
 jobs:
   include:
-    - stage: "Test on Python 3.6 (docker-compose: 1.25)"
+    - stage: "Test on Python 3.8 (docker-compose: 1.25)"
+      python: 3.8
       before_script:
           - ./setup.py install
           - pip install docker-compose==1.25.0
@@ -24,8 +25,7 @@ jobs:
       script:
           - rkd :test
 
-    - stage: "Test on Python 3.8 (docker-compose: 1.25)"
-      python: 3.8
+    - stage: "Test on Python 3.6 (docker-compose: 1.25)"
       before_script:
           - ./setup.py install
           - pip install docker-compose==1.25.0
