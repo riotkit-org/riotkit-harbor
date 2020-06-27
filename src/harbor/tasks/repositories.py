@@ -66,6 +66,8 @@ class BaseRepositoryTask(HarborBaseTask):
 
             names.append(file.name[:-3])
 
+        names.sort()
+
         return names
 
     def _get_permissions_command(self):

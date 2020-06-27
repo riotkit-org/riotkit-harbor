@@ -52,7 +52,7 @@ class TestHooksFeature(BaseHarborTestClass):
             with task.hooks_executed(ctx, 'upgrade'):
                 pass
 
-        self.assertIn('>> This is a whoami.sh hook, test: root', buffer.getvalue(),
+        self.assertIn('>> This is a whoami.sh hook, test:', buffer.getvalue(),
                       msg='Expected pre-upgrade hook to be ran')
 
         self.assertIn('25 June 1978 the rainbow flag was first flown', buffer.getvalue(),
