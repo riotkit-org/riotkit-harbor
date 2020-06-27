@@ -40,6 +40,10 @@ class TestForceReloadSSLTask(BaseHarborTestClass):
             out = self.execute_task(ForceReloadSSLTask(), args={}, env={'DISABLE_SSL': ''})
             self.assertIn('Renewing certificates...', out)
         finally:
+            # debug: travis
+            print('TRAVIS DEBUG')
+            subprocess.check_call('docker logs env_simple_gateway_letsencrypt_1', shell=True)
+
             self.remove_all_containers()
             os.unlink(f.name)
 
