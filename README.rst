@@ -26,7 +26,7 @@ Harbor fits perfectly, while providing some of Kubernetes-like solutions in dock
 - Automatic Letsencrypt SSL
 - Standardized directory structures and design patterns
 - Ready to use snippets of code and solutions
-- Ansible integration to prepare your production/testing server and deploy updates
+- Ansible integration to prepare your production/testing server and deploy updates in extremely intuitive way
 
 
 **Roadmap:**

@@ -1,52 +1,26 @@
 
-RiotKit's Harbor
+RiotKit Harbor 2
 ================
 
-Comprehensive single-server docker deployment template. Perfect for smaller and medium projects.
-Unified production and development environment, with minimum amount of differences.
+**docker-compose** based framework for building production-like environments - developing and testing on your local computer, deploying to your server or cluster from shell or from CI.
+**Harbor is a pre-configured set of most popular technologies available to use with docker-compose, in addition of our exclusive features**
 
-.. image:: _static/env-differences.png
-    :align: center
 
-**Includes:**
+**Features:**
 
-- **Service discovery, automatic SSL (generates NGINX configuration on-fly for domains, subdomains + SSL)**
-- Support for webhooks
-- Ansible integration (ready to use role)
-- **Encrypted production credentials (.env-prod)**
-- **Modularity, template is split into parts that could be enabled/disabled**
-- YAML based configuration, clear and easy to maintain
-- **Health checks integration** + simple dashboard
-- Services index (to publish list of installed apps for non-technical users)
-- **Automatic backups** to external server (File Repository integration)
-- Ready-to-use SMTP relay, easy to configure
-- **Support for git-based projects mounted as volumes**
-- Updater to keep your template up-to-date with RiotKit's Harbor
-- Templating system for generating configuration files
-- Database migrations
-- **Maintenance mode**
+- Service discovery (pins containers into WWW domains by labelling)
+- Deployment strategies: compose's standard, recreation, and **rolling-updates (zero-downtime updates)**
+- Automatic Letsencrypt SSL
+- Standardized directory structures and design patterns
+- Ready to use snippets of code and solutions
+- Ansible integration to prepare your production/testing server and deploy updates in extremely intuitive way
 
-**Goals:**
-
-- Provide complete, automated infrastructure
-- Easy of use and easy to understand
-- Feature toggle on/off
-- Template for common usages
-- Integration with other RiotKit's projects such as health checking, automated backups
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    first-steps
-   structure
-   general_concept
-   configuration_conception
-   features
-   ansible
-   configuration_reference
-   guides/cookbook
-   riotkit-guide
 
 
 From authors
