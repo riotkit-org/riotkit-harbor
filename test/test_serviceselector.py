@@ -1,6 +1,7 @@
 from harbor.test import BaseHarborTestClass
 from harbor.service import ServiceSelector
 from rkd.inputoutput import BufferedSystemIO
+from rkd.inputoutput import IO
 
 
 class ServiceSelectorTest(BaseHarborTestClass):
@@ -33,7 +34,7 @@ class ServiceSelectorTest(BaseHarborTestClass):
     def test_find_matching_services_by_labels(self):
         """Test that services can be found by labels"""
 
-        io = BufferedSystemIO()
+        io = IO()
         selector = ServiceSelector(
             '"org.riotkit.type" in service["labels"] and service["labels"]["org.riotkit.type"] == "abc"', io
         )
@@ -44,7 +45,7 @@ class ServiceSelectorTest(BaseHarborTestClass):
         self.assertEqual(['web_abc_international', 'web_phillyabc'], names)
 
     def test_find_matching_services_by_names(self):
-        io = BufferedSystemIO()
+        io = IO()
         selector = ServiceSelector('name.startswith("web")', io)
 
         names = list(map(lambda service: service.get_name(),
@@ -64,7 +65,7 @@ class ServiceSelectorTest(BaseHarborTestClass):
         self.assertIn("Exception raised, while attempting to evaluate --profile selector", io.get_value())
 
     def test_finding_matching_services_considers_priority_ascending(self):
-        io = BufferedSystemIO()
+        io = IO()
         selector = ServiceSelector('True', io)
 
         names = list(map(lambda service: service.get_name(),
@@ -84,7 +85,7 @@ class ServiceSelectorTest(BaseHarborTestClass):
             self.assertEqual(['web_phillyabc', 'web_iwa_ait', 'web_abc_international'], names)
 
     def test_finding_matching_services_accepts_1000_as_default_priority(self):
-        io = BufferedSystemIO()
+        io = IO()
         selector = ServiceSelector('True', io)
 
         test_data = self._provide_test_data()

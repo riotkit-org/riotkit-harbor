@@ -38,3 +38,24 @@ class SafeEvalTests(BaseHarborTestClass):
 
     def test_comprehensions(self):
         self.assertRaises(ValueError, safe_eval, "[i for i in [1,2]]", {'i': 1})
+
+    def test_pattern_to_lookup_labels(self):
+        self.assertTrue(
+            safe_eval(
+                '"org.riotkit.useMaintenanceMode" in service["labels"] and service["labels"]["org.riotkit.useMaintenanceMode"]', {
+                    "service": {
+                        'labels': {
+                            'org.riotkit.useMaintenanceMode': True
+                        }
+                    }
+                }
+            )
+        )
+
+    def test_python36_nameconstant(self):
+        """In Python 3.8 the 'True' is classified as Constant, in Python 3.6 as a NameConstant"""
+
+        self.assertTrue(safe_eval('True', {}))
+
+    def test_pattern_using_basic_string_functions(self):
+        self.assertTrue(safe_eval('"org.riotkit.replicas".startswith("org.riotkit")', {}))
