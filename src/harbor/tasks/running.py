@@ -26,29 +26,30 @@ class StartTask(BaseProfileSupportingTask):
         strategy = context.get_arg('--strategy')
         result = True
 
-        for service in services:
-            self.io().h2('Starting "%s" (%i instances)...' % (service.get_name(), service.get_desired_replicas_count()))
+        with self.hooks_executed(context, 'start'):
+            for service in services:
+                self.io().h2('Starting "%s" (%i instances)...' % (service.get_name(), service.get_desired_replicas_count()))
 
-            try:
-                self.rkd(
-                    [
-                        '--no-ui',
-                        ':harbor:service:up',
-                        service.get_name(),
-                        '--remove-previous-images' if context.get_arg('--remove-previous-images') else '',
-                        ('--strategy=%s' % strategy) if strategy else ''
-                    ],
-                    capture=not self.io().is_log_level_at_least('info')
-                )
+                try:
+                    self.rkd(
+                        [
+                            '--no-ui',
+                            ':harbor:service:up',
+                            service.get_name(),
+                            '--remove-previous-images' if context.get_arg('--remove-previous-images') else '',
+                            ('--strategy=%s' % strategy) if strategy else ''
+                        ],
+                        capture=not self.io().is_log_level_at_least('info')
+                    )
 
-                self.io().success_msg('Service "%s" was started' % service.get_name())
+                    self.io().success_msg('Service "%s" was started' % service.get_name())
 
-            except CalledProcessError as e:
-                self.io().err(str(e))
-                self.io().error_msg('Cannot start service "%s"' % service.get_name())
-                result = False
+                except CalledProcessError as e:
+                    self.io().err(str(e))
+                    self.io().error_msg('Cannot start service "%s"' % service.get_name())
+                    result = False
 
-            self.io().print_opt_line()
+                self.io().print_opt_line()
 
         return result
 
@@ -151,14 +152,15 @@ class UpgradeTask(BaseProfileSupportingTask):
         strategy = context.get_arg('--strategy')
         success = True
 
-        self.rkd([
-            '--no-ui',
-            ':harbor:pull', '--profile=%s' % profile,
+        with self.hooks_executed(context, 'upgrade'):
+            self.rkd([
+                '--no-ui',
+                ':harbor:pull', '--profile=%s' % profile,
 
-            ':harbor:start', '--profile=%s' % profile, '--strategy=%s' % strategy,
-            '--remove-previous-images' if context.get_arg('--remove-previous-images') else '',
+                ':harbor:start', '--profile=%s' % profile, '--strategy=%s' % strategy,
+                '--remove-previous-images' if context.get_arg('--remove-previous-images') else '',
 
-            ':harbor:prod:gateway:reload'
-        ])
+                ':harbor:gateway:reload'
+            ])
 
         return success

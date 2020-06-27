@@ -1,6 +1,7 @@
 
 import os
 import yaml
+from contextlib import contextmanager
 from subprocess import check_output
 from argparse import ArgumentParser
 from abc import ABC
@@ -47,6 +48,7 @@ class HarborBaseTask(HarborTaskInterface):
     def get_declared_envs(self) -> Dict[str, str]:
         return {
             'APPS_PATH': './apps/',
+            'HOOKS_PATH': './hooks.d/',
             'DATA_PATH': './data/',
             'COMPOSE_PROJECT_NAME': None,
             'DOMAIN_SUFFIX': ''
@@ -80,6 +82,10 @@ class HarborBaseTask(HarborTaskInterface):
     @staticmethod
     def get_apps_path(ctx: ExecutionContext) -> str:
         return ctx.get_env('APPS_PATH')
+
+    @staticmethod
+    def get_hooks_dir(ctx: ExecutionContext) -> str:
+        return ctx.get_env('HOOKS_PATH')
 
     @staticmethod
     def get_data_path(ctx: ExecutionContext) -> str:
@@ -155,6 +161,40 @@ class HarborBaseTask(HarborTaskInterface):
         suffix = context.get_env('DOMAIN_SUFFIX')
 
         return suffix.endswith('.localhost') or suffix.endswith('.xip.io')
+
+    @contextmanager
+    def hooks_executed(self, ctx: ExecutionContext, hooks_suffix: str):
+        self.execute_hooks(ctx, 'pre-' + hooks_suffix)
+        yield
+        self.execute_hooks(ctx, 'post-' + hooks_suffix)
+
+    def execute_hooks(self, ctx: ExecutionContext, hook_name: str):
+        """Executes a hooks from directory "hooks.d", when any executed script will fail, then an exception is raised
+
+        The error handling must be implemented in the scripts itself
+        """
+
+        hooks_dir = self.get_hooks_dir(ctx) + '/' + hook_name + '/'
+
+        if not os.path.isdir(hooks_dir):
+            self.io().debug('Hooks dir "%s" not present, skipping' % hooks_dir)
+            return
+
+        self.io().info('Executing hook scripts for action "%s"' % hook_name)
+
+        for script in os.scandir(hooks_dir):
+            script: os.DirEntry
+
+            if script.name.split('.')[0] == '':
+                continue
+
+            self.io().info('Running hook script "%s"' % script.path)
+
+            try:
+                self.sh(script.path)
+            except Exception as e:
+                self.io().error_msg('Failed executing script: "%s"' % script.path)
+                raise e
 
 
 class BaseProfileSupportingTask(HarborBaseTask, ABC):

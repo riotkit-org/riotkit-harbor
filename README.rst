@@ -25,7 +25,7 @@ Harbor fits perfectly, while providing some of Kubernetes-like solutions in dock
 - Deployment strategies: compose's standard, recreation, and **rolling-updates (zero-downtime updates)**
 - Automatic Letsencrypt SSL
 - Standardized directory structures and design patterns
-- Ready to use snippets of code and solutions
+- Ready to use snippets of code and solutions (one command to install database, Wordpress or other application from our repository)
 - Ansible integration to prepare your production/testing server and deploy updates in extremely intuitive way
 
 
@@ -39,6 +39,18 @@ Harbor fits perfectly, while providing some of Kubernetes-like solutions in dock
 
 Read documentation for more: https://environment.docs.riotkit.org/en/latest/?badge=latest
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Changelog
+---------
+
+Harbor 2.0
+""""""""""
+
+- Service upgrade strategies: Compose-native, recreation, rolling-updates
+- Rewrite from Makefile to Python
+- Containers startup priority
+- Maintenance mode is now not only global, but also per domain
+- Development mode now supports not only .localhost domains, but also \*.xip.io
 
 From authors
 ------------

@@ -241,15 +241,16 @@ class FetchAllRepositories(BaseRepositoryTask):
 
         result = True
 
-        for name in self.list_repositories(context):
-            self.io().info('Updating "%s"' % name)
+        with self.hooks_executed(context, 'repositories-upgrade'):
+            for name in self.list_repositories(context):
+                self.io().info('Updating "%s"' % name)
 
-            try:
-                self.rkd([':harbor:git:apps:update', '--name=%s' % name])
+                try:
+                    self.rkd([':harbor:git:apps:update', '--name=%s' % name])
 
-            except CalledProcessError:
-                self.io().err(format_exc())
-                self.io().error_msg('Failed updating "%s"' % name)
-                result = False
+                except CalledProcessError:
+                    self.io().err(format_exc())
+                    self.io().error_msg('Failed updating "%s"' % name)
+                    result = False
 
         return result

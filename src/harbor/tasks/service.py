@@ -89,18 +89,19 @@ class ServiceUpTask(BaseHarborServiceTask):
             'recreate': lambda: self.deploy_recreate(service, context)
         }
 
-        with self._old_images_clean_up(context, service, clear_images=remove_previous_images):
-            if strategy in strategies:
-                return strategies[strategy]()
-            else:
-                if strategy == 'auto':
-                    strategy = service.get_update_strategy(default='compose')
+        with self.hooks_executed(context, 'service-start-%s' % service_name):
+            with self._old_images_clean_up(context, service, clear_images=remove_previous_images):
+                if strategy in strategies:
+                    return strategies[strategy]()
+                else:
+                    if strategy == 'auto':
+                        strategy = service.get_update_strategy(default='compose')
 
-                    if strategy in strategies:
-                        return strategies[strategy]()
+                        if strategy in strategies:
+                            return strategies[strategy]()
 
-                self.io().error_msg('Invalid strategy selected: %s' % strategy)
-                return False
+                    self.io().error_msg('Invalid strategy selected: %s' % strategy)
+                    return False
 
     @contextmanager
     def _old_images_clean_up(self, ctx: ExecutionContext, service: ServiceDeclaration, clear_images: bool):
