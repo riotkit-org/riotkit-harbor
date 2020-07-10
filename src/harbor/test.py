@@ -46,7 +46,7 @@ class TestTask(HarborBaseTask):
 
 def create_mocked_task(io: IO) -> TestTask:
     task = TestTask()
-    ctx = ApplicationContext([], [])
+    ctx = ApplicationContext([], [], '')
     ctx.io = io
 
     task.internal_inject_dependencies(
