@@ -1,0 +1,6 @@
+{% for group_name, nodes in nodes.items() -%}
+[{{ group_name }}]
+{% for node in nodes -%}
+{{ node.host }} ansible_ssh_user={{ node.user }} ansible_ssh_port={{ node.port }} {% if node.password is defined and node.password %}ansible_ssh_pass={{ node.password }}{%- endif %} ansible_sudo_pass={{ node.sudo_password|default(node.password) }} {% if node.private_key is defined and node.private_key -%}ansible_ssh_private_key_file={{ node.private_key }}{%- endif %} ansible_python_interpreter={{ node.python_interpreter | default('/usr/bin/python3') }}
+{% endfor %}
+{% endfor %}

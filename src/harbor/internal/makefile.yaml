@@ -1,4 +1,4 @@
-version: org.riotkit.rkd/0.7
+version: org.riotkit.rkd/yaml/v1
 imports:
     - harbor
 
