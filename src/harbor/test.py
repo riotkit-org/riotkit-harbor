@@ -136,7 +136,7 @@ class BaseHarborTestClass(unittest.TestCase):
         return ComposeDriver(task, ctx, TEST_PROJECT_NAME)
 
     def execute_task(self, task: HarborBaseTask, args: dict = {}, env: dict = {}) -> str:
-        ctx = ApplicationContext([], [])
+        ctx = ApplicationContext([], [], '')
         ctx.io = BufferedSystemIO()
 
         task.internal_inject_dependencies(
