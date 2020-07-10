@@ -45,3 +45,7 @@ jobs:
           - pip show rkd
       script:
           - rkd :test
+
+    - stage: Release
+      python: 3.6
+      script: rkd :release
