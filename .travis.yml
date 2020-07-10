@@ -12,6 +12,7 @@ services:
     - docker
 
 before_install:
+  - pip install -r ./requirements-dev.txt
   - './.travis/main.sh'
 
   # pull before tests, so the tests would not have to do so
