@@ -22,6 +22,7 @@ HARBOR_ROOT = os.path.dirname(os.path.realpath(__file__)) + '/../deployment/file
 class BaseDeploymentTask(HarborBaseTask, ABC):
     ansible_dir: str = '.rkd/deployment'
     _config: dict
+    vault_args: list = []
 
     def _silent_mkdir(self, path: str):
         try:
@@ -30,20 +31,45 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
             pass
 
     def get_config(self) -> dict:
+        deployment_filenames = ['deployment.yml', 'deployment.yaml']
+
         try:
             self._config
         except AttributeError:
-            # try .yml, then .yaml
-            try:
-                self._config = YamlFileLoader(self._ctx.directories).load_from_file(
-                    'deployment.yml',
-                    'org.riotkit.harbor/deployment/v1'
-                )
-            except FileNotFoundError as e:
-                self._config = YamlFileLoader(self._ctx.directories).load_from_file(
-                    'deployment.yaml',
-                    'org.riotkit.harbor/deployment/v1'
-                )
+
+            # try multiple files
+            for filename in deployment_filenames:
+                if os.path.isfile(filename):
+
+                    #
+                    # When file is encrypted, then decrypt it
+                    #
+                    with open(filename, 'rb') as f:
+                        content = f.read().decode('utf-8')
+
+                        if content.startswith('$ANSIBLE_VAULT;'):
+                            tmp_vault_filename = '.tmp-' + str(uuid4())
+                            tmp_vault_path = './.rkd/' + tmp_vault_filename
+
+                            self.sh('cp %s %s' % (filename, tmp_vault_path))
+                            self.rkd([':harbor:vault:encrypt', '-d', tmp_vault_path] + self.vault_args)
+
+                            try:
+                                self._config = YamlFileLoader(self._ctx.directories).load_from_file(
+                                    tmp_vault_filename,
+                                    'org.riotkit.harbor/deployment/v1'
+                                )
+                            finally:
+                                self.sh('rm -f %s' % tmp_vault_path)
+
+                            return self._config
+
+                    self._config = YamlFileLoader(self._ctx.directories).load_from_file(
+                        filename,
+                        'org.riotkit.harbor/deployment/v1'
+                    )
+
+                    return self._config
 
         return self._config
 
@@ -146,6 +172,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
                 with open(abs_dest_file_path, 'wb') as f:
                     f.write(tpl.render(**variables).encode('utf-8'))
+
             except UndefinedError as e:
                 self.io().error(str(e) + " - required in " + abs_src_file_path + ", please define it in deployment.yml")
                 return False
@@ -172,8 +199,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
         return variables
 
-    @classmethod
-    def _get_vault_opts(cls, ctx: ExecutionContext):
+    def _get_vault_opts(self, ctx: ExecutionContext, chdir: str = '') -> str:
         try:
             vault_passwords = ctx.get_arg_or_env('--vault-passwords').split('||')
         except MissingInputException:
@@ -191,8 +217,9 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
             if passwd.startswith('./') or passwd.startswith('/'):
                 if os.path.isfile(passwd):
-                    opts += ' --vault-password-file="%s" ' % passwd
+                    opts += ' --vault-password-file="%s" ' % (chdir + passwd)
                 else:
+                    self.io().error('Vault password file "%s" does not exist, calling --ask-vault-pass' % passwd)
                     enforce_ask_pass = True
             else:
                 tmp_vault_file = './.rkd/.tmp-vault-' + str(uuid4())
@@ -200,7 +227,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                 with open(tmp_vault_file, 'w') as f:
                     f.write(passwd)
 
-                opts += ' --vault-password-file="%s" ' % tmp_vault_file
+                opts += ' --vault-password-file="%s" ' % (chdir + tmp_vault_file)
 
         if enforce_ask_pass:
             opts += ' --ask-vault-pass '
@@ -283,8 +310,7 @@ Example usage:
         parser.add_argument('--branch', '-b', help='Git branch to deploy from', default='master')
         parser.add_argument('--profile', help='Harbor profile to filter out services that needs to be deployed',
                             default='')
-
-        parser.add_argument('--ask-vault-pass', '-v', help='Ask for vault password interactively')
+        self._add_vault_arguments_to_argparse(parser)
 
     def run(self, context: ExecutionContext) -> bool:
         playbook_name = context.get_arg_or_env('--playbook')
@@ -294,13 +320,17 @@ Example usage:
         profile = context.get_arg('--profile')
         debug = context.get_arg('--debug')
 
+        # keep the vault arguments for decryption of deployment.yml
+        self.vault_args = ['--vault-passwords=' + (context.get_arg_or_env('--vault-passwords') if context.get_arg_or_env('--vault-passwords') else '')]
+        if context.get_arg('--ask-vault-pass'):
+            self.vault_args += '--ask-vault-pass'
+
         if not self.role_is_installed_and_configured():
-            self.io().error_msg('Deployment unconfigured. Use `harbor :deployment:role:update` first')
+            self.io().error_msg('Deployment not configured. Use `harbor :deployment:role:update` first')
             return False
 
         self.install_and_configure_role(force_update=False)
         pwd_backup = os.getcwd()
-        os.chdir(self.ansible_dir)
         pid = None
 
         try:
@@ -317,8 +347,9 @@ Example usage:
 
             opts += ' -e git_branch="%s" ' % branch
             opts += ' -e harbor_deployment_profile="%s" ' % profile
-            opts += self._get_vault_opts(context)
+            opts += self._get_vault_opts(context, '../../')
 
+            os.chdir(self.ansible_dir)
             command += 'ansible-playbook ./%s -i %s %s' % (
                 playbook_name,
                 inventory_name,
