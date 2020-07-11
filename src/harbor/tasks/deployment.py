@@ -1,6 +1,5 @@
 import os
 import subprocess
-import pkg_resources
 from uuid import uuid4
 from abc import ABC
 from jinja2 import Environment
@@ -24,13 +23,9 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
     _config: dict
     vault_args: list = []
 
-    def _silent_mkdir(self, path: str):
-        try:
-            os.mkdir(path)
-        except FileExistsError:
-            pass
-
     def get_config(self) -> dict:
+        """Loads and parses deployment.yml file. Supports Ansible Vault encryption"""
+
         deployment_filenames = ['deployment.yml', 'deployment.yaml']
 
         try:
@@ -73,12 +68,6 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
         return self._config
 
-    def get_harbor_version(self) -> str:
-        try:
-            return pkg_resources.get_distribution("harbor").version
-        except:
-            return 'dev'
-
     def _verify_synced_version(self, abs_ansible_dir: str):
         """Verifies last synchronization - displays warning if Harbor version was changed after last
         files synchronization"""
@@ -95,6 +84,8 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                                ' from %s to %s' % (synced_version, actual_version))
 
     def _write_synced_version(self, abs_ansible_dir: str):
+        """Writes information about, in which Harbor version the files were synced last time"""
+
         with open(abs_ansible_dir + '/.synced', 'wb') as f:
             f.write(self.get_harbor_version().encode('utf-8'))
 
@@ -135,6 +126,8 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
         return True
 
     def _synchronize_structure_from_template(self, abs_ansible_dir: str, only_jinja_templates: bool = False) -> bool:
+        """Synchronizes template structure into .rkd/deployment"""
+
         self.io().debug(
             'Synchronizing structure from template (only_jinja_templates=' + str(only_jinja_templates) + ')')
 
@@ -184,6 +177,8 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
         return True
 
     def _prepare_variables(self):
+        """Glues together variables from environment and from deployment.yaml for exposing in JINJA2 templates"""
+
         variables = {}
         variables.update(os.environ)
         variables.update(self.get_config())
@@ -200,6 +195,8 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
         return variables
 
     def _get_vault_opts(self, ctx: ExecutionContext, chdir: str = '') -> str:
+        """Creates options to pass in Ansible Vault commandline"""
+
         try:
             vault_passwords = ctx.get_arg_or_env('--vault-passwords').split('||')
         except MissingInputException:

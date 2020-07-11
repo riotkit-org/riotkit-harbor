@@ -1,6 +1,7 @@
 
 import os
 import yaml
+import pkg_resources
 from contextlib import contextmanager
 from subprocess import check_output
 from argparse import ArgumentParser
@@ -195,6 +196,18 @@ class HarborBaseTask(HarborTaskInterface):
             except Exception as e:
                 self.io().error_msg('Failed executing script: "%s"' % script.path)
                 raise e
+
+    def get_harbor_version(self) -> str:
+        try:
+            return pkg_resources.get_distribution("harbor").version
+        except:
+            return 'dev'
+
+    def _silent_mkdir(self, path: str):
+        try:
+            os.mkdir(path)
+        except FileExistsError:
+            pass
 
 
 class BaseProfileSupportingTask(HarborBaseTask, ABC):
