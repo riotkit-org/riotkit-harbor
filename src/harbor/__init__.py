@@ -23,6 +23,8 @@ from .tasks.deployment import DeploymentTask
 from .tasks.deployment import UpdateFilesTask
 from .tasks.deployment import CreateExampleDeploymentFileTask
 from .tasks.deployment import ManageVagrantTask
+from .tasks.deployment import EditVaultTask
+from .tasks.deployment import EncryptVaultTask
 from .tasks.diagnostic import DumpComposeArguments
 from .tasks.diagnostic import DumpComposeConfigTask
 from .tasks.gateway import ReloadGatewayTask
@@ -73,6 +75,8 @@ def imports():
         TaskDeclaration(UpdateFilesTask()),
         TaskDeclaration(CreateExampleDeploymentFileTask()),
         TaskDeclaration(ManageVagrantTask()),
+        TaskDeclaration(EditVaultTask()),
+        TaskDeclaration(EncryptVaultTask()),
 
         # git
         TaskDeclaration(FetchRepositoryTask()),

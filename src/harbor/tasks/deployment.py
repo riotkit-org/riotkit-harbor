@@ -1,6 +1,7 @@
 import os
 import subprocess
 import pkg_resources
+from uuid import uuid4
 from abc import ABC
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
@@ -11,6 +12,7 @@ from typing import Tuple
 from argparse import ArgumentParser
 from rkd.contract import ExecutionContext
 from rkd.yaml_parser import YamlFileLoader
+from rkd.exception import MissingInputException
 from .base import HarborBaseTask
 from ..formatting import development_formatting
 
@@ -170,9 +172,48 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
         return variables
 
+    @classmethod
+    def _get_vault_opts(cls, ctx: ExecutionContext):
+        try:
+            vault_passwords = ctx.get_arg_or_env('--vault-passwords').split('||')
+        except MissingInputException:
+            vault_passwords = []
+
+        num = 0
+        opts = ''
+
+        for passwd in vault_passwords:
+            num = num + 1
+
+            if not passwd:
+                continue
+
+            if (passwd.startswith('./') or passwd.startswith('/')) and os.path.isfile(passwd):
+                opts += ' --vault-password-file="%s" ' % passwd
+            else:
+                tmp_vault_file = './.rkd/.tmp-vault-' + str(uuid4())
+
+                with open(tmp_vault_file, 'w') as f:
+                    f.write(passwd)
+
+                opts += ' --vault-password-file="%s" ' % tmp_vault_file
+
+        if ctx.get_arg('--ask-vault-pass'):
+            opts += ' --ask-vault-pass '
+
+        return opts
+
+    def _clear_old_vault_temporary_files(self):
+        self.sh('rm -f ./.rkd/.tmp-vault*', capture=True)
+
+    @classmethod
+    def _add_vault_arguments_to_argparse(cls, parser: ArgumentParser):
+        parser.add_argument('--ask-vault-pass', '-v', help='Ask for vault password interactively')
+        parser.add_argument('--vault-passwords', '-V', help='Vault passwords separated by "||" eg. 123||456')
+
 
 class UpdateFilesTask(BaseDeploymentTask):
-    """Update an Ansible role and required configuration files.
+    """Updates an Ansible role and required configuration files.
     Warning: Overwrites existing files, but does not remove custom files in '.rkd/deployment' directory"""
 
     def get_name(self) -> str:
@@ -191,20 +232,24 @@ class UpdateFilesTask(BaseDeploymentTask):
 class DeploymentTask(BaseDeploymentTask):
     """Deploys your project from GIT to a PRODUCTION server
 
-    All changes needs to be COMMITED and PUSHED to GIT server, the task does not copy local files.
+All changes needs to be COMMITED and PUSHED to GIT server, the task does not copy local files.
 
-    The deployment task can be extended by environment variables and switches to make possible any customizations
-    such as custom playbook, custom role or a custom inventory. The environment variables from .env are considered.
+The deployment task can be extended by environment variables and switches to make possible any customizations
+such as custom playbook, custom role or a custom inventory. The environment variables from .env are considered.
 
-    Example usage:
-        # deploy services matching profile "gateway", use password stored in .vault-apssword for Ansible Vault
-        harbor :deployment:apply -V .vault-password --profile=gateway
+Example usage:
+    # deploy services matching profile "gateway", use password stored in .vault-apssword for Ansible Vault
+    harbor :deployment:apply -V .vault-password --profile=gateway
 
-        # deploy from different branch
-        harbor :deployment:apply --branch production_fix_1
+    # another example with Vault, multiple passwords, and environment variable usage
+    # (NOTICE: paths to password files must begin with "/" or "./")
+    VAULT_PASSWORDS="./.vault-password-file||other-plain-text-password" harbor :deployment:apply
 
-        # use SSH-AGENT & key-based authentication by specifying path to private key
-        harbor :deployment:apply --git-key=~/.ssh/id_rsa
+    # deploy from different branch
+    harbor :deployment:apply --branch production_fix_1
+
+    # use SSH-AGENT & key-based authentication by specifying path to private key
+    harbor :deployment:apply --git-key=~/.ssh/id_rsa
     """
 
     def get_name(self) -> str:
@@ -221,6 +266,7 @@ class DeploymentTask(BaseDeploymentTask):
         envs['PLAYBOOK'] = 'harbor.playbook.yml'
         envs['INVENTORY'] = 'harbor.inventory.cfg'
         envs['GIT_KEY'] = ''
+        envs['VAULT_PASSWORDS'] = ''
 
         return envs
 
@@ -230,11 +276,11 @@ class DeploymentTask(BaseDeploymentTask):
                             default='')
         parser.add_argument('--inventory', '-i', help='Inventory filename', default='harbor.inventory.cfg')
         parser.add_argument('--debug', '-d', action='store_true', help='Set increased logging for Ansible output')
-        parser.add_argument('--vault-passwords', '-V', help='Vault passwords separated by "||" eg. 123||456',
-                            default='')
         parser.add_argument('--branch', '-b', help='Git branch to deploy from', default='master')
         parser.add_argument('--profile', help='Harbor profile to filter out services that needs to be deployed',
                             default='')
+
+        parser.add_argument('--ask-vault-pass', '-v', help='Ask for vault password interactively')
 
     def run(self, context: ExecutionContext) -> bool:
         playbook_name = context.get_arg_or_env('--playbook')
@@ -243,8 +289,6 @@ class DeploymentTask(BaseDeploymentTask):
         branch = context.get_arg('--branch')
         profile = context.get_arg('--profile')
         debug = context.get_arg('--debug')
-        vault_passwords = context.get_arg('--vault-passwords').split('||') \
-            if context.get_arg('--vault-passwords') else []
 
         if not self.role_is_installed_and_configured():
             self.io().error_msg('Deployment unconfigured. Use `harbor :deployment:role:update` first')
@@ -269,16 +313,7 @@ class DeploymentTask(BaseDeploymentTask):
 
             opts += ' -e git_branch="%s" ' % branch
             opts += ' -e harbor_deployment_profile="%s" ' % profile
-
-            if vault_passwords:
-                num = 0
-                for passwd in vault_passwords:
-                    num = num + 1
-
-                    if os.path.isfile('../../' + passwd):
-                        opts += ' --vault-password-file="%s" ' % ('../../' + passwd)
-                    else:
-                        opts += ' --vault-id="%i@%s" ' % (num, passwd)
+            opts += self._get_vault_opts(context)
 
             command += 'ansible-playbook ./%s -i %s %s' % (
                 playbook_name,
@@ -311,7 +346,7 @@ class DeploymentTask(BaseDeploymentTask):
 
 
 class CreateExampleDeploymentFileTask(HarborBaseTask):
-    """Create a example deployment.yml file"""
+    """Creates a example deployment.yml file"""
 
     def get_group_name(self) -> str:
         return ':harbor:deployment'
@@ -363,3 +398,81 @@ class ManageVagrantTask(BaseDeploymentTask):
 
         return True
 
+
+class EditVaultTask(BaseDeploymentTask):
+    """Edits an encrypted file
+
+Example usage:
+    # edit ".env-prod" file
+    harbor :vault:edit .env-prod --vault-passwords="./.vault-password"
+
+    # usage of environment variable (NOTICE: paths to password files must begin with "/" or "./")
+    VAULT_PASSWORDS="./.vault-password-file||second-some-plaintext-password-there" harbor :vault:edit .env-prod
+
+HINT: You can avoid writing the path in commandline each time by putting `VAULT_PASSWORDS=./path-to-password-file.txt` to the .env file
+HINT: You can store vault password file on encrypted flash drive, and make a symbolic link. Every time when you mount an encrypted drive you will gain access to the project
+    """
+
+    def get_group_name(self) -> str:
+        return ':harbor:vault'
+
+    def get_name(self) -> str:
+        return ':edit'
+
+    def get_declared_envs(self) -> Dict[str, str]:
+        envs = super(BaseDeploymentTask, self).get_declared_envs()
+        envs['VAULT_PASSWORDS'] = ''
+
+        return envs
+
+    def configure_argparse(self, parser: ArgumentParser):
+        parser.add_argument('filename', help='Filename')
+        self._add_vault_arguments_to_argparse(parser)
+
+    def run(self, context: ExecutionContext) -> bool:
+        vault_opts = self._get_vault_opts(context)
+        filename = context.get_arg('filename')
+
+        try:
+            subprocess.check_call('ansible-vault edit %s %s' % (vault_opts, filename), shell=True)
+        finally:
+            self._clear_old_vault_temporary_files()
+
+        return True
+
+
+class EncryptVaultTask(BaseDeploymentTask):
+    """Encrypts/Decrypts a file using strong AES-256 algorithm,
+output files are suitable to be kept in GIT repository
+
+See the documentation for :harbor:vault:edit task for general file encryption documentation
+"""
+
+    def get_group_name(self) -> str:
+        return ':harbor:vault'
+
+    def get_name(self) -> str:
+        return ':encrypt'
+
+    def get_declared_envs(self) -> Dict[str, str]:
+        envs = super(BaseDeploymentTask, self).get_declared_envs()
+        envs['VAULT_PASSWORDS'] = ''
+
+        return envs
+
+    def configure_argparse(self, parser: ArgumentParser):
+        parser.add_argument('--decrypt', '-d', action='store_true', help='Decrypt instead of encrypting')
+        parser.add_argument('filename', help='Filename')
+        self._add_vault_arguments_to_argparse(parser)
+
+    def run(self, context: ExecutionContext) -> bool:
+        vault_opts = self._get_vault_opts(context)
+        filename = context.get_arg('filename')
+        mode = 'decrypt' if context.get_arg('--decrypt') else 'encrypt'
+
+        try:
+            self.sh('ansible-vault %s %s %s' % (mode, vault_opts, filename), capture=False)
+        finally:
+            self._clear_old_vault_temporary_files()
+
+        return True
