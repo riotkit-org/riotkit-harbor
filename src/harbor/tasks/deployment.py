@@ -181,6 +181,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
         num = 0
         opts = ''
+        enforce_ask_pass = ctx.get_arg('--ask-vault-pass')
 
         for passwd in vault_passwords:
             num = num + 1
@@ -188,8 +189,11 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
             if not passwd:
                 continue
 
-            if (passwd.startswith('./') or passwd.startswith('/')) and os.path.isfile(passwd):
-                opts += ' --vault-password-file="%s" ' % passwd
+            if passwd.startswith('./') or passwd.startswith('/'):
+                if os.path.isfile(passwd):
+                    opts += ' --vault-password-file="%s" ' % passwd
+                else:
+                    enforce_ask_pass = True
             else:
                 tmp_vault_file = './.rkd/.tmp-vault-' + str(uuid4())
 
@@ -198,7 +202,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
                 opts += ' --vault-password-file="%s" ' % tmp_vault_file
 
-        if ctx.get_arg('--ask-vault-pass'):
+        if enforce_ask_pass:
             opts += ' --ask-vault-pass '
 
         return opts
@@ -411,6 +415,7 @@ Example usage:
 
 HINT: You can avoid writing the path in commandline each time by putting `VAULT_PASSWORDS=./path-to-password-file.txt` to the .env file
 HINT: You can store vault password file on encrypted flash drive, and make a symbolic link. Every time when you mount an encrypted drive you will gain access to the project
+NOTICE: When at least one of vault password files does not exist, then there will be a password prompt
     """
 
     def get_group_name(self) -> str:
