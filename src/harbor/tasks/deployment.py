@@ -171,14 +171,15 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
         return variables
 
 
-class UpdateRoleTask(BaseDeploymentTask):
-    """Update an Ansible role and required configuration files"""
+class UpdateFilesTask(BaseDeploymentTask):
+    """Update an Ansible role and required configuration files.
+    Warning: Overwrites existing files, but does not remove custom files in '.rkd/deployment' directory"""
 
     def get_name(self) -> str:
         return ':update'
 
     def get_group_name(self) -> str:
-        return ':harbor:deployment:role'
+        return ':harbor:deployment:files'
 
     def format_task_name(self, name) -> str:
         return development_formatting(name)
@@ -190,11 +191,20 @@ class UpdateRoleTask(BaseDeploymentTask):
 class DeploymentTask(BaseDeploymentTask):
     """Deploys your project from GIT to a PRODUCTION server
 
-    Creates a generated structure in .rkd/deployment from a template.
-    To synchronize the structure after Harbor update use --update switch.
+    All changes needs to be COMMITED and PUSHED to GIT server, the task does not copy local files.
 
     The deployment task can be extended by environment variables and switches to make possible any customizations
-    such as custom playbook, custom role, custom inventory etc.
+    such as custom playbook, custom role or a custom inventory. The environment variables from .env are considered.
+
+    Example usage:
+        # deploy services matching profile "gateway", use password stored in .vault-apssword for Ansible Vault
+        harbor :deployment:apply -V .vault-password --profile=gateway
+
+        # deploy from different branch
+        harbor :deployment:apply --branch production_fix_1
+
+        # use SSH-AGENT & key-based authentication by specifying path to private key
+        harbor :deployment:apply --git-key=~/.ssh/id_rsa
     """
 
     def get_name(self) -> str:
@@ -220,12 +230,18 @@ class DeploymentTask(BaseDeploymentTask):
                             default='')
         parser.add_argument('--inventory', '-i', help='Inventory filename', default='harbor.inventory.cfg')
         parser.add_argument('--debug', '-d', action='store_true', help='Set increased logging for Ansible output')
-        parser.add_argument('--vault-passwords', '-V', help='Vault passwords separated by "||" eg. 123||456', default='')
+        parser.add_argument('--vault-passwords', '-V', help='Vault passwords separated by "||" eg. 123||456',
+                            default='')
+        parser.add_argument('--branch', '-b', help='Git branch to deploy from', default='master')
+        parser.add_argument('--profile', help='Harbor profile to filter out services that needs to be deployed',
+                            default='')
 
     def run(self, context: ExecutionContext) -> bool:
         playbook_name = context.get_arg_or_env('--playbook')
         inventory_name = context.get_arg_or_env('--inventory')
         git_private_key_path = context.get_arg_or_env('--git-key')
+        branch = context.get_arg('--branch')
+        profile = context.get_arg('--profile')
         debug = context.get_arg('--debug')
         vault_passwords = context.get_arg('--vault-passwords').split('||') \
             if context.get_arg('--vault-passwords') else []
@@ -250,6 +266,9 @@ class DeploymentTask(BaseDeploymentTask):
 
             if debug:
                 opts += ' -vv '
+
+            opts += ' -e git_branch="%s" ' % branch
+            opts += ' -e harbor_deployment_profile="%s" ' % profile
 
             if vault_passwords:
                 num = 0

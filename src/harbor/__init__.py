@@ -20,7 +20,7 @@ from .tasks.service import ServiceStopTask
 from .tasks.service import WaitForServiceTask
 from .tasks.listing import ListDefinedServices
 from .tasks.deployment import DeploymentTask
-from .tasks.deployment import UpdateRoleTask
+from .tasks.deployment import UpdateFilesTask
 from .tasks.deployment import CreateExampleDeploymentFileTask
 from .tasks.deployment import ManageVagrantTask
 from .tasks.diagnostic import DumpComposeArguments
@@ -70,7 +70,7 @@ def imports():
         TaskDeclaration(MaintenanceOnTask()),
         TaskDeclaration(MaintenanceOffTask()),
         TaskDeclaration(DeploymentTask()),
-        TaskDeclaration(UpdateRoleTask()),
+        TaskDeclaration(UpdateFilesTask()),
         TaskDeclaration(CreateExampleDeploymentFileTask()),
         TaskDeclaration(ManageVagrantTask()),
 
