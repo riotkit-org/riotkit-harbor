@@ -77,3 +77,6 @@ Keeping standards
 By keeping standards in your project you make sure, that any person that joins your project or a contributor could be satisfied
 with Harbor documentation. Any outstanding solutions would require you to create extra documentation in your project.
 
+
+OK, got it, let's learn :ref:`basic commands`
+---------------------------------------------
