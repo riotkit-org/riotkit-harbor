@@ -14,6 +14,7 @@ from rkd.yaml_parser import YamlFileLoader
 from rkd.exception import MissingInputException
 from .base import HarborBaseTask
 from ..formatting import development_formatting
+from ..exception import MissingDeploymentConfigurationError
 
 HARBOR_ROOT = os.path.dirname(os.path.realpath(__file__)) + '/../deployment/files'
 
@@ -37,11 +38,13 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                 if os.path.isfile(filename):
 
                     #
-                    # When file is encrypted, then decrypt it
+                    # Check file contents before
                     #
                     with open(filename, 'rb') as f:
                         content = f.read().decode('utf-8')
-
+                        #
+                        # When file is encrypted, then decrypt it
+                        #
                         if content.startswith('$ANSIBLE_VAULT;'):
                             tmp_vault_filename = '.tmp-' + str(uuid4())
                             tmp_vault_path = './.rkd/' + tmp_vault_filename
@@ -65,6 +68,8 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                     )
 
                     return self._config
+
+            raise MissingDeploymentConfigurationError()
 
         return self._config
 
@@ -194,6 +199,19 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
         return variables
 
+    def _preserve_vault_parameters_for_usage_in_inner_tasks(self, ctx: ExecutionContext):
+        """Preserve original parameters related to Vault, so those parameters can be propagated to inner tasks"""
+
+        try:
+            vault_passwords = ctx.get_arg_or_env('--vault-passwords')
+        except MissingInputException:
+            vault_passwords = ''
+
+        # keep the vault arguments for decryption of deployment.yml
+        self.vault_args = ['--vault-passwords=' + vault_passwords]
+        if ctx.get_arg('--ask-vault-pass'):
+            self.vault_args += '--ask-vault-pass'
+
     def _get_vault_opts(self, ctx: ExecutionContext, chdir: str = '') -> str:
         """Creates options to pass in Ansible Vault commandline"""
 
@@ -253,8 +271,24 @@ class UpdateFilesTask(BaseDeploymentTask):
     def format_task_name(self, name) -> str:
         return development_formatting(name)
 
+    def get_declared_envs(self) -> Dict[str, str]:
+        envs = super(BaseDeploymentTask, self).get_declared_envs()
+        envs['VAULT_PASSWORDS'] = ''
+
+        return envs
+
+    def configure_argparse(self, parser: ArgumentParser):
+        self._add_vault_arguments_to_argparse(parser)
+
     def run(self, context: ExecutionContext) -> bool:
-        return self.install_and_configure_role(force_update=True)
+        self._preserve_vault_parameters_for_usage_in_inner_tasks(context)
+
+        try:
+            return self.install_and_configure_role(force_update=True)
+
+        except MissingDeploymentConfigurationError as e:
+            self.io().error_msg(str(e))
+            return False
 
 
 class DeploymentTask(BaseDeploymentTask):
@@ -318,15 +352,19 @@ Example usage:
         debug = context.get_arg('--debug')
 
         # keep the vault arguments for decryption of deployment.yml
-        self.vault_args = ['--vault-passwords=' + (context.get_arg_or_env('--vault-passwords') if context.get_arg_or_env('--vault-passwords') else '')]
-        if context.get_arg('--ask-vault-pass'):
-            self.vault_args += '--ask-vault-pass'
+        self._preserve_vault_parameters_for_usage_in_inner_tasks(context)
 
         if not self.role_is_installed_and_configured():
             self.io().error_msg('Deployment not configured. Use `harbor :deployment:role:update` first')
             return False
 
-        self.install_and_configure_role(force_update=False)
+        try:
+            self.install_and_configure_role(force_update=False)
+
+        except MissingDeploymentConfigurationError as e:
+            self.io().error_msg(str(e))
+            return False
+
         pwd_backup = os.getcwd()
         pid = None
 
@@ -353,7 +391,7 @@ Example usage:
                 opts
             )
 
-            self.sh(command)
+            self.spawn_ansible(command)
         finally:
             os.chdir(pwd_backup)
 
@@ -361,6 +399,10 @@ Example usage:
                 self.kill_ssh_agent(pid)
 
         return True
+
+    def spawn_ansible(self, command):
+        self.io().info('Spawning Ansible')
+        return self.sh(command)
 
     def spawn_ssh_agent(self) -> Tuple[str, int]:
         out = subprocess.check_output('eval $(ssh-agent -s);echo "|${SSH_AUTH_SOCK}|${SSH_AGENT_PID}";', shell=True).decode('utf-8')

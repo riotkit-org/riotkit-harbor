@@ -22,6 +22,7 @@ from dotenv import dotenv_values
 
 HARBOR_MODULE_PATH = os.path.dirname(os.path.realpath(__file__))
 ENV_SIMPLE_PATH = os.path.dirname(os.path.realpath(__file__)) + '/../../test/testdata/env_simple'
+CURRENT_TEST_ENV_PATH = os.path.dirname(os.path.realpath(__file__)) + '/../../test/testdata/current_test_env'
 TEST_PROJECT_NAME = 'env_simple'
 
 
@@ -71,8 +72,8 @@ class BaseHarborTestClass(unittest.TestCase):
         print('')
 
         CachedLoader.clear()   # avoid keeping the state between tests
-        self.setup_environment()
         self.recreate_structure()
+        self.setup_environment()
         self.remove_all_containers()
         self._stderr_bckp = sys.stderr
         self._stdout_bckp = sys.stdout
@@ -87,7 +88,7 @@ class BaseHarborTestClass(unittest.TestCase):
     def mock_compose(cls, content: dict):
         content['version'] = '3.4'
 
-        with open(ENV_SIMPLE_PATH + '/apps/conf/mocked.yaml', 'wb') as f:
+        with open(CURRENT_TEST_ENV_PATH + '/apps/conf/mocked.yaml', 'wb') as f:
             f.write(yaml.dump(content).encode('utf-8'))
 
     def _restore_streams(self):
@@ -98,13 +99,18 @@ class BaseHarborTestClass(unittest.TestCase):
     def recreate_structure(cls):
         """Within each class recreate the project structure, as it could be changed by tests itself"""
 
-        for directory in ['containers', 'data', 'hooks.d', 'apps/www-data']:
-            subprocess.check_call('rm -rf %s/%s' % (ENV_SIMPLE_PATH, directory), shell=True)
-            subprocess.check_call('cp -pr %s/project/%s %s/%s' % (
-                HARBOR_MODULE_PATH, directory, ENV_SIMPLE_PATH, directory
-            ), shell=True)
-
+        subprocess.check_call(['rm', '-rf', CURRENT_TEST_ENV_PATH])
+        subprocess.check_call(['cp', '-pr', ENV_SIMPLE_PATH, CURRENT_TEST_ENV_PATH])
         cls.mock_compose({'services': {}})
+
+    @classmethod
+    def get_test_env_subdirectory(cls, subdir_name: str):
+        directory = CURRENT_TEST_ENV_PATH + '/' + subdir_name
+
+        if not os.path.isdir(directory):
+            subprocess.check_call(['mkdir', '-p', directory])
+
+        return os.path.realpath(directory)
 
     @classmethod
     def remove_all_containers(cls):
@@ -121,9 +127,10 @@ class BaseHarborTestClass(unittest.TestCase):
 
     @classmethod
     def setup_environment(cls):
-        os.environ.update(dotenv_values(ENV_SIMPLE_PATH + '/.env'))
-        os.environ['APPS_PATH'] = ENV_SIMPLE_PATH + '/apps'
-        os.chdir(ENV_SIMPLE_PATH)
+        os.environ.update(dotenv_values(CURRENT_TEST_ENV_PATH + '/.env'))
+        os.environ['APPS_PATH'] = CURRENT_TEST_ENV_PATH + '/apps'
+        os.environ['RKD_PATH'] = cls.get_test_env_subdirectory('') + ':' + HARBOR_MODULE_PATH + '/internal'
+        os.chdir(CURRENT_TEST_ENV_PATH)
 
     def _get_prepared_compose_driver(self, args: dict = {}, env: dict = {}) -> ComposeDriver:
         merged_env = deepcopy(os.environ)

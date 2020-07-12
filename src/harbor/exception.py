@@ -14,7 +14,7 @@ class ServiceNotFoundInYaml(TaskException):
 
 class ServiceNotFoundInYamlLookedByCriteria(TaskException):
     def __init__(self, criteria: str):
-        super().__init__('No any service found matching those criteria: %s' % (criteria))
+        super().__init__('No any service found matching those criteria: %s' % criteria)
 
 
 class ServiceNotCreatedException(TaskException):
@@ -34,3 +34,12 @@ class ServiceNotReadyException(TaskException):
         super().__init__('Service "%s" #%s is not ready yet. "%s" text not found in logs' % (
             name, instance_num, text
         ))
+
+
+class DeploymentException(TaskException):
+    pass
+
+
+class MissingDeploymentConfigurationError(TaskException):
+    def __init__(self):
+        super().__init__('Deployment not configured - missing deployment.yml or deployment.yaml file')
