@@ -21,6 +21,7 @@ RiotKit Harbor 2
    :caption: Contents:
 
    first-steps
+   structure
 
 
 From authors
