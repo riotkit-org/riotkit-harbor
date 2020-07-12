@@ -72,6 +72,8 @@ class BaseHarborTestClass(unittest.TestCase):
         print('')
 
         CachedLoader.clear()   # avoid keeping the state between tests
+
+        os.chdir(HARBOR_MODULE_PATH)
         self.recreate_structure()
         self.setup_environment()
         self.remove_all_containers()
@@ -138,6 +140,7 @@ class BaseHarborTestClass(unittest.TestCase):
         os.environ.update(dotenv_values(CURRENT_TEST_ENV_PATH + '/.env'))
         os.environ['APPS_PATH'] = CURRENT_TEST_ENV_PATH + '/apps'
         os.environ['RKD_PATH'] = cls.get_test_env_subdirectory('') + ':' + HARBOR_MODULE_PATH + '/internal'
+
         os.chdir(CURRENT_TEST_ENV_PATH)
 
     def _get_prepared_compose_driver(self, args: dict = {}, env: dict = {}) -> ComposeDriver:
