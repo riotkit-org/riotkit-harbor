@@ -4,7 +4,7 @@ from harbor.tasks.deployment import UpdateFilesTask
 
 
 class DeploymentTaskTask(BaseHarborTestClass):
-    def test_validates_if_structure_exists(self):
+    def test_functional_validates_if_structure_exists(self):
         """Verify that :deployment:apply requires :deployment:files:update to be called first
         """
 
@@ -23,7 +23,7 @@ class DeploymentTaskTask(BaseHarborTestClass):
         self.assertIn('TASK_EXIT_RESULT=False', out)
 
     # todo: Move test to other class
-    def test_validates_deployment_yml_file_not_created(self):
+    def test_functional_validates_deployment_yml_file_not_created(self):
         """Test that deployment.yml/deployment.yaml needs to be created first and the message for the end user is clear
         """
 
@@ -36,7 +36,7 @@ class DeploymentTaskTask(BaseHarborTestClass):
 
         self.assertIn('Deployment not configured - missing deployment.yml or deployment.yaml file', out)
 
-    def test_passes_structure_validation_after_using_update_command(self):
+    def test_functional_passes_structure_validation_after_using_update_command(self):
         """Verify that when :deployment:files:update is called, then :deployment:apply, then the validation
         in :deployment:apply is passing - as the files are created by first task
         """
