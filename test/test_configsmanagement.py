@@ -13,11 +13,19 @@ class ConfigsManagementTest(BaseHarborTestClass):
         self.assertIn('conf/infrastructure.service-discovery.yml  Yes', self.execute_task(ListConfigsTask(), args={}))
 
         with self.subTest('Disable service discovery'):
-            self.execute_task(DisableConfigTask(), args={'--name': 'conf/infrastructure.service-discovery.yml'})
-            self.assertIn('conf/infrastructure.service-discovery.yml  No',
-                          self.execute_task(ListConfigsTask(), args={}))
+            disable_task = DisableConfigTask()
+            disable_task.git_commands_suffix = '|| true'
+            disable_task.git_mv_command = 'mv'
+
+            self.execute_task(disable_task, args={'--name': 'conf/infrastructure.service-discovery.yml'})
+            self.assertRegex(self.execute_task(ListConfigsTask(), args={}),
+                             'conf/infrastructure.service-discovery.yml.*No')
 
         with self.subTest('Enable service discovery'):
-            self.execute_task(EnableConfigTask(), args={'--name': 'conf/infrastructure.service-discovery.yml'})
-            self.assertIn('conf/infrastructure.service-discovery.yml  Yes',
-                          self.execute_task(ListConfigsTask(), args={}))
+            enable_task = EnableConfigTask()
+            enable_task.git_commands_suffix = '|| true'
+            enable_task.git_mv_command = 'mv'
+
+            self.execute_task(enable_task, args={'--name': 'conf/infrastructure.service-discovery.yml'})
+            self.assertRegex(self.execute_task(ListConfigsTask(), args={}),
+                             'conf/infrastructure.service-discovery.yml.*Yes')

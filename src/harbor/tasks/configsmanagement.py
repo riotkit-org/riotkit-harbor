@@ -45,6 +45,9 @@ class ListConfigsTask(HarborBaseTask):
 
 
 class AbstractManageConfigTask(HarborBaseTask):
+    git_commands_suffix: str = ''  # used in tests
+    git_mv_command = 'git mv'
+
     def configure_argparse(self, parser: ArgumentParser):
         parser.add_argument('--name', '-n', required=True, help='Configuration file name')
 
@@ -63,8 +66,8 @@ class AbstractManageConfigTask(HarborBaseTask):
             self.io().error_msg('Cannot find file at path "%s", check if name is correct' % src_path)
             return False
 
-        self.sh('git mv "%s" "%s"' % (src_path, dst_path))
-        self.sh('git add "%s"' % dst_path)
+        self.sh((self.git_mv_command + ' "%s" "%s"' + self.git_commands_suffix) % (src_path, dst_path))
+        self.sh(('git add "%s"' + self.git_commands_suffix) % dst_path)
         self.rkd([':harbor:config:list'])
 
         return True
