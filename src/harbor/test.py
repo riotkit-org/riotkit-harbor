@@ -101,6 +101,14 @@ class BaseHarborTestClass(unittest.TestCase):
 
         subprocess.check_call(['rm', '-rf', CURRENT_TEST_ENV_PATH])
         subprocess.check_call(['cp', '-pr', ENV_SIMPLE_PATH, CURRENT_TEST_ENV_PATH])
+
+        # copy from base structure - as we test eg. things like default configurations, NGINX template
+        for directory in ['containers', 'data', 'hooks.d', 'apps/www-data']:
+            subprocess.check_call('rm -rf %s/%s' % (ENV_SIMPLE_PATH, directory), shell=True)
+            subprocess.check_call('cp -pr %s/project/%s %s/%s' % (
+                HARBOR_MODULE_PATH, directory, CURRENT_TEST_ENV_PATH, directory
+            ), shell=True)
+
         cls.mock_compose({'services': {}})
 
     @classmethod
