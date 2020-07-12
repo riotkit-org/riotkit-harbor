@@ -1,3 +1,4 @@
+import subprocess
 from harbor.test import BaseHarborTestClass
 from harbor.tasks.deployment import DeploymentTask
 from harbor.tasks.deployment import UpdateFilesTask
@@ -47,6 +48,45 @@ class DeploymentTaskTask(BaseHarborTestClass):
         deployment_task = DeploymentTask()
         deployment_task.spawn_ansible = lambda *args, **kwargs: ansible_call.append(args)
 
+        self.execute_task(deployment_task,
+                          args={'--playbook': 'harbor.playbook.yml',
+                                '--inventory': 'harbor.inventory.yml',
+                                '--git-key': '',
+                                '--branch': 'master',
+                                '--profile': '',
+                                '--debug': False,
+                                '--vault-passwords': '',
+                                '--ask-vault-pass': False},
+                          env={})
+
+        self.assertIn('ansible-playbook', ansible_call[0][0])
+        self.assertIn('./harbor.playbook.yml', ansible_call[0][0])
+        self.assertIn('-i harbor.inventory.yml', ansible_call[0][0])
+        self.assertIn('-e git_branch="master"', ansible_call[0][0])
+        self.assertIn('-e harbor_deployment_profile=""', ansible_call[0][0])
+
+    def test_functional_decrypts_encrypted_deployment_yml_file_on_startup(self):
+        """Check that deployment.yml file can be encrypted, and that given vault password in commandline will allow
+        to decrypt the contents automatically"""
+
+        self._prepare_valid_configuration()
+        ansible_call = []
+        passphrase_file_path = self.get_test_env_subdirectory('.rkd') + '/tmp-secret.txt'
+
+        # 1) Write test password
+        with open(passphrase_file_path, 'w') as f:
+            f.write('International-Workers-Association')
+
+        # 2) Encrypt a file
+        deployment_yml_path = self.get_test_env_subdirectory('') + '/deployment.yml'
+        subprocess.check_call(
+            ['ansible-vault encrypt --vault-password-file=%s %s' % (passphrase_file_path, deployment_yml_path)],
+            shell=True)
+
+        # 3) Run a deployment while the deployment.yml is encrypted
+        deployment_task = DeploymentTask()
+        deployment_task.spawn_ansible = lambda *args, **kwargs: ansible_call.append(args)
+
         out = self.execute_task(deployment_task,
                                 args={'--playbook': 'harbor.playbook.yml',
                                       '--inventory': 'harbor.inventory.yml',
@@ -54,15 +94,13 @@ class DeploymentTaskTask(BaseHarborTestClass):
                                       '--branch': 'master',
                                       '--profile': '',
                                       '--debug': False,
-                                      '--vault-passwords': '',
+                                      '--vault-passwords': passphrase_file_path,
                                       '--ask-vault-pass': False},
                                 env={})
 
-        self.assertIn('ansible-playbook', ansible_call[0][0])
-        self.assertIn('./harbor.playbook.yml', ansible_call[0][0])
-        self.assertIn('-i harbor.inventory.yml', ansible_call[0][0])
-        self.assertIn('-e git_branch="master"', ansible_call[0][0])
-        self.assertIn('-e harbor_deployment_profile=""', ansible_call[0][0])
+        self.assertIn('--vault-password-file=', ansible_call[0][0])
+        self.assertIn('.rkd/tmp-secret.txt', ansible_call[0][0])
+        self.assertIn('TASK_EXIT_RESULT=True', out)
 
     def _prepare_valid_configuration(self):
         """Internal: Prepares a valid deployment.yml and already synchronized files structure, downloaded role"""
