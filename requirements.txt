@@ -1,1 +1,2 @@
 rkd==1.1.1.dev10
+ansible>=2.8
