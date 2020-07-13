@@ -119,16 +119,19 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                 return False
 
             self.io().debug('Downloading fresh role...')
-            subprocess.check_call([
-                'ansible-galaxy',
-                'install', '-r', self.ansible_dir + '/requirements.yml',
-                '-p', self.ansible_dir + '/roles/',
-                '--force'
-            ])
+            self.download_roles()
 
             self._write_synced_version(abs_ansible_dir)
 
         return True
+
+    def download_roles(self):
+        self.sh(' '.join([
+            'ansible-galaxy',
+            'install', '-r', self.ansible_dir + '/requirements.yml',
+            '-p', self.ansible_dir + '/roles/',
+            '--force'
+        ]), capture=False)
 
     def _synchronize_structure_from_template(self, abs_ansible_dir: str, only_jinja_templates: bool = False) -> bool:
         """Synchronizes template structure into .rkd/deployment"""

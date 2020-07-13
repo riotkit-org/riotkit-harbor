@@ -230,6 +230,27 @@ class BaseHarborTestClass(unittest.TestCase):
         return self.exec_in_container(TEST_PROJECT_NAME + '_gateway_1', ['curl', '-s', '-vv', '--header',
                                                                          'Host: %s' % host, 'http://127.0.0.1'])
 
+    def prepare_valid_deployment_yml(self):
+        """Internal: Prepares a valid deployment.yml and already synchronized files structure, downloaded role"""
+
+        with open(self.get_test_env_subdirectory('') + '/deployment.yml', 'w') as f:
+            f.write('''deploy_user: vagrant
+deploy_group: vagrant
+remote_dir: /project
+git_url: https://github.com/riotkit-org/empty
+git_secret_url: https://github.com/riotkit-org/empty
+configure_sudoers: no
+
+nodes:
+    production:
+        # example configuration for testing environment based on Vagrant
+        # to run the environment type: harbor :deployment:vagrant -c "up --provision"
+        - host: 127.0.0.1
+          port: 2222
+          user: docker
+          password: docker
+''')
+
     def assertContainerIsNotRunning(self, service_name: str, driver: ComposeDriver):
         container_name_without_instance_num = driver.project_name + '_' + service_name + '_'
 
