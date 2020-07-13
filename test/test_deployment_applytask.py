@@ -30,7 +30,9 @@ class DeploymentTaskTest(BaseHarborTestClass):
 
         # Prepare configuration files first
         self.prepare_valid_deployment_yml()
-        self.execute_task(UpdateFilesTask(),
+        update_task = UpdateFilesTask()
+        update_task.download_roles = lambda *args, **kwargs: None
+        self.execute_task(update_task,
                           args={
                               '--ask-vault-pass': False,
                               '--vault-passwords': ''
@@ -65,7 +67,9 @@ class DeploymentTaskTest(BaseHarborTestClass):
 
         # 0) Preparation of configuration files
         self.prepare_valid_deployment_yml()
-        self.execute_task(UpdateFilesTask(),
+        update_task = UpdateFilesTask()
+        update_task.download_roles = lambda *args, **kwargs: None
+        self.execute_task(update_task,
                           args={
                               '--ask-vault-pass': False,
                               '--vault-passwords': ''
