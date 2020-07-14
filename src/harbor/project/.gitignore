@@ -11,3 +11,6 @@
 /.env
 /AUTHORS
 /ChangeLog
+
+/.rkd/cooperative/*
+*.log

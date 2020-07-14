@@ -40,6 +40,7 @@ from .tasks.repositories import FetchRepositoryTask
 from .tasks.repositories import SetPermissionsForWritableDirectoriesTask
 from .tasks.repositories import ListRepositoriesTask
 from .tasks.repositories import FetchAllRepositories
+from .tasks.cooperative import CooperativeSyncTask
 from .tasks.structure import CreateHarborStructureTask
 
 
@@ -87,6 +88,7 @@ def imports():
         TaskDeclaration(SetPermissionsForWritableDirectoriesTask()),
         TaskDeclaration(ListRepositoriesTask()),
 
+        TaskDeclaration(CooperativeSyncTask()),
         TaskDeclaration(CreateHarborStructureTask()),
         TaskDeclaration(GetEnvTask()),
         TaskDeclaration(SetEnvTask())
