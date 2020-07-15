@@ -3,6 +3,8 @@ from rkd.syntax import TaskDeclaration
 from rkd import main as rkd_main
 from rkd.standardlib.env import GetEnvTask
 from rkd.standardlib.env import SetEnvTask
+from rkd.standardlib.jinja import RenderDirectoryTask
+from rkd.standardlib.jinja import FileRendererTask
 from .tasks.diagnostic import ListContainersTask
 from .tasks.running import StartTask
 from .tasks.running import UpgradeTask
@@ -41,6 +43,9 @@ from .tasks.repositories import SetPermissionsForWritableDirectoriesTask
 from .tasks.repositories import ListRepositoriesTask
 from .tasks.repositories import FetchAllRepositories
 from .tasks.cooperative import CooperativeSyncTask
+from .tasks.cooperative import CooperativeInstallTask
+from .tasks.cooperative import CooperativeSnippetWizardTask
+from .tasks.cooperative import CooperativeSnippetInstallTask
 from .tasks.structure import CreateHarborStructureTask
 
 
@@ -89,9 +94,14 @@ def imports():
         TaskDeclaration(ListRepositoriesTask()),
 
         TaskDeclaration(CooperativeSyncTask()),
+        TaskDeclaration(CooperativeInstallTask()),
         TaskDeclaration(CreateHarborStructureTask()),
+        TaskDeclaration(CooperativeSnippetWizardTask()),
+        TaskDeclaration(CooperativeSnippetInstallTask()),
         TaskDeclaration(GetEnvTask()),
-        TaskDeclaration(SetEnvTask())
+        TaskDeclaration(SetEnvTask()),
+        TaskDeclaration(FileRendererTask()),
+        TaskDeclaration(RenderDirectoryTask())
     ]
 
 
