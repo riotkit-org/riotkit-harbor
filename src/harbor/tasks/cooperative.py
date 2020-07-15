@@ -148,9 +148,9 @@ class CooperativeInstallTask(BaseCooperativeTask):
 
     @staticmethod
     def list_snippets():
-        dirs = glob('.rkd/cooperative/**/**/files')
+        dirs = glob('.rkd/cooperative/**/**/files', recursive=True)
 
-        return map(lambda name: os.path.dirname(name), dirs)
+        return list(set(map(lambda name: os.path.dirname(name), dirs)))
 
 
 class CooperativeSnippetWizardTask(BaseCooperativeTask):
