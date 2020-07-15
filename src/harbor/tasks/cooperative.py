@@ -7,6 +7,7 @@ from typing import Dict
 from urllib.parse import urlparse
 from rkd.contract import ExecutionContext
 from rkd.exception import MissingInputException
+from rkd.inputoutput import Wizard
 from .base import HarborBaseTask
 from ..formatting import development_formatting
 
@@ -188,10 +189,9 @@ class CooperativeSnippetInstallTask(BaseCooperativeTask):
         parser.add_argument('path', help='Path to the root directory of the snippet files')
 
     def execute(self, ctx: ExecutionContext) -> bool:
-
-        if os.path.isfile('.rkd/tmp-wizard.json'):
-            with open('.rkd/tmp-wizard.json', 'rb') as f:
-                os.environ.update(json_loads(f.read().decode('utf-8')))
+        wizard = Wizard(self)
+        wizard.load_previously_stored_values()
+        os.environ.update(wizard.answers)
 
         self.rkd([
             ':j2:directory-to-directory',
