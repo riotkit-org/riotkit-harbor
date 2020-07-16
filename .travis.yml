@@ -19,34 +19,39 @@ before_install:
   - docker-compose -f ./test/testdata/env_simple/apps/conf/infrastructure.ssl.yml -f ./test/testdata/env_simple/apps/conf/infrastructure.service-discovery.yml -f ./test/testdata/env_simple/apps/conf/apps.website.yml pull
 
 jobs:
-  include:
-    - stage: "Test on Python 3.8 (docker-compose: 1.25)"
-      python: 3.8
-      before_script:
-          - ./setup.py install
-          - pip install docker-compose==1.25.0
-          - pip show rkd
-      script:
-          - rkd :test
+    allow_failures:
+        env:
+            - CAN_FAIL=true
 
-    - stage: "Test on Python 3.6 (docker-compose: 1.25)"
-      before_script:
-          - ./setup.py install
-          - pip install docker-compose==1.25.0
-          - pip show rkd
-      script:
-          - rkd :test
+    include:
+        - stage: "Test on Python 3.8 (docker-compose: 1.25)"
+          python: 3.8
+          before_script:
+              - ./setup.py install
+              - pip install docker-compose==1.25.0
+              - pip show rkd
+          script:
+              - rkd :test
 
-    - stage: "Test on Python 3.8, LATEST docker-compose and LATEST RKD"
-      python: 3.8
-      before_script:
-          - ./setup.py install
-          - pip install --upgrade docker-compose rkd
-          - pip show docker-compose
-          - pip show rkd
-      script:
-          - rkd :test
+        - stage: "Test on Python 3.6 (docker-compose: 1.25)"
+          before_script:
+              - ./setup.py install
+              - pip install docker-compose==1.25.0
+              - pip show rkd
+          script:
+              - rkd :test
 
-    - stage: Release
-      python: 3.6
-      script: rkd :release
+        - stage: "Test on Python 3.8, LATEST docker-compose and LATEST RKD"
+          python: 3.8
+          env: CAN_FAIL=true
+          before_script:
+              - ./setup.py install
+              - pip install --pre --upgrade docker-compose rkd
+              - pip show docker-compose
+              - pip show rkd
+          script:
+              - rkd :test
+
+        - stage: Release
+          python: 3.6
+          script: rkd :release
