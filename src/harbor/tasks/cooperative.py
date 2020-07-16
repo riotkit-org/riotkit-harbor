@@ -197,6 +197,7 @@ class CooperativeSnippetInstallTask(BaseCooperativeTask):
             ':j2:directory-to-directory',
             '--source="%s"' % ctx.get_arg('path') + '/files/',
             '--target="./"',
-            '--pattern="(.*)"'
+            '--pattern="(.*)"',
+            '--copy-not-matching-files'
         ])
         return True
