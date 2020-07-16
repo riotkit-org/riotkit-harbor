@@ -5,6 +5,10 @@ from rkd.standardlib.env import GetEnvTask
 from rkd.standardlib.env import SetEnvTask
 from rkd.standardlib.jinja import RenderDirectoryTask
 from rkd.standardlib.jinja import FileRendererTask
+from rkd_cooperative.tasks import CooperativeSyncTask
+from rkd_cooperative.tasks import CooperativeInstallTask
+from rkd_cooperative.tasks import CooperativeSnippetWizardTask
+from rkd_cooperative.tasks import CooperativeSnippetInstallTask
 from .tasks.diagnostic import ListContainersTask
 from .tasks.running import StartTask
 from .tasks.running import UpgradeTask
@@ -42,10 +46,6 @@ from .tasks.repositories import FetchRepositoryTask
 from .tasks.repositories import SetPermissionsForWritableDirectoriesTask
 from .tasks.repositories import ListRepositoriesTask
 from .tasks.repositories import FetchAllRepositories
-from .tasks.cooperative import CooperativeSyncTask
-from .tasks.cooperative import CooperativeInstallTask
-from .tasks.cooperative import CooperativeSnippetWizardTask
-from .tasks.cooperative import CooperativeSnippetInstallTask
 from .tasks.structure import CreateHarborStructureTask
 
 
@@ -114,6 +114,7 @@ def main():
     os.environ['RKD_WHITELIST_GROUPS'] = env_or_default('RKD_WHITELIST_GROUPS', ':env,:harbor,')
     os.environ['RKD_ALIAS_GROUPS'] = env_or_default('RKD_ALIAS_GROUPS', '->:harbor')
     os.environ['RKD_UI'] = env_or_default('RKD_UI', 'false')
+    os.environ['REPOSITORIES'] = env_or_default('REPOSITORIES', 'https://github.com/riotkit-org/riotkit-harbor-snippet-cooperative')
     rkd_main()
 
 

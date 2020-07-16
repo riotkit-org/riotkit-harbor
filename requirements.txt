@@ -1,2 +1,3 @@
 rkd==1.1.1.dev31
+rkd-snippet-cooperative
 ansible>=2.8
