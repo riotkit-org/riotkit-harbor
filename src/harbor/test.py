@@ -4,6 +4,7 @@ import unittest
 import subprocess
 import time
 import yaml
+from dotenv import dotenv_values
 from io import StringIO
 from typing import Dict
 from copy import deepcopy
@@ -14,11 +15,11 @@ from rkd.executor import OneByOneTaskExecutor
 from rkd.inputoutput import IO
 from rkd.inputoutput import BufferedSystemIO
 from rkd.syntax import TaskDeclaration
+from rkd.contract import TaskInterface
 from .tasks.base import HarborBaseTask
 from .service import ServiceDeclaration
 from .driver import ComposeDriver
 from .cached_loader import CachedLoader
-from dotenv import dotenv_values
 
 HARBOR_MODULE_PATH = os.path.dirname(os.path.realpath(__file__))
 ENV_SIMPLE_PATH = os.path.dirname(os.path.realpath(__file__)) + '/../../test/testdata/env_simple'
@@ -153,7 +154,7 @@ class BaseHarborTestClass(unittest.TestCase):
 
         return ComposeDriver(task, ctx, TEST_PROJECT_NAME)
 
-    def execute_task(self, task: HarborBaseTask, args: dict = {}, env: dict = {}) -> str:
+    def execute_task(self, task: TaskInterface, args: dict = {}, env: dict = {}) -> str:
         ctx = ApplicationContext([], [], '')
         ctx.io = BufferedSystemIO()
 
