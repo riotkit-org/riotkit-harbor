@@ -20,7 +20,7 @@ class CreateHarborStructureTask(CreateStructureTask):
     def on_files_copy(self, ctx: ExecutionContext) -> None:
         """Copies files, if project was not created yet"""
 
-        self.sh('cp -pr %s/project/* ./' % HARBOR_PATH)
+        self.sh('cp -prfT %s/project ./' % HARBOR_PATH)
 
     def on_requirements_txt_write(self, ctx: ExecutionContext) -> None:
         """Apply Ansible to requirements.txt"""
