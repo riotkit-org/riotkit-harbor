@@ -17,7 +17,7 @@ Then, perform an installation within a single command.
 .. code:: bash
 
     # at first do a repository sync, later you don't need to do it all the time
-    harbor :coop:sync :coop:install nginx/hello
+    harbor :cooperative:sync :cooperative:install harbor/redis
 
 Starting, upgrading and stopping services
 -----------------------------------------
@@ -62,3 +62,20 @@ Harbor provides a simple maintenance mode in 3 ways: global, per-service, per-do
     # global maintenance mode - for all services
     harbor :maintenance:on --global
 
+Diagnosing issues (advanced usage on production)
+------------------------------------------------
+
+    # do the docker-compose ps, in case you need
+    harbor :diagnostic:compose:ps
+
+    # in case you need a full docker-compose arguments used by Harbor to execute some commands manually
+    harbor :diagnostic:dump-compose-args
+
+    # dump all yamls to big one for analysis
+    harbor :diagnostic:compose:config
+
+    # force regenerate all Letsencrypt certificates (use with caution, there are limits of hits on Letsencrypt)
+    harbor :gateway:ssl:regenerate
+
+    # reload gateway in case, when the the nginx.tmpl was modified
+    harbor :gateway:reload
