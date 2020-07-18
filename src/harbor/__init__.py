@@ -114,7 +114,8 @@ def main():
     os.environ['RKD_WHITELIST_GROUPS'] = env_or_default('RKD_WHITELIST_GROUPS', ':env,:harbor,')
     os.environ['RKD_ALIAS_GROUPS'] = env_or_default('RKD_ALIAS_GROUPS', '->:harbor')
     os.environ['RKD_UI'] = env_or_default('RKD_UI', 'false')
-    os.environ['REPOSITORIES'] = env_or_default('REPOSITORIES', 'https://github.com/riotkit-org/riotkit-harbor-snippet-cooperative')
+    os.environ['COOP_REPOSITORIES'] = env_or_default(
+        'COOP_REPOSITORIES', 'https://github.com/riotkit-org/riotkit-harbor-snippet-cooperative')
     rkd_main()
 
 

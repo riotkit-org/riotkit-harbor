@@ -55,7 +55,7 @@ Harbor 2.0
 From authors
 ------------
 
-We are grassroot activists for social change, so we created Harbor especially in mind for those fantastic initiatives:
+We are grassroot activists for social change, so we created this software while we were helping those fantastic initiatives:
 
 - RiotKit (https://riotkit.org)
 - International Workers Association (https://iwa-ait.org)
