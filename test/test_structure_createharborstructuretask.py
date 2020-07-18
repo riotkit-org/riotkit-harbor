@@ -18,7 +18,11 @@ class CreateHarborStructureTaskTest(BaseHarborTestClass):
             with tempfile.TemporaryDirectory() as dir_path:
                 os.chdir(dir_path)
 
-                self.execute_task(CreateHarborStructureTask(), args={
+                task = CreateHarborStructureTask()
+                # do not match current dev version as it may be unreleased yet when developing
+                task.get_harbor_version_matcher = lambda: ''
+
+                self.execute_task(task, args={
                     '--commit': False,
                     '--no-venv': False
                 })
@@ -36,7 +40,7 @@ class CreateHarborStructureTaskTest(BaseHarborTestClass):
                     content = requirements_txt.read().decode('utf-8')
 
                     self.assertIn('ansible>=2.8', content, msg='Expected Ansible defined in requirements.txt')
-                    self.assertIn('rkd-harbor==', content, msg='Expected rkd-harbor to be defined in requirements.txt')
+                    self.assertIn('rkd-harbor', content, msg='Expected rkd-harbor to be defined in requirements.txt')
         finally:
             os.chdir(backup_dir_path)
 

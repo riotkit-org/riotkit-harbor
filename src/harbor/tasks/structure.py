@@ -1,4 +1,5 @@
 import os
+import pkg_resources
 from rkd.contract import ExecutionContext
 from rkd.standardlib import CreateStructureTask
 
@@ -30,6 +31,19 @@ class CreateHarborStructureTask(CreateStructureTask):
                   '--regexp="ansible(.*)"',
                   '--insert="ansible>=2.8"'
                   ])
+
+        self.rkd([':file:line-in-file',
+                  'requirements.txt',
+                  '--regexp="rkd-harbor(.*)"',
+                  '--insert="rkd-harbor%s"' % self.get_harbor_version_matcher()
+                  ])
+
+    @staticmethod
+    def get_harbor_version_matcher() -> str:
+        harbor_version = pkg_resources.get_distribution("rkd-harbor").version
+
+        return '==' + harbor_version
+
 
     def print_success_msg(self, ctx: ExecutionContext) -> None:
         super().print_success_msg(ctx)
