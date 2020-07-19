@@ -22,6 +22,8 @@ RiotKit Harbor 2
 
    first-steps
    structure
+   basic-commands
+   creating-first-service
 
 
 From authors
