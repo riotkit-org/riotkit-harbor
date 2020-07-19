@@ -1,0 +1,5 @@
+version: '2.3'
+
+#
+# Place your applications configuration in ./apps/conf
+#
