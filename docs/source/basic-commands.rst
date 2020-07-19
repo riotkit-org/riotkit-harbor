@@ -1,7 +1,7 @@
 .. _basic commands:
 
-Basic commanads
-===============
+Basic commands
+==============
 
 Harbor defines a lot of RKD tasks, that automates preparing changes to project as well as operating on live organism.
 
@@ -11,7 +11,7 @@ At first we would like you to get familiar with our Snippet Cooperative, which i
 Installing applications from Snippet Cooperative
 ------------------------------------------------
 
-Browse the catalogue of applications at: https://github.com/riotkit-org/riotkit-harbor-snippet-cooperative
+Browse the catalogue of applications at: https://github.com/riotkit-org/harbor-snippet-cooperative
 Then, perform an installation within a single command.
 
 .. code:: bash
