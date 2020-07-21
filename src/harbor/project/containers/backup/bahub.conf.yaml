@@ -1,0 +1,34 @@
+#
+# Bahub - File Repository API client configuration
+# For documentation see: https://file-repository.readthedocs.io/en/latest/client/configuration-reference.html
+#
+
+accesses:
+    primary:
+        url: "${BACKUPS_URL}"
+        token: "${BACKUPS_TOKEN}"
+
+encryption:
+    secured:
+        passphrase: "${BACKUPS_PASSPHRASE}"
+        method: "${BACKUPS_ENCRYPTION_METHOD}"
+
+backups:
+
+    #
+    # Example service
+    #   - Uses "hot copy" method, which means copying files directly from container
+    #
+    example:
+        type: docker_hot_volumes
+        container: "${COMPOSE_PROJECT_NAME}_portainer_1"
+        access: primary
+        encryption: secured
+        collection_id: "${BACKUPS_PORTAINER_COLLECTION_ID}"
+        paths:
+            - "/data"
+
+recoveries:
+    default:
+        policy: restore-whats-possible
+        definitions: all

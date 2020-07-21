@@ -1,0 +1,19 @@
+version: '2.3'
+services:
+
+    #
+    # Passes your e-mails to external gateway
+    # You can use eg. gmail account if you do not have your own SMTP server.
+    #
+    # To use in application simply point it to "smtp_server:25", without any authorization.
+    # Credentials you can set in the .env file, which could be stored encrypted in repository (see: .env-prod)
+    #
+    smtp_server:
+        image: namshi/smtp
+        expose:
+            - "25"
+        env_file:
+            - .env
+        labels:
+            com.centurylinklabs.watchtower.enable: true
+

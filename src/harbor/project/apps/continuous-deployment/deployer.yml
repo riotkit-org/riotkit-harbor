@@ -1,0 +1,17 @@
+my_app_name:
+    # token used to authorize via "token" GET parameter, or "X-Auth-Token" header
+    token: your_token_goes_here
+    use_notification: false
+    notification_group: "logs"
+    pwd: /deployer-root
+
+    # could be empty, if not empty then the deploy will execute
+    # only if the INCOMING REQUEST BODY will match this regexp
+    # useful for example to deploy only from a proper branch
+    #request_regexp: "\"branch\": \"([master|godna\-praca\.pl]+)\""
+    request_regexp: ""
+
+    # commands to execute in order
+    commands:
+        - sudo docker ps
+        #- make update_single_service_container SERVICE=app_pl.godna-praca

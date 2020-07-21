@@ -1,0 +1,16 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "1500"
+  end
+
+  # documentation for more information about their specific syntax and use.
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y git docker.io docker-compose python3-pip --no-install-recommends
+    pip3 install setuptools
+  SHELL
+end

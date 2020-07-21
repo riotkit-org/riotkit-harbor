@@ -1,0 +1,27 @@
+version: '3.4'
+services:
+    website:
+        image: nginx:1.19-alpine
+        environment:
+            VIRTUAL_HOST: "nginx.local"
+
+    website_with_maintenance:
+        image: nginx:1.19-alpine
+        environment:
+            VIRTUAL_HOST: "nginx-with-maintenance-mode.local"
+        labels:
+            org.riotkit.useMaintenanceMode: true
+
+    website_with_redirect_to_www:
+        image: nginx:1.19-alpine
+        environment:
+            VIRTUAL_HOST: "nginx-redirect-to-www.local,www.nginx-redirect-to-www.local"
+        labels:
+            org.riotkit.redirectFromWWW: true
+
+    website_with_multiple_domains:
+        image: nginx:1.19-alpine
+        environment:
+            VIRTUAL_HOST: "web1.local,web2.local,web3.local"
+        labels:
+            org.riotkit.useMaintenanceMode: true

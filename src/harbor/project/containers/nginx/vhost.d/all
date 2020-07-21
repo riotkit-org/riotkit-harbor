@@ -1,0 +1,5 @@
+
+#
+# This will be in each server { } block, for all containers
+# Can contain location { } blocks, ifs, proxy configuration etc.
+#

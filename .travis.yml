@@ -1,15 +1,57 @@
 language: python
+os: linux
+dist: bionic
+#if: branch = master or tag IS present
 python: 3.6
+
+# important: with limited depth the tags are not cloned properly - the PBR does not work
+git:
+   depth: false
+
 services:
     - docker
 
+before_install:
+  - pip install -r ./requirements-dev.txt
+  - './.travis/main.sh'
+
+  # pull before tests, so the tests would not have to do so
+  - docker-compose -f ./test/testdata/env_simple/apps/conf/infrastructure.ssl.yml -f ./test/testdata/env_simple/apps/conf/infrastructure.service-discovery.yml -f ./test/testdata/env_simple/apps/conf/apps.website.yml pull
+
 jobs:
-  include:
-    - stage: Check if environment starts
-      before_script:
-          - sudo /bin/bash -c 'echo "127.0.0.1 health.test.localhost" >> /etc/hosts'
-      script:
-          - make start DETACH=true
-          - sleep 15
-          - docker ps
-          - curl -f -v http://health.test.localhost/some-test/
+    allow_failures:
+        env:
+            - CAN_FAIL=true
+
+    include:
+        - stage: "Test on Python 3.8 (docker-compose: 1.25)"
+          python: 3.8
+          before_script:
+              - ./setup.py install
+              - pip install docker-compose==1.25.0
+              - pip show rkd
+          script:
+              - rkd :test
+
+        - stage: "Test on Python 3.6 (docker-compose: 1.25)"
+          before_script:
+              - ./setup.py install
+              - pip install docker-compose==1.25.0
+              - pip show rkd
+          script:
+              - rkd :test
+
+        - stage: "Test on Python 3.8, LATEST docker-compose and LATEST RKD"
+          python: 3.8
+          env: CAN_FAIL=true
+          before_script:
+              - ./setup.py install
+              - pip install --pre --upgrade docker-compose rkd
+              - pip show docker-compose
+              - pip show rkd
+          script:
+              - rkd :test
+
+        - stage: Release
+          python: 3.6
+          script: rkd :release

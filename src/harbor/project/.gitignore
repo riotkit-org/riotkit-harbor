@@ -1,0 +1,16 @@
+/.idea
+/.vscode
+/docs/build
+/docs/source/_build
+/data/*/
+!/data/*/.gitkeep
+/data/www-data/*
+!/data/www-data/.gitkeep
+/containers/templates/compiled/*
+!/containers/templates/compiled/.gitkeep
+/.env
+/AUTHORS
+/ChangeLog
+
+/.rkd/cooperative/*
+*.log

@@ -1,1 +1,3 @@
-j2cli
+rkd>=2.0.0.0rc4
+rkd-snippet-cooperative>=1.0.0.0rc2
+ansible>=2.8
