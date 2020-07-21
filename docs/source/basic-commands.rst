@@ -57,7 +57,7 @@ Harbor provides a simple maintenance mode in 3 ways: global, per-service, per-do
     harbor :maintenance:on --service hello
 
     # per single domain
-    harbor :maintenance:on --domain
+    harbor :maintenance:on --domain domain-name.org
 
     # global maintenance mode - for all services
     harbor :maintenance:on --global
