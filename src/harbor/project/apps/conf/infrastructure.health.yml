@@ -1,7 +1,7 @@
 version: '2.3'
 services:
     healthcheck:
-        image: quay.io/riotkit/infracheck:v1.7-x86_64
+        image: quay.io/riotkit/infracheck:v1.8-x86_64
         command: " --directory=/data --server-path-prefix=/${HEALTH_CHECK_CODE}"
         volumes:
             - "./apps/healthchecks:/data"

@@ -13,7 +13,7 @@ services:
     #  It's just a normal nginx that is running GENERATED configurations by other container - gateway_proxy_gen
     #
     gateway:
-        image: nginx:1.17
+        image: nginx:1.19-alpine
         restart: always
         labels:
             - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true
@@ -37,7 +37,7 @@ services:
     #  Generates configuration files for NGINX and then restarts the NGINX
     #
     gateway_proxy_gen:
-        image: jwilder/docker-gen:0.7.0
+        image: jwilder/docker-gen:0.7.3
         # during startup the letsencrypt container will kill this container after certificates generation
         # so it is necessary to bring it up quickly back, else the gateway will be unconfigured and not working
         restart: always
