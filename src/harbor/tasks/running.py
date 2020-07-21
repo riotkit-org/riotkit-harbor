@@ -97,11 +97,15 @@ class StopAndRemoveTask(BaseProfileSupportingTask):
     def get_name(self) -> str:
         return ':remove'
 
+    def configure_argparse(self, parser: ArgumentParser):
+        super(StopAndRemoveTask, self).configure_argparse(parser)
+        parser.add_argument('--with-image', help='Remove containers with images', action='store_true')
+
     def run(self, ctx: ExecutionContext) -> bool:
         services = self.get_matching_services(ctx)
 
         for service in services:
-            self.io().info('Restarting "%s"' % service.get_name())
+            self.io().info('Removing "%s"' % service.get_name())
             self.rkd([
                 ':harbor:service:rm',
                 service.get_name(),
