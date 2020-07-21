@@ -1,9 +1,47 @@
 RiotKit's Harbor
 ================
 
-[![Documentation Status](https://readthedocs.org/projects/riotkit-docker-template/badge/?version=latest)](https://environment.docs.riotkit.org/en/latest/?badge=latest)
+.. image:: https://readthedocs.org/projects/riotkit-docker-template/badge/?version=latest
+	:alt: Documentation Status
+	:target: https://environment.docs.riotkit.org/en/latest/
 
-`docker-compose` based framework for building production-like environments - developing and testing on your local computer, deploying to your server or cluster from shell or from CI.
+.. image:: http://www.repostatus.org/badges/latest/active.svg
+	:alt: Project Status: Active – The project has reached a stable, usable state and is being actively developed.
+	:target: http://www.repostatus.org/#active
+
+.. image:: https://img.shields.io/github/v/release/riotkit-org/riotkit-harbor?include_prereleases
+	:target: https://img.shields.io/github/v/release/riotkit-org/riotkit-harbor?include_prereleases
+	:alt: Github Release
+
+.. image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
+	:target: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
+	:alt: Made with Python
+
+.. image:: https://img.shields.io/pypi/l/rkd-harbor.svg
+	:target: https://img.shields.io/pypi/l/rkd-harbor.svg
+	:alt: License
+
+.. image:: https://travis-ci.com/riotkit-org/riotkit-harbor.svg?branch=master
+	:target: https://travis-ci.com/riotkit-org/riotkit-harbor
+	:alt: Travis CI
+
+.. image:: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
+	:target: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
+	:alt: PRs welcome
+
+.. image:: https://img.shields.io/github/issues-pr/riotkit-org/riotkit-harbor.svg
+	:target: https://img.shields.io/github/issues-pr/riotkit-org/riotkit-harbor.svg
+	:alt: PRs open
+
+.. image:: https://img.shields.io/github/issues/riotkit-org/riotkit-harbor.svg
+	:target: https://img.shields.io/github/issues/riotkit-org/riotkit-harbor.svg
+	:alt: Issues open
+
+:code:`docker-compose` based framework for building production-like environments - developing and testing on your local computer, deploying to your server or cluster from shell or from CI.
+
+.. image:: ./docs/demo.gif
+
+Demo: https://asciinema.org/a/348698
 
 Harbor
 ^^^^^^
