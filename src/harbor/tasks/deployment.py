@@ -133,6 +133,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
         # optionally ask user and set facts such as passwords, key paths, sudo passwords
         # ansible-vault password prompt is handed by ansible-vault itself
+        self._ask_and_set_var(ctx, '--ask-ssh-login', 'SSH username', 'user', secret=True)
         self._ask_and_set_var(ctx, '--ask-ssh-pass', 'SSH password', 'password', secret=True)
         self._ask_and_set_var(ctx, '--ask-ssh-key-path', 'SSH private key path', 'private_key', secret=False)
         self._ask_and_set_var(ctx, '--ask-sudo-pass', 'Sudo password for remote machines', 'sudo_pass', secret=True)
@@ -374,6 +375,7 @@ Example usage:
         parser.add_argument('--branch', '-b', help='Git branch to deploy from', default='master')
         parser.add_argument('--profile', help='Harbor profile to filter out services that needs to be deployed',
                             default='')
+        parser.add_argument('--ask-ssh-login', help='Ask for SSH username', action='store_true')
         parser.add_argument('--ask-ssh-pass', help='Ask for a SSH password', action='store_true')
         parser.add_argument('--ask-ssh-key-path', help='Ask for a SSH private key path', action='store_true')
         parser.add_argument('--ask-sudo-pass', help='Ask for sudo password', action='store_true')

@@ -17,7 +17,12 @@ class DeploymentTaskTest(BaseHarborTestClass):
                                       '--profile': '',
                                       '--debug': False,
                                       '--vault-passwords': '',
-                                      '--ask-vault-pass': False},
+                                      '--ask-vault-pass': False,
+                                      '--ask-ssh-login': False,
+                                      '--ask-ssh-pass': False,
+                                      '--ask-ssh-key-path': False,
+                                      '--ask-sudo-pass': False
+                                      },
                                 env={})
 
         self.assertIn('Deployment not configured. Use `harbor :deployment:files:update` first', out)
@@ -35,7 +40,11 @@ class DeploymentTaskTest(BaseHarborTestClass):
         self.execute_task(update_task,
                           args={
                               '--ask-vault-pass': False,
-                              '--vault-passwords': ''
+                              '--vault-passwords': '',
+                              '--ask-ssh-login': False,
+                              '--ask-ssh-pass': False,
+                              '--ask-ssh-key-path': False,
+                              '--ask-sudo-pass': False
                           },
                           env={})
 
@@ -52,7 +61,12 @@ class DeploymentTaskTest(BaseHarborTestClass):
                                 '--profile': '',
                                 '--debug': False,
                                 '--vault-passwords': '',
-                                '--ask-vault-pass': False},
+                                '--ask-vault-pass': False,
+                                '--ask-ssh-login': False,
+                                '--ask-ssh-pass': False,
+                                '--ask-ssh-key-path': False,
+                                '--ask-sudo-pass': False
+                                },
                           env={})
 
         self.assertIn('ansible-playbook', ansible_call[0][0])
@@ -72,7 +86,11 @@ class DeploymentTaskTest(BaseHarborTestClass):
         self.execute_task(update_task,
                           args={
                               '--ask-vault-pass': False,
-                              '--vault-passwords': ''
+                              '--vault-passwords': '',
+                              '--ask-ssh-login': False,
+                              '--ask-ssh-pass': False,
+                              '--ask-ssh-key-path': False,
+                              '--ask-sudo-pass': False
                           },
                           env={})
 
@@ -101,7 +119,12 @@ class DeploymentTaskTest(BaseHarborTestClass):
                                       '--profile': '',
                                       '--debug': False,
                                       '--vault-passwords': passphrase_file_path,
-                                      '--ask-vault-pass': False},
+                                      '--ask-vault-pass': False,
+                                      '--ask-ssh-login': False,
+                                      '--ask-ssh-pass': False,
+                                      '--ask-ssh-key-path': False,
+                                      '--ask-sudo-pass': False
+                                      },
                                 env={})
 
         self.assertIn('--vault-password-file=', ansible_call[0][0])

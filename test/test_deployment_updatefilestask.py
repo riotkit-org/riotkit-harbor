@@ -25,6 +25,7 @@ class UpdateFilesTaskTest(BaseHarborTestClass):
             out = self.execute_task(task, args={
                 '--ask-vault-pass': False,
                 '--vault-passwords': '',
+                '--ask-ssh-login': False,
                 '--ask-ssh-pass': False,
                 '--ask-ssh-key-path': False,
                 '--ask-sudo-pass': False
