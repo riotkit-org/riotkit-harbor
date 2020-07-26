@@ -20,7 +20,7 @@ class DeploymentTaskTest(BaseHarborTestClass):
                                       '--ask-vault-pass': False},
                                 env={})
 
-        self.assertIn('Deployment not configured. Use `harbor :deployment:role:update` first', out)
+        self.assertIn('Deployment not configured. Use `harbor :deployment:files:update` first', out)
         self.assertIn('TASK_EXIT_RESULT=False', out)
 
     def test_functional_passes_structure_validation_after_using_update_command(self):

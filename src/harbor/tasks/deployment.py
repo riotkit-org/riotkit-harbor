@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 from rkd.contract import ExecutionContext
 from rkd.yaml_parser import YamlFileLoader
 from rkd.exception import MissingInputException
+from rkd.inputoutput import Wizard
 from .base import HarborBaseTask
 from ..formatting import development_formatting
 from ..exception import MissingDeploymentConfigurationError
@@ -97,7 +98,30 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
     def role_is_installed_and_configured(self) -> bool:
         return os.path.isfile(self.ansible_dir + '/.synced')
 
-    def install_and_configure_role(self, force_update: bool = False) -> bool:
+    def _ask_and_set_var(self, ctx: ExecutionContext, arg_name: str, title: str, attribute: str, secret: bool):
+        """Ask user an interactive question, then add answer to the deployment.yml loaded in memory
+
+        The variable will be appended to any node, where the variable is empty.
+        Example: We have 5 servers, 3 without a password. So the password will be applied to 3 servers.
+        """
+
+        self.get_config()
+
+        if not ctx.get_arg(arg_name):
+            return
+
+        for group_name, nodes in self._config['nodes'].items():
+            node_num = 0
+
+            for node in nodes:
+                node_num += 1
+                if attribute in self._config['nodes'][group_name][node_num - 1]:
+                    continue
+
+                wizard = Wizard(self).ask(title, attribute=attribute, secret=secret)
+                self._config['nodes'][group_name][node_num - 1][attribute] = wizard.answers[attribute]
+
+    def install_and_configure_role(self, ctx: ExecutionContext, force_update: bool = False) -> bool:
         """Install an Ansible role from galaxy, and configure playbook, inventory, all the needed things"""
 
         abs_ansible_dir = os.path.realpath(self.ansible_dir)
@@ -106,6 +130,12 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
         self.io().info('Checking role installation...')
         self._silent_mkdir(abs_ansible_dir)
         self._verify_synced_version(abs_ansible_dir)
+
+        # optionally ask user and set facts such as passwords, key paths, sudo passwords
+        # ansible-vault password prompt is handed by ansible-vault itself
+        self._ask_and_set_var(ctx, '--ask-ssh-pass', 'SSH password', 'password', secret=True)
+        self._ask_and_set_var(ctx, '--ask-ssh-key-path', 'SSH private key path', 'private_key', secret=False)
+        self._ask_and_set_var(ctx, '--ask-sudo-pass', 'Sudo password for remote machines', 'sudo_pass', secret=True)
 
         if not self._synchronize_structure_from_template(abs_ansible_dir, only_jinja_templates=True):
             self.io().error_msg('Cannot synchronize templates')
@@ -257,7 +287,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
 
     @classmethod
     def _add_vault_arguments_to_argparse(cls, parser: ArgumentParser):
-        parser.add_argument('--ask-vault-pass', '-v', help='Ask for vault password interactively')
+        parser.add_argument('--ask-vault-pass', '-v', help='Ask for vault password interactively', action='store_true')
         parser.add_argument('--vault-passwords', '-V', help='Vault passwords separated by "||" eg. 123||456')
 
 
@@ -287,7 +317,7 @@ class UpdateFilesTask(BaseDeploymentTask):
         self._preserve_vault_parameters_for_usage_in_inner_tasks(context)
 
         try:
-            return self.install_and_configure_role(force_update=True)
+            return self.install_and_configure_role(context, force_update=True)
 
         except MissingDeploymentConfigurationError as e:
             self.io().error_msg(str(e))
@@ -303,7 +333,7 @@ The deployment task can be extended by environment variables and switches to mak
 such as custom playbook, custom role or a custom inventory. The environment variables from .env are considered.
 
 Example usage:
-    # deploy services matching profile "gateway", use password stored in .vault-apssword for Ansible Vault
+    # deploy services matching profile "gateway", use password stored in .vault-password for Ansible Vault
     harbor :deployment:apply -V .vault-password --profile=gateway
 
     # another example with Vault, multiple passwords, and environment variable usage
@@ -344,6 +374,10 @@ Example usage:
         parser.add_argument('--branch', '-b', help='Git branch to deploy from', default='master')
         parser.add_argument('--profile', help='Harbor profile to filter out services that needs to be deployed',
                             default='')
+        parser.add_argument('--ask-ssh-pass', help='Ask for a SSH password', action='store_true')
+        parser.add_argument('--ask-ssh-key-path', help='Ask for a SSH private key path', action='store_true')
+        parser.add_argument('--ask-sudo-pass', help='Ask for sudo password', action='store_true')
+
         self._add_vault_arguments_to_argparse(parser)
 
     def run(self, context: ExecutionContext) -> bool:
@@ -358,11 +392,11 @@ Example usage:
         self._preserve_vault_parameters_for_usage_in_inner_tasks(context)
 
         if not self.role_is_installed_and_configured():
-            self.io().error_msg('Deployment not configured. Use `harbor :deployment:role:update` first')
+            self.io().error_msg('Deployment not configured. Use `harbor :deployment:files:update` first')
             return False
 
         try:
-            self.install_and_configure_role(force_update=False)
+            self.install_and_configure_role(context, force_update=False)
 
         except MissingDeploymentConfigurationError as e:
             self.io().error_msg(str(e))
