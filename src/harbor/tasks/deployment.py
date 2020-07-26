@@ -50,10 +50,11 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                             tmp_vault_filename = '.tmp-' + str(uuid4())
                             tmp_vault_path = './.rkd/' + tmp_vault_filename
 
+                            self.io().info('Decrypting deployment file')
                             self.sh('cp %s %s' % (filename, tmp_vault_path))
-                            self.rkd([':harbor:vault:encrypt', '-d', tmp_vault_path] + self.vault_args)
 
                             try:
+                                self.rkd([':harbor:vault:encrypt', '-d', tmp_vault_path] + self.vault_args)
                                 self._config = YamlFileLoader(self._ctx.directories).load_from_file(
                                     tmp_vault_filename,
                                     'org.riotkit.harbor/deployment/v1'
@@ -244,7 +245,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
         # keep the vault arguments for decryption of deployment.yml
         self.vault_args = ['--vault-passwords=' + vault_passwords]
         if ctx.get_arg('--ask-vault-pass'):
-            self.vault_args += '--ask-vault-pass'
+            self.vault_args.append('--ask-vault-pass')
 
     def _get_vault_opts(self, ctx: ExecutionContext, chdir: str = '') -> str:
         """Creates options to pass in Ansible Vault commandline"""
