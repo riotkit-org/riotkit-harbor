@@ -1,6 +1,6 @@
 import os
 from harbor.test import BaseHarborTestClass
-from harbor.tasks.deployment import UpdateFilesTask
+from harbor.tasks.deployment.syncfiles import UpdateFilesTask
 
 
 class UpdateFilesTaskTest(BaseHarborTestClass):

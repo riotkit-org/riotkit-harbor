@@ -1,7 +1,7 @@
 import subprocess
 from harbor.test import BaseHarborTestClass
-from harbor.tasks.deployment import DeploymentTask
-from harbor.tasks.deployment import UpdateFilesTask
+from harbor.tasks.deployment.apply import DeploymentTask
+from harbor.tasks.deployment.syncfiles import UpdateFilesTask
 
 
 class DeploymentTaskTest(BaseHarborTestClass):
