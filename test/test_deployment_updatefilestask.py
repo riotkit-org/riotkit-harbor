@@ -22,7 +22,13 @@ class UpdateFilesTaskTest(BaseHarborTestClass):
         task.download_roles = lambda *args, **kwargs: None
 
         with self.subTest('Verify overall task exit code'):
-            out = self.execute_task(task, args={'--ask-vault-pass': False, '--vault-passwords': ''}, env={})
+            out = self.execute_task(task, args={
+                '--ask-vault-pass': False,
+                '--vault-passwords': '',
+                '--ask-ssh-pass': False,
+                '--ask-ssh-key-path': False,
+                '--ask-sudo-pass': False
+            }, env={})
             self.assertIn('TASK_EXIT_RESULT=True', out)
 
         with self.subTest('Verify copied files'):
