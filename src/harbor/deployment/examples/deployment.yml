@@ -28,5 +28,11 @@ nodes:
           user: vagrant
           password: vagrant
 
-          # relative path from ".rkd/deployment" path
+          # relative path from ".rkd/deployment" path or key contents
           private_key: .vagrant/machines/default/virtualbox/private_key
+
+          # example of key pasted directly
+          #private_key: |
+          #    -----BEGIN OPENSSH PRIVATE KEY-----
+          #    (................................)
+          #    -----END OPENSSH PRIVATE KEY-----

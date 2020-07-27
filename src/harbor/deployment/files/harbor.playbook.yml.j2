@@ -15,3 +15,5 @@
 
             production_specific_env:
                 - { line: "DOMAIN_SUFFIX=", regexp: '^DOMAIN_SUFFIX', title: 'env: Remove domain suffix' }
+                - { line: "APP_USER={{ deploy_user }}", regexp: '^APP_USER', title: 'env: User' }
+                - { line: "APP_GROUP_ID=", regexp: '^APP_GROUP_ID', title: 'env: Group' }
