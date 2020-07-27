@@ -127,7 +127,7 @@ Example usage:
         return True
 
     def spawn_ansible(self, command):
-        self.io().info('Spawning Ansible')
+        self.io().info('Spawning Ansible, you may be asked for vault password to decrypt .env-prod')
         return self.sh(command)
 
     def spawn_ssh_agent(self) -> Tuple[str, int]:

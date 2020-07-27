@@ -54,6 +54,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                             self.io().info('Decrypting deployment file')
                             self.sh('cp %s %s' % (filename, tmp_vault_path))
 
+                            self.io().info_msg('Need a vault passphrase to decrypt "%s"' % filename)
                             self.rkd([':harbor:vault:encrypt', '-d', tmp_vault_path] + self.vault_args)
                             self._config = YamlFileLoader(self._ctx.directories).load_from_file(
                                 tmp_vault_filename,
