@@ -44,10 +44,7 @@ NOTICE: When at least one of vault password files does not exist, then there wil
         vault_opts = self._get_vault_opts(context)
         filename = context.get_arg('filename')
 
-        try:
-            subprocess.check_call('ansible-vault edit %s %s' % (vault_opts, filename), shell=True)
-        finally:
-            self._clear_old_vault_temporary_files()
+        subprocess.check_call('ansible-vault edit %s %s' % (vault_opts, filename), shell=True)
 
         return True
 
@@ -81,10 +78,7 @@ See the documentation for :harbor:vault:edit task for general file encryption do
         filename = context.get_arg('filename')
         mode = 'decrypt' if context.get_arg('--decrypt') else 'encrypt'
 
-        try:
-            self.sh('ansible-vault %s %s %s' % (mode, vault_opts, filename), capture=False)
-        finally:
-            self._clear_old_vault_temporary_files()
+        self.sh('ansible-vault %s %s %s' % (mode, vault_opts, filename), capture=False)
 
         return True
 
@@ -126,12 +120,9 @@ required for services to work.
             src = '.env-prod'
             dst = '.env'
 
-        try:
-            self.sh('cp %s %s-tmp' % (src, dst))
-            self.sh('ansible-vault %s %s %s-tmp' % (mode, vault_opts, dst), capture=False)
-            self.sh('mv %s-tmp %s' % (dst, dst))
-        finally:
-            self._clear_old_vault_temporary_files()
+        self.sh('cp %s %s-tmp' % (src, dst))
+        self.sh('ansible-vault %s %s %s-tmp' % (mode, vault_opts, dst), capture=False)
+        self.sh('mv %s-tmp %s' % (dst, dst))
 
         if mode == 'encrypt':
             try:

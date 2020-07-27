@@ -1,6 +1,5 @@
 import os
 import subprocess
-from uuid import uuid4
 from abc import ABC
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
@@ -11,6 +10,7 @@ from rkd.contract import ExecutionContext
 from rkd.yaml_parser import YamlFileLoader
 from rkd.exception import MissingInputException
 from rkd.inputoutput import Wizard
+from rkd.temp import TempManager
 from ..base import HarborBaseTask
 from ...exception import MissingDeploymentConfigurationError
 
@@ -23,7 +23,12 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
     vault_args: list = []
 
     def get_config(self) -> dict:
-        """Loads and parses deployment.yml file. Supports Ansible Vault encryption"""
+        """Loads and parses deployment.yml file.
+
+        Supports:
+            - Ansible Vault encryption of deployment.yml
+            - SSH private key storage inside deployment.yml
+        """
 
         deployment_filenames = ['deployment.yml', 'deployment.yaml']
 
@@ -44,21 +49,18 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                         # When file is encrypted, then decrypt it
                         #
                         if content.startswith('$ANSIBLE_VAULT;'):
-                            tmp_vault_filename = '.tmp-' + str(uuid4())
-                            tmp_vault_path = './.rkd/' + tmp_vault_filename
+                            tmp_vault_path, tmp_vault_filename = TempManager.create_tmp_file_path()
 
                             self.io().info('Decrypting deployment file')
                             self.sh('cp %s %s' % (filename, tmp_vault_path))
 
-                            try:
-                                self.rkd([':harbor:vault:encrypt', '-d', tmp_vault_path] + self.vault_args)
-                                self._config = YamlFileLoader(self._ctx.directories).load_from_file(
-                                    tmp_vault_filename,
-                                    'org.riotkit.harbor/deployment/v1'
-                                )
-                            finally:
-                                self.sh('rm -f %s' % tmp_vault_path)
+                            self.rkd([':harbor:vault:encrypt', '-d', tmp_vault_path] + self.vault_args)
+                            self._config = YamlFileLoader(self._ctx.directories).load_from_file(
+                                tmp_vault_filename,
+                                'org.riotkit.harbor/deployment/v1'
+                            )
 
+                            self._process_config_private_keys()
                             return self._config
 
                     self._config = YamlFileLoader(self._ctx.directories).load_from_file(
@@ -66,11 +68,35 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                         'org.riotkit.harbor/deployment/v1'
                     )
 
+                    self._process_config_private_keys()
                     return self._config
 
             raise MissingDeploymentConfigurationError()
 
         return self._config
+
+    def _process_config_private_keys(self):
+        """Allow private keys to be pasted directly to the deployment.yml
+
+        On-the-fly those keys will be written into the temporary directory
+        """
+
+        for group_name, nodes in self._config['nodes'].items():
+            for node_num in range(0, len(nodes)):
+                if 'private_key' not in self._config['nodes'][group_name][node_num]:
+                    continue
+
+                if '-----BEGIN OPENSSH PRIVATE KEY' not in self._config['nodes'][group_name][node_num]['private_key']:
+                    continue
+
+                tmp_path = TempManager.assign_temporary_file(mode=0o700)
+
+                self.io().info('Storing inline private key as "%s"' % tmp_path)
+                with open(tmp_path, 'w') as key_file:
+                    key_file.write(self._config['nodes'][group_name][node_num]['private_key'].strip())
+                    key_file.write("\n")
+
+                self._config['nodes'][group_name][node_num]['private_key'] = tmp_path
 
     def _verify_synced_version(self, abs_ansible_dir: str):
         """Verifies last synchronization - displays warning if Harbor version was changed after last
@@ -108,6 +134,8 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
         if not ctx.get_arg(arg_name):
             return
 
+        wizard = Wizard(self).ask(title, attribute=attribute, secret=secret)
+
         for group_name, nodes in self._config['nodes'].items():
             node_num = 0
 
@@ -116,7 +144,6 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                 if attribute in self._config['nodes'][group_name][node_num - 1]:
                     continue
 
-                wizard = Wizard(self).ask(title, attribute=attribute, secret=secret)
                 self._config['nodes'][group_name][node_num - 1][attribute] = wizard.answers[attribute]
 
     def install_and_configure_role(self, ctx: ExecutionContext, force_update: bool = False) -> bool:
@@ -245,7 +272,10 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
             self.vault_args.append('--ask-vault-pass')
 
     def _get_vault_opts(self, ctx: ExecutionContext, chdir: str = '') -> str:
-        """Creates options to pass in Ansible Vault commandline"""
+        """Creates options to pass in Ansible Vault commandline
+
+        The output will be a temporary vault file with password entered inline or a --ask-vault-pass switch
+        """
 
         try:
             vault_passwords = ctx.get_arg_or_env('--vault-passwords').split('||')
@@ -269,7 +299,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                     self.io().error('Vault password file "%s" does not exist, calling --ask-vault-pass' % passwd)
                     enforce_ask_pass = True
             else:
-                tmp_vault_file = './.rkd/.tmp-vault-' + str(uuid4())
+                tmp_vault_file = TempManager.assign_temporary_file()
 
                 with open(tmp_vault_file, 'w') as f:
                     f.write(passwd)
@@ -280,9 +310,6 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
             opts += ' --ask-vault-pass '
 
         return opts
-
-    def _clear_old_vault_temporary_files(self):
-        self.sh('rm -f ./.rkd/.tmp-vault*', capture=True)
 
     @classmethod
     def _add_vault_arguments_to_argparse(cls, parser: ArgumentParser):
