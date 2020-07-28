@@ -10,9 +10,11 @@
             compose_env_name: "{{ COMPOSE_PROJECT_NAME }}"
             configure_sudoers: {{ configure_sudoers | default('false') }}
 
+            # will be active, when deploying to *.localhost (inventory)
             test_specific_env:
                 - { line: "DOMAIN_SUFFIX=.localhost", regexp: '^DOMAIN_SUFFIX', title: 'env: Add domain suffix - .localhost' }
 
+            # will be active only on non-localhost hosts in the inventory
             production_specific_env:
                 - { line: "DOMAIN_SUFFIX=", regexp: '^DOMAIN_SUFFIX', title: 'env: Remove domain suffix' }
                 - { line: "APP_USER={{ deploy_user }}", regexp: '^APP_USER', title: 'env: User' }

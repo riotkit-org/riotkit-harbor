@@ -81,7 +81,7 @@ class FetchRepositoryTask(BaseRepositoryTask):
         return ':update'
 
     def run(self, context: ExecutionContext) -> bool:
-        path = self.get_app_repository_path(context.get_arg('--name'), context)
+        path = self.get_app_repository_path(context.get_arg('name'), context)
 
         if not os.path.isfile(path):
             self.io().error_msg('Cannot pull a repository: Unknown application, "%s" file not found' % path)
@@ -179,7 +179,7 @@ class SetPermissionsForWritableDirectoriesTask(BaseRepositoryTask):
         return ':set-permissions'
 
     def run(self, context: ExecutionContext) -> bool:
-        path = self.get_app_repository_path(context.get_arg('--name'), context)
+        path = self.get_app_repository_path(context.get_arg('name'), context)
 
         if not os.path.isfile(path):
             self.io().error_msg('Cannot pull a repository: Unknown application, "%s" file not found' % path)
@@ -248,7 +248,7 @@ class FetchAllRepositories(BaseRepositoryTask):
                 self.io().info('Updating "%s"' % name)
 
                 try:
-                    self.rkd([':harbor:git:apps:update', '--name=%s' % name])
+                    self.rkd([':harbor:git:apps:update', name])
 
                 except CalledProcessError:
                     self.io().err(format_exc())
