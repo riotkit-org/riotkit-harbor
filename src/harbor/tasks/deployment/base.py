@@ -10,7 +10,6 @@ from rkd.contract import ExecutionContext
 from rkd.yaml_parser import YamlFileLoader
 from rkd.exception import MissingInputException
 from rkd.inputoutput import Wizard
-from rkd.temp import TempManager
 from ..base import HarborBaseTask
 from ...exception import MissingDeploymentConfigurationError
 
@@ -49,7 +48,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                         # When file is encrypted, then decrypt it
                         #
                         if content.startswith('$ANSIBLE_VAULT;'):
-                            tmp_vault_path, tmp_vault_filename = TempManager.create_tmp_file_path()
+                            tmp_vault_path, tmp_vault_filename = self.temp.create_tmp_file_path()
 
                             self.io().info('Decrypting deployment file')
                             self.sh('cp %s %s' % (filename, tmp_vault_path))
@@ -90,7 +89,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                 if '-----BEGIN OPENSSH PRIVATE KEY' not in self._config['nodes'][group_name][node_num]['private_key']:
                     continue
 
-                tmp_path = TempManager.assign_temporary_file(mode=0o700)
+                tmp_path = self.temp.assign_temporary_file(mode=0o700)
 
                 self.io().info('Storing inline private key as "%s"' % tmp_path)
                 with open(tmp_path, 'w') as key_file:
@@ -300,7 +299,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                     self.io().error('Vault password file "%s" does not exist, calling --ask-vault-pass' % passwd)
                     enforce_ask_pass = True
             else:
-                tmp_vault_file = TempManager.assign_temporary_file()
+                tmp_vault_file = self.temp.assign_temporary_file()
 
                 with open(tmp_vault_file, 'w') as f:
                     f.write(passwd)
