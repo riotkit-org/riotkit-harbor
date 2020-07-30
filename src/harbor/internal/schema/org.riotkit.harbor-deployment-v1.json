@@ -6,20 +6,25 @@
     "properties": {
         "deploy_user": {
             "type": "string",
-            "minLength": 2
+            "minLength": 2,
+            "description": "The user that will own the files and will be used to execute commands as non-root user. Do not confuse with SSH user - it does not need to be the same."
         },
         "deploy_group": {
             "type": "string",
-            "minLength": 2
+            "minLength": 2,
+            "description": "Name of the group on the remote server. This group will own the files."
         },
         "remote_dir": {
-            "type": "string"
+            "type": "string",
+            "description": "Path on the remote server"
         },
         "configure_sudoers": {
+            "description": "Set true to configure sudoers for SSH-Agent forwarding",
             "type": "boolean"
         },
         "nodes": {
             "type": "object",
+            "description": "Group of nodes",
             "minItems": 1,
             "additionalProperties": {
                 "$ref": "#/definitions/node_group"
@@ -35,22 +40,33 @@
             }
         },
         "node": {
+            "description": "Node (A Linux remote with SSH enabled)",
             "type": "object",
             "required": ["host", "port", "user"],
             "properties": {
                 "host": {
+                    "description": "Remote hostname",
                     "type": "string"
                 },
                 "port": {
-                    "type": "integer"
+                    "description": "Remote port, set 22 for default port",
+                    "type": "integer",
+                    "default": 22
                 },
                 "user": {
+                    "description": "SSH username",
                     "type": "string"
                 },
                 "password": {
+                    "description": "SSH password (if using key-based authentication)",
+                    "type": "string"
+                },
+                "sudo_password": {
+                    "description": "Optional sudo password for the remote user",
                     "type": "string"
                 },
                 "private_key": {
+                    "description": "SSH private-key path. It can be also a private key pasted there (full content) - if using key-based authentication",
                     "type": "string"
                 }
             }
