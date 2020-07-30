@@ -17,14 +17,14 @@ remote_dir: /project
 #git_secret_url: git@github.com:your-org/your-repo.git
 
 # Will make a file in /etc/sudoers.d/ to allow ssh-agent passing into sudo session
-configure_sudoers: yes
+configure_sudoers: true
 
 nodes:
     production:
         # example configuration for testing environment based on Vagrant
         # to run the environment type: harbor :deployment:vagrant -c "up --provision"
         - host: 127.0.0.1
-          port: "2222"
+          port: 2222
           user: vagrant
           password: vagrant
 

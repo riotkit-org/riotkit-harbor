@@ -1,3 +1,59 @@
 {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["deploy_user", "deploy_group", "remote_dir", "nodes"],
 
+    "properties": {
+        "deploy_user": {
+            "type": "string",
+            "minLength": 2
+        },
+        "deploy_group": {
+            "type": "string",
+            "minLength": 2
+        },
+        "remote_dir": {
+            "type": "string"
+        },
+        "configure_sudoers": {
+            "type": "boolean"
+        },
+        "nodes": {
+            "type": "object",
+            "minItems": 1,
+            "additionalProperties": {
+                "$ref": "#/definitions/node_group"
+            }
+        }
+    },
+
+    "definitions": {
+        "node_group": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/node"
+            }
+        },
+        "node": {
+            "type": "object",
+            "required": ["host", "port", "user"],
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "private_key": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }
