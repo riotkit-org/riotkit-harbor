@@ -22,6 +22,14 @@
             "description": "Set true to configure sudoers for SSH-Agent forwarding",
             "type": "boolean"
         },
+        "git_url": {
+            "description": "URL to the remote repository (without passwords if using HTTPS)",
+            "type": "string"
+        },
+        "git_secret_url": {
+            "description": "URL with secrets (if using HTTPS)",
+            "type": "string"
+        },
         "nodes": {
             "type": "object",
             "description": "Group of nodes",
