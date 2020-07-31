@@ -24,6 +24,7 @@ RiotKit Harbor 2
    structure
    basic-commands
    creating-first-service
+   architecture
 
 
 From authors
