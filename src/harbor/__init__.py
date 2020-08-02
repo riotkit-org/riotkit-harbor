@@ -9,6 +9,7 @@ from rkd_cooperative.tasks import CooperativeSyncTask
 from rkd_cooperative.tasks import CooperativeInstallTask
 from rkd_cooperative.tasks import CooperativeSnippetWizardTask
 from rkd_cooperative.tasks import CooperativeSnippetInstallTask
+from rkd import RiotKitDoApplication
 from .tasks.diagnostic import ListContainersTask
 from .tasks.running import StartTask
 from .tasks.running import UpgradeTask
@@ -110,6 +111,8 @@ def env_or_default(env_name: str, default: str):
 
 
 def main():
+    RiotKitDoApplication.load_environment()
+
     os.environ['RKD_PATH'] = os.path.dirname(os.path.realpath(__file__)) + '/internal:' + os.getenv('RKD_PATH', '')
     os.environ['RKD_WHITELIST_GROUPS'] = env_or_default('RKD_WHITELIST_GROUPS', ':env,:harbor,')
     os.environ['RKD_ALIAS_GROUPS'] = env_or_default('RKD_ALIAS_GROUPS', '->:harbor')
