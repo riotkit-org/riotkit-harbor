@@ -1,5 +1,6 @@
 import os
 from rkd.syntax import TaskDeclaration
+from rkd.syntax import TaskAliasDeclaration
 from rkd import main as rkd_main
 from rkd.standardlib.env import GetEnvTask
 from rkd.standardlib.env import SetEnvTask
@@ -102,7 +103,17 @@ def imports():
         TaskDeclaration(GetEnvTask()),
         TaskDeclaration(SetEnvTask()),
         TaskDeclaration(FileRendererTask()),
-        TaskDeclaration(RenderDirectoryTask())
+        TaskDeclaration(RenderDirectoryTask()),
+
+        # templates
+        TaskAliasDeclaration(':harbor:templates:render',
+                             [
+                                 ':j2:directory-to-directory',
+                                 '--source=containers/templates/source',
+                                 '--target=containers/templates/compiled'
+                             ],
+                             description='Render templates stored in containers/templates/source ' +
+                                         'into containers/templates/compiled')
     ]
 
 

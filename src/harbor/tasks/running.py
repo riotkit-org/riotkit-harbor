@@ -132,11 +132,12 @@ class UpgradeTask(BaseProfileSupportingTask):
     """Begin an upgrade procedure
 
     Behavior:
-     1. Pull all images
-     2. Pull all git repositories
-     3. Upgrade services one-by-one
-     4. Restart gateway
-     5. Call SSL to refresh
+     1. Render templates using :harbor:templates:render
+     2. Pull all images
+     3. Pull all git repositories
+     4. Upgrade services one-by-one
+     5. Restart gateway
+     6. Call SSL to refresh
     """
 
     def get_name(self) -> str:
@@ -159,6 +160,7 @@ class UpgradeTask(BaseProfileSupportingTask):
         with self.hooks_executed(context, 'upgrade'):
             self.rkd([
                 '--no-ui',
+                ':harbor:templates:render',
                 ':harbor:pull', '--profile=%s' % profile,
 
                 ':harbor:start', '--profile=%s' % profile, '--strategy=%s' % strategy,
