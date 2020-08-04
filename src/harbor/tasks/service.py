@@ -23,7 +23,7 @@ class BaseHarborServiceTask(HarborBaseTask):
         parser.add_argument('name', help='Service name')
         parser.add_argument('--extra-args', '-c', help='Optional compose arguments', default='')
 
-    def prepare_single_for_single_container(self, ctx: ExecutionContext) -> tuple:
+    def prepare_tuple_for_single_container(self, ctx: ExecutionContext) -> tuple:
         service_name = ctx.get_arg('--name')
         service = self.services(ctx).get_by_name(service_name)
         instance_num = int(ctx.get_arg('--instance-num')) if ctx.get_arg('--instance-num') else None
@@ -260,7 +260,7 @@ class ExecTask(BaseHarborServiceTask):
         tty = bool(ctx.get_arg('--no-tty'))
         interactive = bool(ctx.get_arg('--no-interactive'))
 
-        container_name, service, instance_num = self.prepare_single_for_single_container(ctx)
+        container_name, service, instance_num = self.prepare_tuple_for_single_container(ctx)
 
         if not service:
             return False
@@ -271,6 +271,23 @@ class ExecTask(BaseHarborServiceTask):
         self.containers(ctx).exec_in_container_passthrough(
             command, service, instance_num, shell=shell, tty=tty, interactive=interactive
         )
+
+        return True
+
+
+class GetContainerNameTask(BaseHarborServiceTask):
+    """Returns a full container name - can be used in scripting"""
+
+    def get_name(self) -> str:
+        return ":get-container-name"
+
+    def configure_argparse(self, parser: ArgumentParser):
+        super().configure_argparse(parser)
+        parser.add_argument('--instance-num', '-i', default=None, help='Instance number. If None, then will pick last.')
+
+    def run(self, ctx: ExecutionContext) -> bool:
+        container_name, service, instance_num = self.prepare_tuple_for_single_container(ctx)
+        self.io().out(container_name)
 
         return True
 
@@ -286,7 +303,7 @@ class InspectContainerTask(BaseHarborServiceTask):
         return ':inspect'
 
     def run(self, ctx: ExecutionContext) -> bool:
-        container_name, service, instance_num = self.prepare_single_for_single_container(ctx)
+        container_name, service, instance_num = self.prepare_tuple_for_single_container(ctx)
 
         if not service:
             return False
@@ -372,7 +389,7 @@ class LogsTask(BaseHarborServiceTask):
         return ':logs'
 
     def run(self, ctx: ExecutionContext) -> bool:
-        container_name, service, instance_num = self.prepare_single_for_single_container(ctx)
+        container_name, service, instance_num = self.prepare_tuple_for_single_container(ctx)
         buffered = bool(ctx.get_arg('--buffered'))
 
         if not service:

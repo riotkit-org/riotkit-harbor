@@ -23,6 +23,7 @@ from .tasks.service import AnalyzeServiceTask
 from .tasks.service import InspectContainerTask
 from .tasks.service import ExecTask
 from .tasks.service import ServiceRemoveTask
+from .tasks.service import GetContainerNameTask
 from .tasks.service import ServiceUpTask
 from .tasks.service import ServiceStopTask
 from .tasks.service import WaitForServiceTask
@@ -63,6 +64,7 @@ def imports():
         TaskDeclaration(ServiceStopTask()),
         TaskDeclaration(WaitForServiceTask()),
         TaskDeclaration(ServiceRemoveTask()),
+        TaskDeclaration(GetContainerNameTask()),
         TaskDeclaration(ExecTask()),
         TaskDeclaration(LogsTask()),
         TaskDeclaration(AnalyzeServiceTask()),
