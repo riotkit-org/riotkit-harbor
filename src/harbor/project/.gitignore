@@ -6,8 +6,8 @@
 !/data/*/.gitkeep
 /data/www-data/*
 !/data/www-data/.gitkeep
-/containers/templates/compiled/*
-!/containers/templates/compiled/.gitkeep
+/containers/templates/*
+!/data/templates/.gitkeep
 /.env
 /AUTHORS
 /ChangeLog

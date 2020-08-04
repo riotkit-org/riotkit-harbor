@@ -25,6 +25,7 @@ RiotKit Harbor 2
    basic-commands
    creating-first-service
    architecture
+   profiles
 
 
 From authors
