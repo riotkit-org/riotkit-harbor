@@ -109,8 +109,8 @@ def imports():
         TaskAliasDeclaration(':harbor:templates:render',
                              [
                                  ':j2:directory-to-directory',
-                                 '--source=containers/templates/source',
-                                 '--target=containers/templates/compiled'
+                                 '--source=containers/templates',
+                                 '--target=data/templates'
                              ],
                              description='Render templates stored in containers/templates/source ' +
                                          'into containers/templates/compiled')
