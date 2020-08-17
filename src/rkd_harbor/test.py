@@ -11,7 +11,7 @@ from copy import deepcopy
 from argparse import ArgumentParser
 from rkd.api.contract import ExecutionContext
 from rkd.context import ApplicationContext
-from rkd.executor import OneByOneTaskExecutor
+from rkd.execution.executor import OneByOneTaskExecutor
 from rkd.api.inputoutput import IO
 from rkd.api.inputoutput import BufferedSystemIO
 from rkd.api.syntax import TaskDeclaration
