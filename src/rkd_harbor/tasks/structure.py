@@ -44,9 +44,8 @@ class CreateHarborStructureTask(CreateStructureTask):
 
         return '==' + harbor_version
 
-
-    def print_success_msg(self, ctx: ExecutionContext) -> None:
-        super().print_success_msg(ctx)
+    def print_success_msg(self, use_pipenv: bool, ctx: ExecutionContext) -> None:
+        super().print_success_msg(use_pipenv, ctx)
         self.io().print_line()
         self.io().success_msg("Harbor successfully installed on bootstrapped RKD project, enjoy - " +
                               "RiotKit tech collective.")
