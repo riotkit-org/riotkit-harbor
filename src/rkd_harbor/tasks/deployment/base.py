@@ -299,7 +299,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                     self.io().error('Vault password file "%s" does not exist, calling --ask-vault-pass' % passwd)
                     enforce_ask_pass = True
             else:
-                tmp_vault_file = self.temp.assign_temporary_file()
+                tmp_vault_file = self.temp.assign_temporary_file(mode=0o644)
 
                 with open(tmp_vault_file, 'w') as f:
                     f.write(passwd)

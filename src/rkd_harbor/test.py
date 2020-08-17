@@ -173,12 +173,18 @@ class BaseHarborTestClass(unittest.TestCase):
         r_io = IO()
         str_io = StringIO()
 
+        defined_args = {}
+
+        for arg, arg_value in args.items():
+            defined_args[arg] = {'default': ''}
+
         with r_io.capture_descriptors(enable_standard_out=True, stream=str_io):
             try:
                 result = task.execute(ExecutionContext(
                     TaskDeclaration(task),
                     args=args,
-                    env=merged_env
+                    env=merged_env,
+                    defined_args=defined_args
                 ))
             except Exception:
                 print(ctx.io.get_value() + "\n" + str_io.getvalue())
