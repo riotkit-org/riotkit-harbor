@@ -1,7 +1,7 @@
 import subprocess
 from argparse import ArgumentParser
 from typing import Dict
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from .base import HarborBaseTask
 from ..formatting import prod_formatting
 

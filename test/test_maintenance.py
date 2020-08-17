@@ -1,6 +1,6 @@
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.maintenance import MaintenanceOnTask
-from harbor.tasks.maintenance import MaintenanceOffTask
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.maintenance import MaintenanceOnTask
+from rkd_harbor.tasks.maintenance import MaintenanceOffTask
 
 
 class TestMaintenanceModeFeature(BaseHarborTestClass):

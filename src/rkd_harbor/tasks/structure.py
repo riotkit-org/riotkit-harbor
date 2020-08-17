@@ -1,6 +1,6 @@
 import os
 import pkg_resources
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from rkd.standardlib import CreateStructureTask
 
 HARBOR_PATH = os.path.dirname(os.path.realpath(__file__)) + '/..'

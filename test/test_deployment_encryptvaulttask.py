@@ -1,5 +1,5 @@
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.deployment.vault import EncryptVaultTask
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.deployment.vault import EncryptVaultTask
 
 
 class EncryptVaultTaskTest(BaseHarborTestClass):

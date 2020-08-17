@@ -3,7 +3,7 @@ import os
 from argparse import ArgumentParser
 from abc import abstractmethod
 from tabulate import tabulate
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from .base import HarborBaseTask
 from ..formatting import development_formatting
 

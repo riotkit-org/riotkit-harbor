@@ -1,6 +1,6 @@
-from harbor.test import BaseHarborTestClass
-from harbor.service import ServiceLocator
-from harbor.exception import ServiceNotFoundInYaml
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.service import ServiceLocator
+from rkd_harbor.exception import ServiceNotFoundInYaml
 
 
 class ServiceLocatorTest(BaseHarborTestClass):

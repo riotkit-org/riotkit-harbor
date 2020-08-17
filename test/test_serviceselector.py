@@ -1,7 +1,7 @@
-from harbor.test import BaseHarborTestClass
-from harbor.service import ServiceSelector
-from rkd.inputoutput import BufferedSystemIO
-from rkd.inputoutput import IO
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.service import ServiceSelector
+from rkd.api.inputoutput import BufferedSystemIO
+from rkd.api.inputoutput import IO
 
 
 class ServiceSelectorTest(BaseHarborTestClass):

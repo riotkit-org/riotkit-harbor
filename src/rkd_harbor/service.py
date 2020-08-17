@@ -7,7 +7,7 @@ from typing import List
 from typing import Optional
 from typing import Dict
 from traceback import format_exc
-from rkd.inputoutput import IO
+from rkd.api.inputoutput import IO
 from .expressions import safe_eval
 from .exception import ProfileNotFoundException
 from .exception import ServiceNotFoundInYaml

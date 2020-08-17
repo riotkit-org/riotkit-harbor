@@ -6,10 +6,10 @@ from jinja2 import FileSystemLoader
 from jinja2 import StrictUndefined
 from jinja2.exceptions import UndefinedError
 from argparse import ArgumentParser
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from rkd.yaml_parser import YamlFileLoader
 from rkd.exception import MissingInputException
-from rkd.inputoutput import Wizard
+from rkd.api.inputoutput import Wizard
 from ..base import HarborBaseTask
 from ...exception import MissingDeploymentConfigurationError
 

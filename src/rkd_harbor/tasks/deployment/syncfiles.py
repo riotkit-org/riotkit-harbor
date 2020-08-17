@@ -1,6 +1,6 @@
 from typing import Dict
 from argparse import ArgumentParser
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from ...formatting import development_formatting
 from ...exception import MissingDeploymentConfigurationError
 from .base import BaseDeploymentTask

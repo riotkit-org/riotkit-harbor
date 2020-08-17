@@ -1,6 +1,6 @@
 import os
-from rkd.syntax import TaskDeclaration
-from rkd.syntax import TaskAliasDeclaration
+from rkd.api.syntax import TaskDeclaration
+from rkd.api.syntax import TaskAliasDeclaration
 from rkd import main as rkd_main
 from rkd.standardlib.env import GetEnvTask
 from rkd.standardlib.env import SetEnvTask

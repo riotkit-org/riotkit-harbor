@@ -1,8 +1,8 @@
 import os
 import subprocess
 from tempfile import NamedTemporaryFile
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.gateway import ForceReloadSSLTask
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.gateway import ForceReloadSSLTask
 
 
 class TestForceReloadSSLTask(BaseHarborTestClass):

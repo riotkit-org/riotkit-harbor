@@ -1,5 +1,5 @@
-from harbor.expressions import safe_eval
-from harbor.test import BaseHarborTestClass
+from rkd_harbor.expressions import safe_eval
+from rkd_harbor.test import BaseHarborTestClass
 
 
 class SafeEvalTests(BaseHarborTestClass):

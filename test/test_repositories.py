@@ -1,8 +1,8 @@
 from subprocess import CalledProcessError
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.repositories import FetchRepositoryTask
-from harbor.tasks.repositories import ListRepositoriesTask
-from harbor.tasks.repositories import FetchAllRepositories
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.repositories import FetchRepositoryTask
+from rkd_harbor.tasks.repositories import ListRepositoriesTask
+from rkd_harbor.tasks.repositories import FetchAllRepositories
 
 
 class TestRepositories(BaseHarborTestClass):
@@ -72,6 +72,6 @@ class TestRepositories(BaseHarborTestClass):
         self.assertIn('TASK_EXIT_RESULT=False', out)
 
         self.assertEqual(
-            [[':harbor:git:apps:update', '--name=example'], [':harbor:git:apps:update', '--name=second']],
+            [[':harbor:git:apps:update', 'example'], [':harbor:git:apps:update', 'second']],
             collected_args
         )

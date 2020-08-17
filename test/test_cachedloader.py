@@ -1,6 +1,6 @@
 
-from harbor.cached_loader import CachedLoader
-from harbor.test import BaseHarborTestClass
+from rkd_harbor.cached_loader import CachedLoader
+from rkd_harbor.test import BaseHarborTestClass
 
 
 class CachedLoaderTest(BaseHarborTestClass):

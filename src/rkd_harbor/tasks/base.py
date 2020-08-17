@@ -10,7 +10,7 @@ from abc import abstractmethod
 from typing import Dict
 from typing import List
 from enum import Enum
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from ..service import ProfileLoader
 from ..service import ServiceDeclaration
 from ..service import ServiceLocator

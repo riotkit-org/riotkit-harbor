@@ -1,7 +1,7 @@
 
 from abc import ABC
 
-from rkd.contract import TaskInterface
+from rkd.api.contract import TaskInterface
 
 
 class HarborTaskInterface(TaskInterface, ABC):

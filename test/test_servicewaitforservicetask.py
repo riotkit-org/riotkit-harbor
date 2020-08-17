@@ -1,7 +1,7 @@
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.service import WaitForServiceTask
-from harbor.service import ServiceDeclaration
-from harbor.exception import ServiceNotFoundInYaml
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.service import WaitForServiceTask
+from rkd_harbor.service import ServiceDeclaration
+from rkd_harbor.exception import ServiceNotFoundInYaml
 
 
 class WaitForServiceTaskTest(BaseHarborTestClass):

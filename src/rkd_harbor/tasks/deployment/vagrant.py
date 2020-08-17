@@ -1,6 +1,6 @@
 import subprocess
 from argparse import ArgumentParser
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from ...formatting import development_formatting
 from .base import BaseDeploymentTask
 

@@ -4,7 +4,7 @@ from time import time
 from time import sleep
 from contextlib import contextmanager
 from argparse import ArgumentParser
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from .base import HarborBaseTask
 from .base import UpdateStrategy
 from ..exception import ServiceNotCreatedException

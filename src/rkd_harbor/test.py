@@ -9,13 +9,14 @@ from io import StringIO
 from typing import Dict
 from copy import deepcopy
 from argparse import ArgumentParser
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from rkd.context import ApplicationContext
 from rkd.executor import OneByOneTaskExecutor
-from rkd.inputoutput import IO
-from rkd.inputoutput import BufferedSystemIO
-from rkd.syntax import TaskDeclaration
-from rkd.contract import TaskInterface
+from rkd.api.inputoutput import IO
+from rkd.api.inputoutput import BufferedSystemIO
+from rkd.api.syntax import TaskDeclaration
+from rkd.api.contract import TaskInterface
+from rkd.api.temp import TempManager
 from .tasks.base import HarborBaseTask
 from .service import ServiceDeclaration
 from .driver import ComposeDriver
@@ -54,7 +55,8 @@ def create_mocked_task(io: IO) -> TestTask:
     task.internal_inject_dependencies(
         io=io,
         ctx=ctx,
-        executor=OneByOneTaskExecutor(ctx=ctx)
+        executor=OneByOneTaskExecutor(ctx=ctx),
+        temp_manager=TempManager()
     )
 
     return task
@@ -161,7 +163,8 @@ class BaseHarborTestClass(unittest.TestCase):
         task.internal_inject_dependencies(
             io=ctx.io,
             ctx=ctx,
-            executor=OneByOneTaskExecutor(ctx=ctx)
+            executor=OneByOneTaskExecutor(ctx=ctx),
+            temp_manager=TempManager()
         )
 
         merged_env = deepcopy(os.environ)
@@ -171,11 +174,15 @@ class BaseHarborTestClass(unittest.TestCase):
         str_io = StringIO()
 
         with r_io.capture_descriptors(enable_standard_out=True, stream=str_io):
-            result = task.execute(ExecutionContext(
-                TaskDeclaration(task),
-                args=args,
-                env=merged_env
-            ))
+            try:
+                result = task.execute(ExecutionContext(
+                    TaskDeclaration(task),
+                    args=args,
+                    env=merged_env
+                ))
+            except Exception:
+                print(ctx.io.get_value() + "\n" + str_io.getvalue())
+                raise
 
         return ctx.io.get_value() + "\n" + str_io.getvalue() + "\nTASK_EXIT_RESULT=" + str(result)
 

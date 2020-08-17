@@ -1,12 +1,12 @@
 import os
 import subprocess
 from io import StringIO
-from rkd.inputoutput import BufferedSystemIO
-from rkd.inputoutput import IO
-from rkd.contract import ExecutionContext
-from rkd.syntax import TaskDeclaration
-from harbor.test import BaseHarborTestClass
-from harbor.test import TestTask
+from rkd.api.inputoutput import BufferedSystemIO
+from rkd.api.inputoutput import IO
+from rkd.api.contract import ExecutionContext
+from rkd.api.syntax import TaskDeclaration
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.test import TestTask
 
 
 class TestHooksFeature(BaseHarborTestClass):

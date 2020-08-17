@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from .base import HarborBaseTask
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 
 
 class DumpComposeArguments(HarborBaseTask):

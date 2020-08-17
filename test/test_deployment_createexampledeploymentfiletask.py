@@ -1,6 +1,6 @@
 import os
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.deployment.apply import CreateExampleDeploymentFileTask
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.deployment.apply import CreateExampleDeploymentFileTask
 
 
 class CreateExampleDeploymentFileTaskTest(BaseHarborTestClass):

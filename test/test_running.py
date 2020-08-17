@@ -1,13 +1,13 @@
 from subprocess import CalledProcessError
-from rkd.contract import ExecutionContext
-from rkd.syntax import TaskDeclaration
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.running import UpgradeTask
-from harbor.tasks.running import StopAndRemoveTask
-from harbor.tasks.running import StopTask
-from harbor.tasks.running import StartTask
-from harbor.tasks.running import RestartTask
-from harbor.exception import ProfileNotFoundException
+from rkd.api.contract import ExecutionContext
+from rkd.api.syntax import TaskDeclaration
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.running import UpgradeTask
+from rkd_harbor.tasks.running import StopAndRemoveTask
+from rkd_harbor.tasks.running import StopTask
+from rkd_harbor.tasks.running import StartTask
+from rkd_harbor.tasks.running import RestartTask
+from rkd_harbor.exception import ProfileNotFoundException
 
 
 class TestRunning(BaseHarborTestClass):
@@ -31,7 +31,7 @@ class TestRunning(BaseHarborTestClass):
             recorded_calls[0][0]
         ))
 
-        self.assertEqual([':harbor:pull', ':harbor:start', ':harbor:gateway:reload'], called_tasks_in_order)
+        self.assertEqual([':harbor:templates:render', ':harbor:pull', ':harbor:start', ':harbor:gateway:reload'], called_tasks_in_order)
 
     def test_upgrade_calls_tasks_with_proper_arguments(self):
         """Check if arguments such as --profile and --strategy are passed"""

@@ -1,7 +1,7 @@
 from typing import Dict
 from argparse import ArgumentParser
 from tabulate import tabulate
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from .base import BaseProfileSupportingTask
 from ..service import ServiceDeclaration
 

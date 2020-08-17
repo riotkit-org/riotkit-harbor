@@ -2,7 +2,7 @@ import os
 from typing import List
 from argparse import ArgumentParser
 from abc import abstractmethod
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from .base import HarborBaseTask
 from ..formatting import prod_formatting
 from ..exception import ServiceNotFoundInYamlLookedByCriteria

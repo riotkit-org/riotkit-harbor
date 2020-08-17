@@ -1,6 +1,6 @@
 
-from harbor.test import BaseHarborTestClass
-from harbor.service import ServiceDeclaration
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.service import ServiceDeclaration
 
 
 class ServiceDeclarationTest(BaseHarborTestClass):

@@ -1,6 +1,6 @@
 import subprocess
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.deployment.vault import EnvEncryptTask
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.deployment.vault import EnvEncryptTask
 
 
 class EnvEncryptTaskTest(BaseHarborTestClass):

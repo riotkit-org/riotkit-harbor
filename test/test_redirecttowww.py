@@ -1,4 +1,4 @@
-from harbor.test import BaseHarborTestClass
+from rkd_harbor.test import BaseHarborTestClass
 
 
 class TestRedirectToWWWFeature(BaseHarborTestClass):

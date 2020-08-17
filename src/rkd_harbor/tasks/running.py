@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 from subprocess import CalledProcessError
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from .base import BaseProfileSupportingTask
 from .base import UpdateStrategy
 

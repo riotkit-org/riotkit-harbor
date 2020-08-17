@@ -16,7 +16,7 @@ from typing import Dict
 from typing import List
 from collections import OrderedDict
 from json import loads as json_loads
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from .interface import HarborTaskInterface
 from .service import ServiceDeclaration
 from .exception import ServiceNotReadyException

@@ -5,7 +5,7 @@ from traceback import format_exc
 from subprocess import CalledProcessError
 from typing import Optional
 from argparse import ArgumentParser
-from rkd.contract import ExecutionContext
+from rkd.api.contract import ExecutionContext
 from .base import HarborBaseTask
 from ..formatting import prod_formatting
 

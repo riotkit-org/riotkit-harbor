@@ -1,7 +1,7 @@
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.configsmanagement import EnableConfigTask
-from harbor.tasks.configsmanagement import DisableConfigTask
-from harbor.tasks.configsmanagement import ListConfigsTask
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.configsmanagement import EnableConfigTask
+from rkd_harbor.tasks.configsmanagement import DisableConfigTask
+from rkd_harbor.tasks.configsmanagement import ListConfigsTask
 
 
 class ConfigsManagementTest(BaseHarborTestClass):

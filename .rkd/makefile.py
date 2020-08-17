@@ -1,6 +1,6 @@
 
-from rkd.syntax import TaskAliasDeclaration as Task
-from harbor import imports as HarborImports
+from rkd.api.syntax import TaskAliasDeclaration as Task
+from rkd_harbor import imports as HarborImports
 from rkd_python import imports as PythonImports
 
 IMPORTS = [] + PythonImports() + HarborImports()

@@ -1,7 +1,7 @@
 import os
 import tempfile
-from harbor.test import BaseHarborTestClass
-from harbor.tasks.structure import CreateHarborStructureTask
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.tasks.structure import CreateHarborStructureTask
 
 
 class CreateHarborStructureTaskTest(BaseHarborTestClass):
@@ -24,7 +24,8 @@ class CreateHarborStructureTaskTest(BaseHarborTestClass):
 
                 self.execute_task(task, args={
                     '--commit': False,
-                    '--no-venv': False
+                    '--no-venv': False,
+                    '--pipenv': False
                 })
 
                 self.assertTrue(os.path.isfile(dir_path + '/.env-default'),

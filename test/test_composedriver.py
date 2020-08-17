@@ -2,11 +2,11 @@
 import requests
 from time import time
 from io import StringIO
-from rkd.inputoutput import IO
-from harbor.test import BaseHarborTestClass
-from harbor.service import ServiceDeclaration
-from harbor.exception import ServiceNotCreatedException
-from harbor.exception import ServiceNotReadyException
+from rkd.api.inputoutput import IO
+from rkd_harbor.test import BaseHarborTestClass
+from rkd_harbor.service import ServiceDeclaration
+from rkd_harbor.exception import ServiceNotCreatedException
+from rkd_harbor.exception import ServiceNotReadyException
 
 
 class ComposeDriverTest(BaseHarborTestClass):
