@@ -62,11 +62,7 @@ Example usage:
         parser.add_argument('--branch', '-b', help='Git branch to deploy from', default='master')
         parser.add_argument('--profile', help='Harbor profile to filter out services that needs to be deployed',
                             default='')
-        parser.add_argument('--ask-ssh-login', help='Ask for SSH username', action='store_true')
-        parser.add_argument('--ask-ssh-pass', help='Ask for a SSH password', action='store_true')
-        parser.add_argument('--ask-ssh-key-path', help='Ask for a SSH private key path', action='store_true')
-        parser.add_argument('--ask-sudo-pass', help='Ask for sudo password', action='store_true')
-
+        self._add_ask_pass_arguments_to_argparse(parser)
         self._add_vault_arguments_to_argparse(parser)
 
     def run(self, context: ExecutionContext) -> bool:

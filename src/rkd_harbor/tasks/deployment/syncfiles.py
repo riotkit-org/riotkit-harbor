@@ -26,6 +26,7 @@ class UpdateFilesTask(BaseDeploymentTask):
         return envs
 
     def configure_argparse(self, parser: ArgumentParser):
+        self._add_ask_pass_arguments_to_argparse(parser)
         self._add_vault_arguments_to_argparse(parser)
 
     def run(self, context: ExecutionContext) -> bool:

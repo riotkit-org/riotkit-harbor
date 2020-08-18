@@ -316,3 +316,9 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
         parser.add_argument('--ask-vault-pass', '-v', help='Ask for vault password interactively', action='store_true')
         parser.add_argument('--vault-passwords', '-V', help='Vault passwords separated by "||" eg. 123||456')
 
+    @classmethod
+    def _add_ask_pass_arguments_to_argparse(cls, parser: ArgumentParser):
+        parser.add_argument('--ask-ssh-login', help='Ask for SSH username', action='store_true')
+        parser.add_argument('--ask-ssh-pass', help='Ask for a SSH password', action='store_true')
+        parser.add_argument('--ask-ssh-key-path', help='Ask for a SSH private key path', action='store_true')
+        parser.add_argument('--ask-sudo-pass', help='Ask for sudo password', action='store_true')
