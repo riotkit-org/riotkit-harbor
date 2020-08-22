@@ -39,8 +39,6 @@ RiotKit's Harbor
 
 :code:`docker-compose` based framework for building production-like environments - developing and testing on your local computer, deploying to your server or cluster from shell or from CI.
 
-.. image:: ./docs/demo.gif
-
 Demo: https://asciinema.org/a/348698
 
 Harbor
