@@ -161,6 +161,7 @@ class UpgradeTask(BaseProfileSupportingTask):
             self.rkd([
                 '--no-ui',
                 ':harbor:templates:render',
+                ':harbor:git:apps:update-all',
                 ':harbor:pull', '--profile=%s' % profile,
 
                 ':harbor:start', '--profile=%s' % profile, '--strategy=%s' % strategy,
