@@ -31,7 +31,7 @@ class TestRunning(BaseHarborTestClass):
             recorded_calls[0][0]
         ))
 
-        self.assertEqual([':harbor:templates:render', ':harbor:pull', ':harbor:start', ':harbor:gateway:reload'], called_tasks_in_order)
+        self.assertEqual([':harbor:templates:render', ':harbor:git:apps:update-all', ':harbor:pull', ':harbor:start', ':harbor:gateway:reload'], called_tasks_in_order)
 
     def test_upgrade_calls_tasks_with_proper_arguments(self):
         """Check if arguments such as --profile and --strategy are passed"""
