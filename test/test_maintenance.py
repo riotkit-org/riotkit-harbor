@@ -24,7 +24,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
             self.execute_task(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
             content = self.fetch_page_content('nginx-with-maintenance-mode.local')
 
-            self.assertIn('503: Page maintenance', content)
+            self.assertIn('503: Maintenance', content)
             self.assertIn('HTTP/1.1 503', content)
 
         # 2) maintenance mode off
@@ -32,7 +32,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
             self.execute_task(MaintenanceOffTask(), args={'--global': True, '--domain': '', '--service': ''})
             content = self.fetch_page_content('nginx-with-maintenance-mode.local')
 
-            self.assertNotIn('503: Page maintenance', content)
+            self.assertNotIn('503: Maintenance', content)
             self.assertIn('HTTP/1.1 200', content)
 
     def test_functional_global_maintenance_mode_not_affects_service_that_has_maintenance_off(self):
