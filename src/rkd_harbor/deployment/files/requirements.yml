@@ -1,5 +1,4 @@
 ---
 roles:
-  - name: blackandred.server_docker_project
-    version: master
-    #version: 1.0.1
+    - src: git+https://github.com/RiotKit/ansible-harbor-role.git
+      version: v1.1.0
