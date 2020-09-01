@@ -38,6 +38,7 @@ Project was started as a part of RiotKit initiative, for the needs of grassroot 
 - Fighting for better working conditions syndicalist (International Workers Association for example)
 - Tenants rights organizations
 - Various grassroot organizations that are helping people to organize themselves without authority
+- Grassroot groups fighting for democratic rights
 
 .. rst-class:: language-en align-center
 
