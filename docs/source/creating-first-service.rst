@@ -14,8 +14,8 @@ and standardize the way of environment preparation.
 - Volumes with external git repositories should be in :code:`./apps/www-data/MY-APP-NAME` directory
 - Volumes with dynamic data such as user uploads should be in :code:`./data/MY-APP-NAME` directory
 
-Let's create first service then!
---------------------------------
+Generating a service from template using Cooperative
+----------------------------------------------------
 
 Best way to create a service is to use a generator - to avoid common mistakes.
 
@@ -30,6 +30,30 @@ Demo: https://asciinema.org/a/348867
 The below example will sync coop repositories, then use :code:`harbor/webservice` template to generate docker-compose yaml file,
 that will be placed in :code:`./apps/conf` directory.
 
+Creating a service - the manual way
+-----------------------------------
+
+Create a standard docker-compose format file in :code:`./apps/conf` directory, name it properly eg. :code:`apps.adminer.yml` and put following example contents:
+
+.. code:: yaml
+
+    version: 2.3
+    services:
+        adminer:
+            image: adminer
+            restart: always
+            environment:
+                VIRTUAL_HOST: db.example.localhost
+                VIRTUAL_PORT: "80"
+                LETSENCRYPT_HOST: db.example.localhost
+                LETSENCRYPT_EMAIL: example@example.org
+            labels:
+                org.riotkit.updateStrategy: "rolling"
+
+
+Bringing up created service
+---------------------------
+
 Use :code:`:service:up` task to bring up a recently created service.
 
 .. code:: bash
@@ -39,3 +63,8 @@ Use :code:`:service:up` task to bring up a recently created service.
 
 
 After checking that everything works correctly the service definition + configuration files placed in :code:`./container` directory should be pushed to GIT.
+
+
+Read more about :ref:`creating practical services with volumes, subdomains, credentials and more`
+-------------------------------------------------------------------------------------------------
+

@@ -65,6 +65,8 @@ Harbor provides a simple maintenance mode in 3 ways: global, per-service, per-do
 Diagnosing issues (advanced usage on production)
 ------------------------------------------------
 
+.. code:: bash
+
     # do the docker-compose ps, in case you need
     harbor :diagnostic:compose:ps
 

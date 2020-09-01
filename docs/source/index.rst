@@ -24,8 +24,10 @@ RiotKit Harbor 2
    structure
    basic-commands
    creating-first-service
+   advanced-examples-for-services
    architecture
    profiles
+   ansible-deployment
 
 
 From authors
