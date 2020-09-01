@@ -15,7 +15,7 @@ HARBOR_ROOT = os.path.dirname(os.path.realpath(__file__)) + '/../../deployment/f
 class DeploymentTask(BaseDeploymentTask):
     """Deploys your project from GIT to a PRODUCTION server
 
-All changes needs to be COMMITED and PUSHED to GIT server, the task does not copy local files.
+All changes needs to be COMMITTED and PUSHED to GIT server, the task does not copy local files.
 
 The deployment task can be extended by environment variables and switches to make possible any customizations
 such as custom playbook, custom role or a custom inventory. The environment variables from .env are considered.

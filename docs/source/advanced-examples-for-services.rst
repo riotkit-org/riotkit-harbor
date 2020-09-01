@@ -12,7 +12,7 @@ Connecting domains, subdomains and optionally SSL
 Domains and subdomains are automatically discovered by :ref:`JWilder's Docker-Gen <https://github.com/jwilder/docker-gen>`, when a container is started.
 
 Docker-gen container, later called **"service discovery"** collects environment variables - including **VIRTUAL_HOST** and **VIRTUAL_PORT**
-for each running container, then generates NGINX configuration file and calling reload.
+for each running container, then generates NGINX configuration file and calls reload.
 
 Similar mechanism is practiced by :ref:`docker-letsencrypt-nginx-proxy-companion <https://github.com/nginx-proxy/docker-letsencrypt-nginx-proxy-companion>` to automatically
 connect Let's Encrypt certificate - **LETSENCRYPT_HOST** and **LETSENCRYPT_EMAIL** environment variables are required to do so.
