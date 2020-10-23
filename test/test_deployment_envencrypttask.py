@@ -9,13 +9,13 @@ class EnvEncryptTaskTest(BaseHarborTestClass):
 
         # 1) Encryption
         with self.subTest('Encrypted file ".env-prod" is produced'):
-            self.execute_task(EnvEncryptTask(),
-                              args={
+            self.execute_mocked_task_and_get_output(EnvEncryptTask(),
+                                                    args={
                                   '--ask-vault-pass': False,
                                   '--vault-passwords': 'union',
                                   '--decrypt': False
                               },
-                              env={})
+                                                    env={})
 
             with open(self.get_test_env_subdirectory('') + '/.env-prod', 'rb') as f:
                 self.assertIn('$ANSIBLE_VAULT;', f.read().decode('utf-8'))
@@ -26,13 +26,13 @@ class EnvEncryptTaskTest(BaseHarborTestClass):
 
         # 2) Decryption
         with self.subTest('File ".env" is decrypted back from ".env-prod"'):
-            self.execute_task(EnvEncryptTask(),
-                              args={
+            self.execute_mocked_task_and_get_output(EnvEncryptTask(),
+                                                    args={
                                   '--ask-vault-pass': False,
                                   '--vault-passwords': 'union',
                                   '--decrypt': True
                               },
-                              env={})
+                                                    env={})
 
             with open(self.get_test_env_subdirectory('') + '/.env', 'rb') as f:
                 content = f.read().decode('utf-8')

@@ -13,7 +13,7 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
         drv.up(ServiceDeclaration('alpine_3', {}), capture=True)
         drv.stop('alpine_3', capture=True)
 
-        out = self.execute_task(WaitForServiceTask(), args={
+        out = self.execute_mocked_task_and_get_output(WaitForServiceTask(), args={
             'name': 'alpine_3',
             '--timeout': 1,
             '--instance': 1
@@ -27,7 +27,7 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
         drv = self._get_prepared_compose_driver()
         drv.up(ServiceDeclaration('alpine_3_health_check', {}), capture=True)
 
-        out = self.execute_task(WaitForServiceTask(), args={
+        out = self.execute_mocked_task_and_get_output(WaitForServiceTask(), args={
             'name': 'alpine_3_health_check',
             '--timeout': 0,
             '--instance': 1
@@ -43,7 +43,7 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
         drv.rm(ServiceDeclaration('alpine_3_health_check', {}), capture=True)
         drv.up(ServiceDeclaration('alpine_3_health_check', {}), capture=True)
 
-        out = self.execute_task(WaitForServiceTask(), args={
+        out = self.execute_mocked_task_and_get_output(WaitForServiceTask(), args={
             'name': 'alpine_3_health_check',
             '--timeout': 10,
             '--instance': 1
@@ -55,7 +55,7 @@ class WaitForServiceTaskTest(BaseHarborTestClass):
         """Expects that the container will become health within few seconds,
         even if docker daemon is showing 'starting'"""
 
-        self.assertRaises(ServiceNotFoundInYaml, lambda: self.execute_task(WaitForServiceTask(), args={
+        self.assertRaises(ServiceNotFoundInYaml, lambda: self.execute_mocked_task_and_get_output(WaitForServiceTask(), args={
                                 'name': 'not_existing_service',
                                 '--timeout': 10,
                                 '--instance': 1

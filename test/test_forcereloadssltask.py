@@ -37,7 +37,7 @@ class TestForceReloadSSLTask(BaseHarborTestClass):
 
         try:
             # 2) Test
-            out = self.execute_task(ForceReloadSSLTask(), args={}, env={'DISABLE_SSL': ''})
+            out = self.execute_mocked_task_and_get_output(ForceReloadSSLTask(), args={}, env={'DISABLE_SSL': ''})
             self.assertIn('Renewing certificates...', out)
         finally:
             subprocess.check_call('docker logs env_simple_gateway_letsencrypt_1', shell=True)
@@ -49,5 +49,5 @@ class TestForceReloadSSLTask(BaseHarborTestClass):
         """Checks that SSL container will not be touched, when DISABLE_SSL=true
         """
 
-        out = self.execute_task(ForceReloadSSLTask(), args={}, env={'DISABLE_SSL': 'true'})
+        out = self.execute_mocked_task_and_get_output(ForceReloadSSLTask(), args={}, env={'DISABLE_SSL': 'true'})
         self.assertIn('not regenerating anything', out)

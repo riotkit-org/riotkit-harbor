@@ -19,7 +19,7 @@ class ServiceRemoveTaskTest(BaseHarborTestClass):
         drv.up(service, capture=True)
         drv.scale_one_up(service)
 
-        out = self.execute_task(ServiceRemoveTask(), args={
+        out = self.execute_mocked_task_and_get_output(ServiceRemoveTask(), args={
             'name': 'website',
             '--with-image': False,
             '--extra-args': ''
@@ -40,7 +40,7 @@ class ServiceRemoveTaskTest(BaseHarborTestClass):
         drv = self._get_prepared_compose_driver()
         drv.up(service, capture=True)
 
-        self.execute_task(ServiceRemoveTask(), args={
+        self.execute_mocked_task_and_get_output(ServiceRemoveTask(), args={
             'name': 'alpine_3',
             '--with-image': True,
             '--extra-args': ''

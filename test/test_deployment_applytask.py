@@ -9,8 +9,8 @@ class DeploymentTaskTest(BaseHarborTestClass):
         """Verify that :deployment:apply requires :deployment:files:update to be called first
         """
 
-        out = self.execute_task(DeploymentTask(),
-                                args={'--playbook': 'harbor.playbook.yml',
+        out = self.execute_mocked_task_and_get_output(DeploymentTask(),
+                                                      args={'--playbook': 'harbor.playbook.yml',
                                       '--inventory': 'harbor.inventory.yml',
                                       '--git-key': '',
                                       '--branch': 'master',
@@ -23,7 +23,7 @@ class DeploymentTaskTest(BaseHarborTestClass):
                                       '--ask-ssh-key-path': False,
                                       '--ask-sudo-pass': False
                                       },
-                                env={})
+                                                      env={})
 
         self.assertIn('Deployment not configured. Use `harbor :deployment:files:update` first', out)
         self.assertIn('TASK_EXIT_RESULT=False', out)
@@ -37,8 +37,8 @@ class DeploymentTaskTest(BaseHarborTestClass):
         self.prepare_valid_deployment_yml()
         update_task = UpdateFilesTask()
         update_task.download_roles = lambda *args, **kwargs: None
-        self.execute_task(update_task,
-                          args={
+        self.execute_mocked_task_and_get_output(update_task,
+                                                args={
                               '--ask-vault-pass': False,
                               '--vault-passwords': '',
                               '--ask-ssh-login': False,
@@ -46,15 +46,15 @@ class DeploymentTaskTest(BaseHarborTestClass):
                               '--ask-ssh-key-path': False,
                               '--ask-sudo-pass': False
                           },
-                          env={})
+                                                env={})
 
         ansible_call = []
 
         deployment_task = DeploymentTask()
         deployment_task.spawn_ansible = lambda *args, **kwargs: ansible_call.append(args)
 
-        self.execute_task(deployment_task,
-                          args={'--playbook': 'harbor.playbook.yml',
+        self.execute_mocked_task_and_get_output(deployment_task,
+                                                args={'--playbook': 'harbor.playbook.yml',
                                 '--inventory': 'harbor.inventory.yml',
                                 '--git-key': '',
                                 '--branch': 'master',
@@ -67,7 +67,7 @@ class DeploymentTaskTest(BaseHarborTestClass):
                                 '--ask-ssh-key-path': False,
                                 '--ask-sudo-pass': False
                                 },
-                          env={})
+                                                env={})
 
         self.assertIn('ansible-playbook', ansible_call[0][0])
         self.assertIn('./harbor.playbook.yml', ansible_call[0][0])
@@ -83,8 +83,8 @@ class DeploymentTaskTest(BaseHarborTestClass):
         self.prepare_valid_deployment_yml()
         update_task = UpdateFilesTask()
         update_task.download_roles = lambda *args, **kwargs: None
-        self.execute_task(update_task,
-                          args={
+        self.execute_mocked_task_and_get_output(update_task,
+                                                args={
                               '--ask-vault-pass': False,
                               '--vault-passwords': '',
                               '--ask-ssh-login': False,
@@ -92,7 +92,7 @@ class DeploymentTaskTest(BaseHarborTestClass):
                               '--ask-ssh-key-path': False,
                               '--ask-sudo-pass': False
                           },
-                          env={})
+                                                env={})
 
         ansible_call = []
         passphrase_file_path = self.get_test_env_subdirectory('.rkd') + '/tmp-secret.txt'
@@ -111,8 +111,8 @@ class DeploymentTaskTest(BaseHarborTestClass):
         deployment_task = DeploymentTask()
         deployment_task.spawn_ansible = lambda *args, **kwargs: ansible_call.append(args)
 
-        out = self.execute_task(deployment_task,
-                                args={'--playbook': 'harbor.playbook.yml',
+        out = self.execute_mocked_task_and_get_output(deployment_task,
+                                                      args={'--playbook': 'harbor.playbook.yml',
                                       '--inventory': 'harbor.inventory.yml',
                                       '--git-key': '',
                                       '--branch': 'master',
@@ -125,7 +125,7 @@ class DeploymentTaskTest(BaseHarborTestClass):
                                       '--ask-ssh-key-path': False,
                                       '--ask-sudo-pass': False
                                       },
-                                env={})
+                                                      env={})
 
         self.assertIn('--vault-password-file=', ansible_call[0][0])
         self.assertIn('.rkd/tmp-secret.txt', ansible_call[0][0])

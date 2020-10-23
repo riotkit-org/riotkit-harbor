@@ -12,7 +12,7 @@ class ServiceStopTaskTest(BaseHarborTestClass):
         drv.up(service, capture=True)
 
         # assert it will not raise an error
-        self.execute_task(ExecTask(), args={
+        self.execute_mocked_task_and_get_output(ExecTask(), args={
             'name': 'alpine_3',
             '--extra-args': '',
             '--command': 'exit 0',

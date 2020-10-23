@@ -11,7 +11,7 @@ class ServiceStopTaskTest(BaseHarborTestClass):
         drv = self._get_prepared_compose_driver()
         drv.up(service, capture=True)
 
-        self.execute_task(ServiceStopTask(), args={
+        self.execute_mocked_task_and_get_output(ServiceStopTask(), args={
             'name': 'alpine_3',
             '--extra-args': ''
         })

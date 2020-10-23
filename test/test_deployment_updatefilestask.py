@@ -8,7 +8,7 @@ class UpdateFilesTaskTest(BaseHarborTestClass):
         """Test that deployment.yml/deployment.yaml needs to be created first and the message for the end user is clear
         """
 
-        out = self.execute_task(UpdateFilesTask(), args={'--ask-vault-pass': False, '--vault-passwords': ''}, env={})
+        out = self.execute_mocked_task_and_get_output(UpdateFilesTask(), args={'--ask-vault-pass': False, '--vault-passwords': ''}, env={})
         self.assertIn('Deployment not configured - missing deployment.yml or deployment.yaml file', out)
 
     def test_functional_structure_is_copied(self):
@@ -22,7 +22,7 @@ class UpdateFilesTaskTest(BaseHarborTestClass):
         task.download_roles = lambda *args, **kwargs: None
 
         with self.subTest('Verify overall task exit code'):
-            out = self.execute_task(task, args={
+            out = self.execute_mocked_task_and_get_output(task, args={
                 '--ask-vault-pass': False,
                 '--vault-passwords': '',
                 '--ask-ssh-login': False,

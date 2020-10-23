@@ -1,6 +1,5 @@
 
 from abc import ABC
-
 from rkd.api.contract import TaskInterface
 
 

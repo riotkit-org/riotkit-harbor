@@ -20,7 +20,7 @@ class TestRunning(BaseHarborTestClass):
         recorded_calls = []
         task.rkd = lambda *args, **kwags: recorded_calls.append(args)
 
-        self.execute_task(task, args={
+        self.execute_mocked_task_and_get_output(task, args={
             '--profile': 'profile1',
             '--strategy': 'recreate',
             '--remove-previous-images': False
@@ -40,7 +40,7 @@ class TestRunning(BaseHarborTestClass):
         recorded_calls = []
         task.rkd = lambda *args, **kwags: recorded_calls.append(args)
 
-        self.execute_task(task, args={
+        self.execute_mocked_task_and_get_output(task, args={
             '--profile': 'profile1',
             '--strategy': 'recreate',
             '--remove-previous-images': False
@@ -56,7 +56,7 @@ class TestRunning(BaseHarborTestClass):
         recorded_calls = []
         task.rkd = lambda *args, **kwags: recorded_calls.append(args)
 
-        self.assertRaises(ProfileNotFoundException, lambda: self.execute_task(task, args={
+        self.assertRaises(ProfileNotFoundException, lambda: self.execute_mocked_task_and_get_output(task, args={
             '--profile': 'non-existing',
             '--strategy': 'recreate',
         }))
@@ -66,7 +66,7 @@ class TestRunning(BaseHarborTestClass):
         recorded_calls = []
         task.rkd = lambda *args, **kwags: recorded_calls.append(args)
 
-        self.execute_task(task, args={
+        self.execute_mocked_task_and_get_output(task, args={
             '--profile': 'profile1',
             '--with-image': False
         })
@@ -87,7 +87,7 @@ class TestRunning(BaseHarborTestClass):
         )
         task.containers(ctx).restart = lambda service_name, args = '': restarted_services.append(service_name)
 
-        self.execute_task(task, args={
+        self.execute_mocked_task_and_get_output(task, args={
             '--profile': 'profile1',
             '--with-image': False
         })
@@ -107,7 +107,7 @@ class TestRunning(BaseHarborTestClass):
         )
         task.containers(ctx).stop = lambda service_name, args='', capture = False: recorded_calls.append(service_name)
 
-        self.execute_task(task, args={
+        self.execute_mocked_task_and_get_output(task, args={
             '--profile': ''
         })
 
@@ -122,7 +122,7 @@ class TestRunning(BaseHarborTestClass):
         recorded_calls = []
         task.rkd = lambda *args, **kwags: recorded_calls.append(args)
 
-        self.execute_task(task, args={
+        self.execute_mocked_task_and_get_output(task, args={
             '--profile': 'profile1',
             '--strategy': 'rolling',
             '--remove-previous-images': False
@@ -152,7 +152,7 @@ class TestRunning(BaseHarborTestClass):
 
         task.rkd = rkd_mock
 
-        out = self.execute_task(task, args={
+        out = self.execute_mocked_task_and_get_output(task, args={
             '--profile': 'profile1',
             '--strategy': 'rolling',
             '--remove-previous-images': False

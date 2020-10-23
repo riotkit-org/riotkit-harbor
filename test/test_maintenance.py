@@ -21,7 +21,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
 
         # 1) maintenance on
         with self.subTest('Maintenance mode on'):
-            self.execute_task(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
+            self.execute_mocked_task_and_get_output(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
             content = self.fetch_page_content('nginx-with-maintenance-mode.local')
 
             self.assertIn('503: Maintenance', content)
@@ -29,7 +29,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
 
         # 2) maintenance mode off
         with self.subTest('Maintenance mode off'):
-            self.execute_task(MaintenanceOffTask(), args={'--global': True, '--domain': '', '--service': ''})
+            self.execute_mocked_task_and_get_output(MaintenanceOffTask(), args={'--global': True, '--domain': '', '--service': ''})
             content = self.fetch_page_content('nginx-with-maintenance-mode.local')
 
             self.assertNotIn('503: Maintenance', content)
@@ -44,7 +44,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
         self.prepare_example_service('website', uses_service_discovery=True)
 
         # 1) maintenance on, then check - should not be under maintenance as service has maintenance off in definition
-        self.execute_task(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
+        self.execute_mocked_task_and_get_output(MaintenanceOnTask(), args={'--global': True, '--domain': '', '--service': ''})
 
         self.assertIn('HTTP/1.1 200', self.fetch_page_content('nginx.local'))
 
@@ -58,7 +58,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
 
         # 1) maintenance on
         with self.subTest('Turning maintenance on'):
-            self.execute_task(MaintenanceOnTask(), args={
+            self.execute_mocked_task_and_get_output(MaintenanceOnTask(), args={
                 '--global': False, '--domain': '', '--service': 'website_with_multiple_domains'
             })
 
@@ -68,7 +68,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
 
         # 2) maintenance off
         with self.subTest('Turning off the maintenance'):
-            self.execute_task(MaintenanceOffTask(), args={
+            self.execute_mocked_task_and_get_output(MaintenanceOffTask(), args={
                 '--global': False, '--domain': '', '--service': 'website_with_multiple_domains'
             })
 
@@ -85,7 +85,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
         self.prepare_example_service('website_with_multiple_domains', uses_service_discovery=True)
 
         # 1) maintenance on
-        self.execute_task(MaintenanceOnTask(), args={
+        self.execute_mocked_task_and_get_output(MaintenanceOnTask(), args={
             '--global': False, '--domain': 'web1.local', '--service': ''
         })
 
@@ -99,7 +99,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
         self.prepare_service_discovery(drv)
         self.prepare_example_service('website_with_multiple_domains', uses_service_discovery=True)
 
-        out = self.execute_task(MaintenanceOnTask(), args={
+        out = self.execute_mocked_task_and_get_output(MaintenanceOnTask(), args={
             '--global': False, '--domain': 'invalid_domain.local', '--service': ''
         })
 
@@ -112,7 +112,7 @@ class TestMaintenanceModeFeature(BaseHarborTestClass):
         self.prepare_service_discovery(drv)
         self.prepare_example_service('website_with_multiple_domains', uses_service_discovery=True)
 
-        out = self.execute_task(MaintenanceOnTask(), args={
+        out = self.execute_mocked_task_and_get_output(MaintenanceOnTask(), args={
             '--global': False, '--domain': '', '--service': 'non_existing_service'
         })
 

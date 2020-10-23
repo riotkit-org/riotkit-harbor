@@ -11,7 +11,7 @@ class LogsTaskTest(BaseHarborTestClass):
         drv = self._get_prepared_compose_driver()
         drv.up(service, capture=True)
 
-        out = self.execute_task(LogsTask(), args={
+        out = self.execute_mocked_task_and_get_output(LogsTask(), args={
             'name': 'alpine_3',
             '--instance-num': 1,
             '--follow': False,

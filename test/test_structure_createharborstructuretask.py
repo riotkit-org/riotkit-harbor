@@ -27,7 +27,7 @@ class CreateHarborStructureTaskTest(BaseHarborTestClass):
                 # as it is very problematic in development environment where things are "under construction"
                 task.on_requirements_txt_write = lambda ctx: None
 
-                self.execute_task(task, args={
+                self.execute_mocked_task_and_get_output(task, args={
                     '--commit': False,
                     '--no-venv': False,
                     '--pipenv': False

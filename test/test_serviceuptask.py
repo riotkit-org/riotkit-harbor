@@ -12,7 +12,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
         drv.stop('website', capture=True)
 
         for i in range(1, 2):
-            out = self.execute_task(ServiceUpTask(), args={
+            out = self.execute_mocked_task_and_get_output(ServiceUpTask(), args={
                 'name': 'website',
                 '--strategy': 'recreate',
                 '--remove-previous-images': False,
@@ -31,7 +31,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
         # start gateway (it needs to be later checked if it is stopped an then started)
         drv.up(ServiceDeclaration('gateway_proxy_gen', {}), capture=True)
 
-        out = self.execute_task(ServiceUpTask(), args={
+        out = self.execute_mocked_task_and_get_output(ServiceUpTask(), args={
             'name': 'website',
             '--strategy': 'rolling',
             '--remove-previous-images': False,
@@ -57,7 +57,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
         drv.rm(ServiceDeclaration('website', {}), capture=True)
         drv.up(ServiceDeclaration('website', {}), capture=True)
 
-        out = self.execute_task(ServiceUpTask(), args={
+        out = self.execute_mocked_task_and_get_output(ServiceUpTask(), args={
             'name': 'website',
             '--strategy': 'compose',
             '--remove-previous-images': False,
@@ -73,7 +73,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
         drv = self._get_prepared_compose_driver()
         drv.rm(ServiceDeclaration('website', {}), capture=True)
 
-        out = self.execute_task(ServiceUpTask(), args={
+        out = self.execute_mocked_task_and_get_output(ServiceUpTask(), args={
             'name': 'website',
             '--strategy': 'auto',
             '--remove-previous-images': False,
@@ -89,7 +89,7 @@ class ServiceUpTaskTest(BaseHarborTestClass):
         drv = self._get_prepared_compose_driver()
         drv.rm(ServiceDeclaration('website', {}), capture=True)
 
-        out = self.execute_task(ServiceUpTask(), args={
+        out = self.execute_mocked_task_and_get_output(ServiceUpTask(), args={
             'name': 'website',
             '--strategy': 'invalid-strategy-name',
             '--remove-previous-images': False,

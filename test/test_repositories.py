@@ -13,7 +13,7 @@ class TestRepositories(BaseHarborTestClass):
         """
 
         with self.subTest('Test clone'):
-            out = self.execute_task(FetchRepositoryTask(), args={'name': 'example'})
+            out = self.execute_mocked_task_and_get_output(FetchRepositoryTask(), args={'name': 'example'})
             self.assertIn('Cloning into', out)
             self.assertIn('TASK_EXIT_RESULT=True', out)
 
@@ -22,7 +22,7 @@ class TestRepositories(BaseHarborTestClass):
             self.assertIn("I'm a post_update hook", out)
 
         with self.subTest('Test checkout'):
-            out = self.execute_task(FetchRepositoryTask(), args={'name': 'example'})
+            out = self.execute_mocked_task_and_get_output(FetchRepositoryTask(), args={'name': 'example'})
             self.assertIn('Already up to date', out)
             self.assertIn('TASK_EXIT_RESULT=True', out)
 
@@ -34,7 +34,7 @@ class TestRepositories(BaseHarborTestClass):
         """Check that application name is validated, and a tip is displayed with an expected path to the configuration
         file"""
 
-        out = self.execute_task(FetchRepositoryTask(), args={'name': 'not_working'})
+        out = self.execute_mocked_task_and_get_output(FetchRepositoryTask(), args={'name': 'not_working'})
 
         self.assertIn('Cannot pull a repository: Unknown application', out)
         self.assertIn('repos-enabled/not_working.sh" file not found', out)
@@ -42,7 +42,7 @@ class TestRepositories(BaseHarborTestClass):
     def test_repository_listing_shows_example_application_repository(self):
         """Assert that example data appears"""
 
-        out = self.execute_task(ListRepositoriesTask(), args={})
+        out = self.execute_mocked_task_and_get_output(ListRepositoriesTask(), args={})
 
         self.assertIn('Configured GIT repository', out)
         self.assertIn('example', out)
@@ -63,7 +63,7 @@ class TestRepositories(BaseHarborTestClass):
             collected_args.append(list(args)[0])
 
         task.rkd = mocked_rkd
-        out = self.execute_task(task, args={})
+        out = self.execute_mocked_task_and_get_output(task, args={})
 
         # check logging
         self.assertIn('Updating "example"', out)

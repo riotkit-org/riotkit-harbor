@@ -1,22 +1,15 @@
 import os
-import sys
-import unittest
 import subprocess
 import time
 import yaml
 from dotenv import dotenv_values
-from io import StringIO
 from typing import Dict
 from copy import deepcopy
 from argparse import ArgumentParser
 from rkd.api.contract import ExecutionContext
-from rkd.context import ApplicationContext
-from rkd.execution.executor import OneByOneTaskExecutor
-from rkd.api.inputoutput import IO
 from rkd.api.inputoutput import BufferedSystemIO
 from rkd.api.syntax import TaskDeclaration
-from rkd.api.contract import TaskInterface
-from rkd.api.temp import TempManager
+from rkd.api.testing import FunctionalTestingCase
 from .tasks.base import HarborBaseTask
 from .service import ServiceDeclaration
 from .driver import ComposeDriver
@@ -47,26 +40,10 @@ class TestTask(HarborBaseTask):
         pass
 
 
-def create_mocked_task(io: IO) -> TestTask:
-    task = TestTask()
-    ctx = ApplicationContext([], [], '')
-    ctx.io = io
-
-    task.internal_inject_dependencies(
-        io=io,
-        ctx=ctx,
-        executor=OneByOneTaskExecutor(ctx=ctx),
-        temp_manager=TempManager()
-    )
-
-    return task
-
-
-class BaseHarborTestClass(unittest.TestCase):
-    _stderr_bckp = None
-    _stdout_bckp = None
-
+class BaseHarborTestClass(FunctionalTestingCase):
     def setUp(self) -> None:
+        super().setUp()
+
         print('')
         print('==================================================================================================' +
               '=====================================')
@@ -80,14 +57,6 @@ class BaseHarborTestClass(unittest.TestCase):
         self.recreate_structure()
         self.setup_environment()
         self.remove_all_containers()
-        self._stderr_bckp = sys.stderr
-        self._stdout_bckp = sys.stdout
-
-    def tearDown(self) -> None:
-        if sys.stderr != self._stderr_bckp or sys.stdout != self._stdout_bckp:
-            print('!!! Test ' + self.id() + ' is not cleaning up stdout/stderr')
-
-        self._restore_streams()
 
     @classmethod
     def mock_compose(cls, content: dict):
@@ -95,10 +64,6 @@ class BaseHarborTestClass(unittest.TestCase):
 
         with open(CURRENT_TEST_ENV_PATH + '/apps/conf/mocked.yaml', 'wb') as f:
             f.write(yaml.dump(content).encode('utf-8'))
-
-    def _restore_streams(self):
-        sys.stderr = self._stderr_bckp
-        sys.stdout = self._stdout_bckp
 
     @classmethod
     def recreate_structure(cls):
@@ -150,47 +115,11 @@ class BaseHarborTestClass(unittest.TestCase):
         merged_env = deepcopy(os.environ)
         merged_env.update(env)
 
-        task = create_mocked_task(BufferedSystemIO())
+        task = self.satisfy_task_dependencies(TestTask(), BufferedSystemIO())
         declaration = TaskDeclaration(task)
         ctx = ExecutionContext(declaration, args=args, env=merged_env)
 
         return ComposeDriver(task, ctx, TEST_PROJECT_NAME)
-
-    def execute_task(self, task: TaskInterface, args: dict = {}, env: dict = {}) -> str:
-        ctx = ApplicationContext([], [], '')
-        ctx.io = BufferedSystemIO()
-
-        task.internal_inject_dependencies(
-            io=ctx.io,
-            ctx=ctx,
-            executor=OneByOneTaskExecutor(ctx=ctx),
-            temp_manager=TempManager()
-        )
-
-        merged_env = deepcopy(os.environ)
-        merged_env.update(env)
-
-        r_io = IO()
-        str_io = StringIO()
-
-        defined_args = {}
-
-        for arg, arg_value in args.items():
-            defined_args[arg] = {'default': ''}
-
-        with r_io.capture_descriptors(enable_standard_out=True, stream=str_io):
-            try:
-                result = task.execute(ExecutionContext(
-                    TaskDeclaration(task),
-                    args=args,
-                    env=merged_env,
-                    defined_args=defined_args
-                ))
-            except Exception:
-                print(ctx.io.get_value() + "\n" + str_io.getvalue())
-                raise
-
-        return ctx.io.get_value() + "\n" + str_io.getvalue() + "\nTASK_EXIT_RESULT=" + str(result)
 
     @staticmethod
     def prepare_service_discovery(driver: ComposeDriver):
@@ -208,7 +137,7 @@ class BaseHarborTestClass(unittest.TestCase):
         if uses_service_discovery:
             # give service discovery some time
             # @todo: This can be improved possibly
-            time.sleep(5)
+            time.sleep(10)
 
         return drv
 

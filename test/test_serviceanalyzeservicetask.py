@@ -12,7 +12,7 @@ class AnalyzeServiceTaskTest(BaseHarborTestClass):
         drv.up(service, capture=True)
 
         # assert it will not raise an error
-        out = self.execute_task(AnalyzeServiceTask(), args={'name': 'alpine_3'})
+        out = self.execute_mocked_task_and_get_output(AnalyzeServiceTask(), args={'name': 'alpine_3'})
 
         self.assertIn('Declared image:    alpine:3.11', out)
         self.assertIn('Update strategy:   compose', out)
@@ -23,5 +23,5 @@ class AnalyzeServiceTaskTest(BaseHarborTestClass):
     def test_shows_service_not_found_when_service_name_is_invalid(self):
         self.assertRaises(
             ServiceNotFoundInYaml,
-            lambda: self.execute_task(AnalyzeServiceTask(), args={'name': 'invalid_name'})
+            lambda: self.execute_mocked_task_and_get_output(AnalyzeServiceTask(), args={'name': 'invalid_name'})
         )
