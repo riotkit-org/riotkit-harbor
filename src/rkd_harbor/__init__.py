@@ -29,6 +29,7 @@ from .tasks.service import ServiceStopTask
 from .tasks.service import WaitForServiceTask
 from .tasks.listing import ListDefinedServices
 from .tasks.deployment.apply import DeploymentTask
+from .tasks.deployment.ssh import SSHTask
 from .tasks.deployment.syncfiles import UpdateFilesTask
 from .tasks.deployment.apply import CreateExampleDeploymentFileTask
 from .tasks.deployment.vagrant import ManageVagrantTask
@@ -84,6 +85,7 @@ def imports():
         TaskDeclaration(MaintenanceOnTask()),
         TaskDeclaration(MaintenanceOffTask()),
         TaskDeclaration(DeploymentTask()),
+        TaskDeclaration(SSHTask()),
         TaskDeclaration(UpdateFilesTask()),
         TaskDeclaration(CreateExampleDeploymentFileTask()),
         TaskDeclaration(ManageVagrantTask()),
