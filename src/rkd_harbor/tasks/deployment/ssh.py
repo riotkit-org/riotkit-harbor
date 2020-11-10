@@ -1,4 +1,5 @@
 from typing import Dict
+from typing import Optional
 from argparse import ArgumentParser
 from rkd.api.contract import ExecutionContext
 from ...formatting import development_formatting
@@ -41,8 +42,9 @@ class SSHTask(BaseDeploymentTask):
 
         try:
             config = self.get_config()
+            node = self._get_node(node_group, node_num, config)
 
-            if not self._validate(node_group, node_num, config):
+            if not node:
                 return False
 
             if should_print_password:
@@ -54,16 +56,16 @@ class SSHTask(BaseDeploymentTask):
             self.io().error_msg(str(e))
             return False
 
-    def _validate(self, node_group: str, node_num: int, config: dict):
+    def _get_node(self, node_group: str, node_num: int, config: dict) -> Optional[dict]:
         if node_group not in config['nodes'].keys():
             self.io().error_msg('Node group "{}" not found'.format(node_group))
-            return False
+            return None
 
         try:
-            node = config['nodes'][node_group][node_num]
+            return config['nodes'][node_group][node_num]
         except KeyError:
             self.io().error_msg('Node group "{}" does not have node of number #{}'.format(node_group, node_num))
-            return False
+            return None
 
     def _print_password(self, node: dict):
         if 'sudo_password' in node:
