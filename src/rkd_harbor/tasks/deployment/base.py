@@ -86,7 +86,7 @@ class BaseDeploymentTask(HarborBaseTask, ABC):
                 if 'private_key' not in self._config['nodes'][group_name][node_num]:
                     continue
 
-                if '-----BEGIN OPENSSH PRIVATE KEY' not in self._config['nodes'][group_name][node_num]['private_key']:
+                if '-----BEGIN' not in self._config['nodes'][group_name][node_num]['private_key']:
                     continue
 
                 tmp_path = self.temp.assign_temporary_file(mode=0o700)
