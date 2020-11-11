@@ -43,7 +43,7 @@ class SSHTaskTest(BaseHarborTestClass):
             '--ask-ssh-key-path': False,
             '--ask-sudo-pass': False,
             '--group': 'production',
-            '--num': '0',
+            '--num': '1',
             '--print-password': False
         })
 
@@ -64,7 +64,7 @@ class SSHTaskTest(BaseHarborTestClass):
             '--ask-ssh-key-path': False,
             '--ask-sudo-pass': False,
             '--group': 'production',
-            '--num': '0',
+            '--num': '1',
             '--print-password': False
         })
 
@@ -88,7 +88,7 @@ class SSHTaskTest(BaseHarborTestClass):
             '--ask-ssh-key-path': False,
             '--ask-sudo-pass': False,
             '--group': 'production',
-            '--num': '0',
+            '--num': '1',
             '--print-password': True
         })
 
@@ -111,11 +111,32 @@ class SSHTaskTest(BaseHarborTestClass):
             '--ask-ssh-key-path': False,
             '--ask-sudo-pass': False,
             '--group': 'production',
-            '--num': '0',
+            '--num': '1',
             '--print-password': True
         })
 
         self.assertIn('User password is: "docker"', out)
+        
+    def test_ssh_num_too_high_will_be_checked(self):
+        """
+        Test that if we specify eg. server #2, but we have only one server, then a proper error will be shown
+        """
+
+        self.prepare_valid_deployment_yml()
+
+        sh_calls, out = self._execute_task_and_get_sh_calls_and_output({
+            '--ask-vault-pass': False,
+            '--vault-passwords': '',
+            '--ask-ssh-login': False,
+            '--ask-ssh-pass': False,
+            '--ask-ssh-key-path': False,
+            '--ask-sudo-pass': False,
+            '--group': 'production',
+            '--num': '2',
+            '--print-password': True
+        })
+
+        self.assertIn('Node group "production" does not have node of number #2', out)
 
     def test_ssh_decrypts_yaml_when_encoded(self):
         """
@@ -137,7 +158,7 @@ class SSHTaskTest(BaseHarborTestClass):
             '--ask-ssh-key-path': False,
             '--ask-sudo-pass': False,
             '--group': 'production',
-            '--num': '0',
+            '--num': '1',
             '--print-password': True
         }, mock_exceptions=mock_exceptions)
 

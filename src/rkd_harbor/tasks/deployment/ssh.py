@@ -37,7 +37,7 @@ class SSHTask(BaseDeploymentTask):
         self._preserve_vault_parameters_for_usage_in_inner_tasks(context)
 
         node_group = context.get_arg('--group')
-        node_num = int(context.get_arg('--num'))
+        node_num = int(context.get_arg('--num')) - 1
         should_print_password = context.get_arg('--print-password')
 
         try:
@@ -63,8 +63,8 @@ class SSHTask(BaseDeploymentTask):
 
         try:
             return config['nodes'][node_group][node_num]
-        except KeyError:
-            self.io().error_msg('Node group "{}" does not have node of number #{}'.format(node_group, node_num))
+        except IndexError:
+            self.io().error_msg('Node group "{}" does not have node of number #{}'.format(node_group, node_num + 1))
             return None
 
     def _print_password(self, node: dict):
