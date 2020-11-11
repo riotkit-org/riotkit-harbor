@@ -24,7 +24,7 @@ class SSHTask(BaseDeploymentTask):
         self._add_vault_arguments_to_argparse(parser)
 
         parser.add_argument('--group', help='Node group eg. "production"', required=True)
-        parser.add_argument('--num', help='Node number from given group, defaults to "0"', default="0")
+        parser.add_argument('--num', help='Node number from given group, defaults to "1"', default="1")
         parser.add_argument('--print-password', help='Print user password', action='store_true')
 
     def get_declared_envs(self) -> Dict[str, str]:
