@@ -30,7 +30,7 @@ class SSHTaskTest(BaseHarborTestClass):
 
     def test_ssh_task_creates_a_valid_ssh_command_without_private_key(self):
         """
-        Test that ssh command would be invoked
+        Test that ssh command would be invoked along with sshpass - as there is no private key
         """
 
         self.prepare_valid_deployment_yml()
@@ -47,7 +47,7 @@ class SSHTaskTest(BaseHarborTestClass):
             '--print-password': False
         })
 
-        self.assertEqual(['ssh docker@127.0.0.1 -p 2222'], sh_calls)
+        self.assertEqual(['sshpass -p "docker" ssh docker@127.0.0.1 -p 2222'], sh_calls)
 
     def test_ssh_task_includes_private_key_if_present(self):
         """
