@@ -79,8 +79,14 @@ class SSHTask(BaseDeploymentTask):
     def _ssh(self, node: dict) -> bool:
         ssh_cmd = 'ssh {}@{} -p {}'.format(node['user'], node['host'], node['port'])
 
-        if 'private_key' in node:
+        has_private_key = 'private_key' in node
+        has_password = 'password' in node
+
+        if has_private_key:
             ssh_cmd += ' -i {}'.format(node['private_key'])
+
+        if not has_private_key and has_password:
+            ssh_cmd = 'sshpass -p "{}" '.format(node['password']) + ssh_cmd
 
         self.sh(ssh_cmd)
 
