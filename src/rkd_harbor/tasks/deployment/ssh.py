@@ -88,6 +88,6 @@ class SSHTask(BaseDeploymentTask):
         if not has_private_key and has_password:
             ssh_cmd = 'sshpass -p "{}" '.format(node['password']) + ssh_cmd
 
-        self.sh(ssh_cmd)
+        self.sh(ssh_cmd, use_subprocess=True)
 
         return True
