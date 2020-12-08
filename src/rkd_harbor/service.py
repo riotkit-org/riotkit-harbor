@@ -53,7 +53,18 @@ class ServiceDeclaration(object):
 
     def get_ports(self) -> list:
         try:
-            return self.get_definition()['ports']
+            ports = self.get_definition()['ports']
+            as_list_of_strings: List[str] = []
+
+            for pair in ports:
+                if isinstance(pair, dict):
+                    as_list_of_strings.append(str(pair['published']) + ':' + str(pair['target']))
+                    continue
+
+                as_list_of_strings.append(pair)
+
+            return as_list_of_strings
+
         except KeyError:
             return []
 

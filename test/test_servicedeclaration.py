@@ -84,6 +84,21 @@ class ServiceDeclarationTest(BaseHarborTestClass):
         service = ServiceDeclaration('phillyabc', example_service)
         self.assertEqual(ports, service.get_ports())
 
+    def test_get_ports_returned_as_dict(self):
+        """
+        In newer versions of docker-compose the list of ports is returned as dict ex. {"published": 80, "target": 8000}
+        :return:
+        """
+
+        service = ServiceDeclaration('phillyabc', {
+            'image': 'quay.io/riotkit/infracheck:v2.0',
+            'ports': [
+                {'published': 80, 'target': 8000}
+            ]
+        })
+
+        self.assertEqual(['80:8000'], service.get_ports())
+
     def test_get_desired_replicas_count_returns_one_as_default(self):
         example_service = {
             'image': 'nginx:1.19'
