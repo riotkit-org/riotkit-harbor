@@ -114,10 +114,10 @@ def imports():
                              [
                                  ':j2:directory-to-directory',
                                  '--source=containers/templates',
-                                 '--target=data/templates'
+                                 '--target=./'
                              ],
-                             description='Render templates stored in containers/templates/source ' +
-                                         'into containers/templates/compiled')
+                             description='Render templates stored in containers/templates ' +
+                                         'into root directory, with preserving the tree structure')
     ]
 
 
