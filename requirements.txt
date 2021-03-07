@@ -1,3 +1,3 @@
-rkd>=2.3.4
+rkd>=2.3.5.dev8
 rkd-cooperative>=1.0.3
 ansible>=2.8
