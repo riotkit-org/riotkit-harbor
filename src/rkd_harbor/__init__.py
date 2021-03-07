@@ -113,7 +113,7 @@ def imports():
         TaskAliasDeclaration(':harbor:templates:render',
                              [
                                  ':j2:directory-to-directory',
-                                 '--source=containers/templates',
+                                 '--source=templates',
                                  '--target=./'
                              ],
                              description='Render templates stored in containers/templates ' +
