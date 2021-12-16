@@ -41,6 +41,17 @@ RiotKit's Harbor
 
 Demo: https://asciinema.org/a/348698
 
+Notice
+^^^^^^
+
+This project will be in the future replaced by "Space Harbor", which is successor of Harbor.
+Why? We started Harbor project as lightweight and elastic replacement for Kubernetes usage in tiny scale (for smaller services like blogs, forums etc.)
+but recently we researched usage of a lightweight Kubernetes distribution which fits very well for tiny scale and does not require an extra development
+of Python code.
+
+We will support bugfixes fixes to Harbor till 01.01.2023, please consider migration to https://github.com/riotkit-org/k3s-space-harbor as soon as it will be
+announced stable.
+
 Harbor
 ^^^^^^
 
